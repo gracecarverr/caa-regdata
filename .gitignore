@@ -11,8 +11,8 @@ data/panels/*
 data/clean/*
 !data/clean/.gitkeep
 
-# Generated documentation inputs (rebuilt by scripts/03_document.R before `quarto render`).
-docs/_generated/
+# docs/dictionary.md and docs/distributions.md ARE generated (by scripts/03_document.R) but tracked
+# on purpose, so they're browsable on GitHub without a build. Regenerate with run_all.R.
 
 # ---- R / renv ---------------------------------------------------------------
 renv/library/

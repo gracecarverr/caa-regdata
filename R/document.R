@@ -28,16 +28,25 @@ col_summary <- function(x) {
                 as.integer(tt)[seq_len(min(3, length(tt)))]), collapse = "; ")
 }
 
-# Per-column distribution table for one asset, saved under docs/_generated/ for the Quarto site to read.
+# Per-column distribution table for one asset (a data frame). Read straight from the clean asset.
 variable_distributions <- function(asset) {
-  df  <- readr::read_csv(file.path(CLEAN, paste0(asset, ".csv.gz")), show_col_types = FALSE)
-  out <- dplyr::bind_rows(lapply(names(df), function(col) {
+  df <- readr::read_csv(file.path(CLEAN, paste0(asset, ".csv.gz")), show_col_types = FALSE)
+  dplyr::bind_rows(lapply(names(df), function(col) {
     x <- df[[col]]
     tibble::tibble(column = col, type = class(x)[1], n = length(x),
                    missing = sum(is.na(x)), pct_missing = round(100 * mean(is.na(x)), 1),
                    distinct = dplyr::n_distinct(x), summary = col_summary(x))
   }))
-  gen <- here::here("docs/_generated"); dir.create(gen, showWarnings = FALSE, recursive = TRUE)
-  saveRDS(out, file.path(gen, sprintf("dist_%s.rds", asset)))
-  invisible(out)
+}
+
+# Render a data frame as a GitHub-flavored Markdown table (escapes pipes; NA -> blank).
+md_table <- function(df) {
+  cell <- function(v) gsub("\\|", "\\\\|", ifelse(is.na(v), "", as.character(v)))
+  df   <- as.data.frame(df, stringsAsFactors = FALSE)
+  head <- paste0("| ", paste(names(df), collapse = " | "), " |")
+  sep  <- paste0("| ", paste(rep("---", ncol(df)), collapse = " | "), " |")
+  body <- vapply(seq_len(nrow(df)),
+                 \(i) paste0("| ", paste(vapply(df[i, ], cell, character(1)), collapse = " | "), " |"),
+                 character(1))
+  paste(c(head, sep, body), collapse = "\n")
 }

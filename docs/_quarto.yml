@@ -9,9 +9,9 @@ website:
     left:
       - href: index.qmd
         text: Overview
-      - href: dictionary.qmd
+      - href: dictionary.md
         text: Data Dictionary
-      - href: distributions.qmd
+      - href: distributions.md
         text: Distributions
       - href: nuances.qmd
         text: Data Nuances
