@@ -3,6 +3,7 @@
 #   Cleaning scripts stay THIN: read one raw source, parse/type/flag, and write ONE documented asset.
 #   No sample selection, no aggregation, no cross-dataset joins (those belong to the panel layer).
 # =========================================================================================================
+source(here::here("R/setup.R"))
 
 # Write a clean asset to data/clean/ AND register its column dictionary, so documentation is generated
 # from the same code that produces the data (never hand-maintained separately).

@@ -2,6 +2,7 @@
 # R/document.R -- helpers that turn clean assets into documentation inputs (used by scripts/03_document.R).
 #   Everything the docs site shows is GENERATED from data/clean/, so it can never drift from the data.
 # =========================================================================================================
+source(here::here("R/setup.R"))
 
 # Names of all built assets (from the clean/ directory).
 list_assets <- function() sub("[.]csv[.]gz$", "", list.files(CLEAN, pattern = "[.]csv[.]gz$"))

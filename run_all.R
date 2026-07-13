@@ -21,6 +21,10 @@ step("02 clean")
 clean_scripts <- sort(list.files(here::here("scripts/02_clean"), pattern = "^[0-9].*[.]R$", full.names = TRUE))
 for (f in clean_scripts) { cat(" -", basename(f), "\n"); source(f) }
 
-step("03 document");     source(here::here("scripts/03_document.R"))
-step("04 build panels"); source(here::here("scripts/04_build_panels.R"))
+step("03 document"); source(here::here("scripts/03_document.R"))
+
+step("04 build panels")
+for (f in sort(list.files(here::here("scripts/04_panels"), pattern = "[.]R$", full.names = TRUE))) {
+  cat(" -", basename(f), "\n"); source(f)
+}
 step("done")

@@ -74,10 +74,11 @@ caa-regdata/
 
 - [x] Scaffold (structure, config, `run_all.R`, docs skeleton)
 - [x] Vertical slice: **violations** end-to-end (download → clean → dictionary → distribution → test)
-- [ ] Remaining cleaners + facilities spine
-- [ ] Quarto site: generated dictionary + distributions, nuances, decisions
-- [ ] `build_panel()` + sample panels + codebooks
-- [ ] Validation tests
+- [x] Remaining cleaners + facilities spine
+- [x] Quarto site: generated dictionary + distributions, nuances, decisions
+- [x] Sample panels — standalone scripts in `scripts/04_panels/` (no configurable builder)
+- [x] Validation tests (`tests/test_assets.R`)
+- [ ] Attainment (Green Book / Wayback) + treatment panel — the semi-manual acquisition piece
 
 ## License
 

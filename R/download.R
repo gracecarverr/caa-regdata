@@ -3,6 +3,7 @@
 #   Each fetcher pulls one raw source into data/raw/ and appends a provenance row to MANIFEST.csv
 #   (source, file, url, downloaded_at, md5). Raw files are IMMUTABLE once written.
 # =========================================================================================================
+source(here::here("R/setup.R"))
 
 # Fetch the ICIS-Air bulk tables from EPA ECHO into data/raw/ICIS-AIR_downloads/.
 #   Idempotent: if the CSVs are already present it does nothing (raw is immutable). Records provenance
