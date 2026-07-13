@@ -1,6 +1,4 @@
----
-title: "Construction Decisions"
----
+# Construction Decisions
 
 What was decided when building the clean assets and the sample panels, and **why**. Full per-dataset
 detail is in each cleaning script's companion `.md` (`scripts/02_clean/`).

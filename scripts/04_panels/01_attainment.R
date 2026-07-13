@@ -1,10 +1,10 @@
 # =========================================================================================================
-# scripts/02_clean/10_attainment.R -- PM2.5 (2012 NAAQS) nonattainment TREATMENT, facility x year.
+# scripts/04_panels/01_attainment.R -- PM2.5 (2012 NAAQS) nonattainment TREATMENT, facility x year.
 #   RUNS AFTER the facilities spine (needs facility coordinates).
 #   in : data/raw/greenbook/pm25_2012_status/<year>.dbf   (yearly Green Book status snapshots, from Wayback)
 #        data/raw/greenbook/pm25_2012_naa/PM25_2012Std_NAA.shp   (nonattainment-area polygons)
-#        data/clean/facilities.csv.gz   (spine coordinates)
-#   out: data/clean/attainment.csv.gz   (one row per facility-year INSIDE a PM2.5 NAA)
+#        data/panels/spine.csv.gz   (facility coordinates)
+#   out: data/panels/attainment.csv.gz   (one row per facility-year INSIDE a PM2.5 NAA)
 #
 #   COVERAGE / LIMITATIONS (deliberately narrow):
 #     * PM2.5 (2012 standard) ONLY; ozone / SO2 / lead not built.
@@ -15,8 +15,9 @@
 #     * MAINTENANCE-AWARE: status = N (nonattainment) or M (maintenance, redesignated). A facility-year
 #       ABSENT from this asset = the facility was not inside a PM2.5 NAA that year (i.e. attainment).
 # =========================================================================================================
-source(here::here("R/clean.R"))
+library(readr); library(dplyr); library(tidyr)
 suppressPackageStartupMessages({library(foreign); library(sf)})
+RAW <- here::here("data/raw"); PANELS <- here::here("data/panels")
 
 status_dir <- file.path(RAW, "greenbook", "pm25_2012_status")
 naa_shp    <- file.path(RAW, "greenbook", "pm25_2012_naa", "PM25_2012Std_NAA.shp")
@@ -41,7 +42,7 @@ ay <- expand_grid(composid = areas$composid, year = min(obs_years):max(obs_years
 
 # ---- 2. place facilities (spine coordinates) into a NAA polygon (composid) -------------------------------
 shp <- st_read(naa_shp, quiet = TRUE); shp$COMPOSID <- trimws(shp$COMPOSID)
-fac <- read_csv(file.path(CLEAN, "facilities.csv.gz"),
+fac <- read_csv(file.path(PANELS, "spine.csv.gz"),
                 col_types = cols(PGM_SYS_ID = col_character(), .default = col_guess()), show_col_types = FALSE) |>
   filter(!is.na(latitude), !is.na(longitude))
 pts <- st_as_sf(fac, coords = c("longitude", "latitude"), crs = 4326) |> st_transform(st_crs(shp))
@@ -53,12 +54,7 @@ att <- hit |> left_join(ay, by = "composid", relationship = "many-to-many") |>
   transmute(PGM_SYS_ID, year, composid, area_name, status, class, imputed) |>
   arrange(PGM_SYS_ID, year)
 
-write_asset(att, "attainment", dict = c(
-  PGM_SYS_ID = "ICIS-Air facility id",
-  year       = "calendar year (Green Book snapshot window only)",
-  composid   = "id of the PM2.5 NAA the facility's coordinate falls inside (point-in-polygon)",
-  area_name  = "nonattainment-area name",
-  status     = "N = nonattainment / M = maintenance (redesignated)",
-  class      = "NAA classification",
-  imputed    = "TRUE if that year's Green Book snapshot was missing and status was carried forward"
-))
+dir.create(PANELS, showWarnings = FALSE, recursive = TRUE)
+write_csv(att, file.path(PANELS, "attainment.csv.gz"))
+cat(sprintf("attainment: %d facility-years | %d facilities in a NAA | %d areas\n",
+            nrow(att), n_distinct(att$PGM_SYS_ID), n_distinct(att$composid)))

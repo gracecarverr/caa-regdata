@@ -11,8 +11,8 @@ data/panels/*
 data/clean/*
 !data/clean/.gitkeep
 
-# docs/dictionary.md and docs/distributions.md ARE generated (by scripts/03_document.R) but tracked
-# on purpose, so they're browsable on GitHub without a build. Regenerate with run_all.R.
+# docs/index.html is GENERATED (by scripts/03_build_site.R) but tracked on purpose, so GitHub Pages
+# serves it directly with no build step. Regenerate with run_all.R.
 
 # ---- R / renv ---------------------------------------------------------------
 renv/library/

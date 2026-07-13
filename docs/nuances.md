@@ -1,6 +1,4 @@
----
-title: "Data Nuances"
----
+# Data Nuances
 
 The gotchas an analyst should know before using this data. Per-dataset detail lives in each cleaning
 script's companion `.md` (in `scripts/02_clean/`); this page collects the cross-cutting ones.

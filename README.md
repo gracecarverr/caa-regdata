@@ -2,8 +2,8 @@
 
 Regulatory data infrastructure for EPA stationary-source air-pollution enforcement.
 A reproducible pipeline that **downloads** raw EPA data, **cleans** each source into a
-documented data asset, **documents** it (dictionary, variable distributions, known
-nuances), and **builds** sample facility × year panels.
+one-table-per-source data asset, **summarizes** the assets in a static site, and **builds**
+sample facility × year panels.
 
 > **Status: scaffold.** Structure and conventions are in place; the pipeline stages are
 > stubs to be filled in dataset by dataset. See *Roadmap* below.
@@ -21,41 +21,39 @@ Rscript run_all.R
 DOWNLOAD=false Rscript run_all.R
 ```
 
-Render the documentation site (requires [Quarto](https://quarto.org)):
-
-```bash
-quarto render docs
-```
+The documentation site (`docs/index.html`) is regenerated as part of `run_all.R` (the build-site step)
+and committed, so GitHub Pages serves it directly with no build step.
 
 ## Layout
 
 ```
 caa-regdata/
 ├── run_all.R           one command: sources the numbered pipeline in order
-├── config.yml          single source of truth — window, paths, source URLs
-├── R/                  reusable functions (scripts stay thin, call these)
-│   ├── setup.R         config, paths, constants, shared helpers
-│   ├── download.R  clean.R  panel.R  document.R
-├── scripts/            the pipeline (numbered, ordered)
-│   ├── 01_download.R
-│   ├── 02_clean/       one cleaning script per dataset (numbered; spine last)
-│   ├── 03_document.R   writes generated tables/figures the docs read
-│   └── 04_build_panels.R
+├── scripts/            the pipeline — self-contained scripts (no shared R/ layer, no config)
+│   ├── 01_download.R   raw sources into data/raw/ (immutable) + provenance
+│   ├── 02_clean/       one bare-bones cleaner per raw table (numbered)
+│   ├── 03_build_site.R writes docs/index.html summary tables from data/clean/
+│   └── 04_panels/      facility spine (00), attainment treatment (01), then sample panels
 ├── data/
 │   ├── raw/            immutable downloads (gitignored) + MANIFEST.csv (provenance)
-│   ├── clean/          documented assets
-│   └── panels/         sample panels (gitignored, rebuilt from code)
-├── docs/               Quarto site — auto-rendered from data/clean/
-└── tests/              schema + invariant checks
+│   ├── clean/          one clean asset per raw table (gitignored, rebuilt from code)
+│   └── panels/         spine + attainment + sample panels (gitignored, rebuilt from code)
+├── docs/               committed static site (index.html) + nuances.md / decisions.md
+└── tests/              invariant checks
 ```
+
+Every script is standalone: it hard-codes its own paths and constants and inlines whatever it needs,
+so it can be read and run on its own without chasing sourced helpers.
 
 ## Design principles
 
 - **Raw is immutable.** Nothing in `data/raw/` is ever edited; every asset rebuilds from code.
-- **One job per file.** One cleaning script per dataset; cleaning never does sample
-  selection or aggregation (that lives in the panel layer). Each cleaner ships a companion
-  `<name>.md` documenting its source, decisions, columns, and nuances.
-- **Docs are generated from the data**, so they can't drift from it.
+- **One job per file.** One cleaner per raw table; cleaning keeps every column and every row (adds only
+  `date`/`year`/`dup`/`dup_exact`) and never does sample selection or aggregation (that lives in the
+  panel layer).
+- **Self-contained scripts.** No shared `R/` helper layer and no `config.yml`; each script hard-codes its
+  own paths and constants, so nothing is hidden behind a `source()`.
+- **Docs are generated from the data** (`03_build_site.R`), so they can't drift from it.
 - **Reproducible.** `renv` pins packages; `run_all.R` rebuilds everything from raw;
   `data/raw/MANIFEST.csv` records source URLs, dates, and checksums; `tests/` assert invariants.
 
@@ -72,11 +70,12 @@ caa-regdata/
 
 ## Roadmap
 
-- [x] Scaffold (structure, config, `run_all.R`, docs skeleton)
-- [x] Vertical slice: **violations** end-to-end (download → clean → dictionary → distribution → test)
+- [x] Scaffold (structure, `run_all.R`, docs skeleton)
+- [x] Vertical slice: **violations** end-to-end (download → clean → test)
 - [x] Remaining cleaners + facilities spine
-- [x] Quarto site: generated dictionary + distributions, nuances, decisions
+- [x] Static site (`03_build_site.R`): per-asset summary tables; committed nuances / decisions
 - [x] Sample panels — standalone scripts in `scripts/04_panels/` (no configurable builder)
+- [x] Flatten to self-contained scripts (remove the `R/` helper layer and `config.yml`)
 - [x] Validation tests (`tests/test_assets.R`)
 - [x] Attainment (Green Book / Wayback) + treatment panel (`electric.R`) — PM2.5 (2012); ozone next
 

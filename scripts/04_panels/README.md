@@ -1,8 +1,11 @@
 # Sample panels
 
-Standalone, explicit scripts — one per sample panel. Each picks a set of facilities and calls
-`facility_year_panel()` (`R/panel.R`); there is no configurable builder. Copy a script and change the
-facility filter to make a new panel.
+Standalone, explicit scripts — one per sample panel. Each is fully self-contained: it spells out the
+`facility_year_panel()` recipe inline (no shared helpers, no configurable builder). Copy a script and
+change the facility filter to make a new panel.
+
+Built on the derived facility spine (`00_spine.R` → `data/panels/spine.csv.gz`) and, for the electric
+panel, the PM2.5 attainment treatment (`01_attainment.R` → `data/panels/attainment.csv.gz`).
 
 | script | panel | facilities |
 |---|---|---|
@@ -14,8 +17,8 @@ facility filter to make a new panel.
 
 Balanced **facility × year** (every in-scope facility × every year in the window). Columns:
 
-- **Counts** `n_inspections`, `n_violations`, `n_enforcement`, `n_certs` — distinct events (`dup == 0`)
-  that facility-year.
+- **Counts** `n_inspections`, `n_violations`, `n_formal_actions`, `n_informal_actions`, `n_certs` —
+  distinct events (`dup == 0`) that facility-year.
 - **Facility attributes** — the full facility spine (identity, geography, industry, class, operating
   status, `emits_*`, `prog_*`, `n_programs`).
 

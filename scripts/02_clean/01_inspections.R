@@ -1,38 +1,27 @@
 # =========================================================================================================
-# scripts/02_clean/01_inspections.R -- clean ICIS-Air FCE/PCE evaluations into the `inspections` asset.
-#   in : data/raw/ICIS-AIR_downloads/ICIS-AIR_FCES_PCES.csv   (one row per compliance evaluation)
-#   out: data/clean/inspections.csv.gz  (one row per raw record; distinct evaluations = filter(dup == 0))
+# scripts/02_clean/01_inspections.R -- minimal panel-prep for ICIS-Air compliance evaluations (FCE/PCE).
+#   in : data/raw/ICIS-AIR_downloads/ICIS-AIR_FCES_PCES.csv
+#   out: data/clean/inspections.csv.gz
 #
-#   Full (FCE) and partial (PCE) compliance evaluations are pooled into one "inspections" measure; the
-#   `type` column preserves the full-vs-partial distinction. Date = ACTUAL_END_DATE (evaluation completion).
-#   NO deduplication: all rows kept, duplicates flagged.
+#   BARE BONES: every original column is kept and every row is kept (nothing dropped, including rows with
+#   no PGM_SYS_ID). The only additions are what a facility x year panel needs:
+#     date       -- ACTUAL_END_DATE parsed to a real Date
+#     year       -- calendar year of that date
+#     dup        -- occurrence index within (PGM_SYS_ID, ACTIVITY_ID); 0 = first row (no deduplication)
+#     dup_exact  -- 1 if the row is byte-identical to an earlier row
 # =========================================================================================================
-source(here::here("R/clean.R"))
+library(readr); library(dplyr); library(lubridate)
 
-src <- file.path(RAW, "ICIS-AIR_downloads", "ICIS-AIR_FCES_PCES.csv")
-d <- read_csv(src,
-  col_select = c(PGM_SYS_ID, ACTIVITY_ID, STATE_EPA_FLAG, ACTIVITY_TYPE_DESC, COMP_MONITOR_TYPE_DESC, ACTUAL_END_DATE),
-  col_types = cols(.default = col_character()), show_col_types = FALSE) |>
-  mutate(date = mdy(ACTUAL_END_DATE, quiet = TRUE), year = year(date))
+d <- read_csv(here::here("data/raw/ICIS-AIR_downloads/ICIS-AIR_FCES_PCES.csv"),
+              col_types = cols(.default = col_character()), show_col_types = FALSE)
 
-n_in <- nrow(d)
-d <- d |> filter(!is.na(PGM_SYS_ID), PGM_SYS_ID != "", !is.na(year))
-cat(sprintf("  dropped %d of %d rows (%.1f%%) with no PGM_SYS_ID or unparseable date\n",
-            n_in - nrow(d), n_in, 100 * (n_in - nrow(d)) / n_in))
+d$date <- mdy(d$ACTUAL_END_DATE, quiet = TRUE)          # evaluation completion date, parsed
+d$year <- year(d$date)
 
-d <- d |>
-  transmute(PGM_SYS_ID, activity_id = ACTIVITY_ID, date, year,
-            type = ACTIVITY_TYPE_DESC, monitor_type = COMP_MONITOR_TYPE_DESC, agency = STATE_EPA_FLAG) |>
-  add_dup_flags(c("PGM_SYS_ID", "activity_id"))
+d$dup_exact <- as.integer(duplicated(d))               # byte-identical row (before the dup index is added)
+key    <- paste(d$PGM_SYS_ID, d$ACTIVITY_ID, sep = "\r")
+d$dup  <- as.integer(ave(seq_len(nrow(d)), key, FUN = seq_along) - 1L)
 
-write_asset(d, "inspections", dict = c(
-  PGM_SYS_ID   = "ICIS-Air facility (program-system) id",
-  activity_id  = "distinct evaluation id (the event id)",
-  date         = "evaluation completion date (ACTUAL_END_DATE, parsed)",
-  year         = "evaluation calendar year",
-  type         = "evaluation type (ACTIVITY_TYPE_DESC) -- full (FCE) vs partial (PCE) etc.",
-  monitor_type = "compliance-monitoring type (COMP_MONITOR_TYPE_DESC)",
-  agency       = "conducting agency flag (STATE_EPA_FLAG: E=EPA / S=State / L=Local)",
-  dup          = "occurrence index within (PGM_SYS_ID, activity_id); 0 = first row",
-  dup_exact    = "1 if byte-identical (on kept columns) to an earlier row"
-))
+dir.create(here::here("data/clean"), showWarnings = FALSE, recursive = TRUE)
+write_csv(d, here::here("data/clean/inspections.csv.gz"))
+cat(sprintf("inspections: %d rows | %d columns (all original + date/year/dup/dup_exact)\n", nrow(d), ncol(d)))

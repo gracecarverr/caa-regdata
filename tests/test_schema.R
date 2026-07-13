@@ -1,8 +1,10 @@
 # =========================================================================================================
 # tests/test_schema.R -- invariant checks that run against the clean assets.
 #   Kept dependency-light (base stopifnot); run after a build, or wire into CI later.
+#   Standalone: no shared helpers, no config.
 # =========================================================================================================
-source(here::here("R/setup.R"))
+library(readr); library(dplyr)
+CLEAN <- here::here("data/clean")
 
 # TODO (validate phase), per asset:
 #   - required columns present; keys non-missing
