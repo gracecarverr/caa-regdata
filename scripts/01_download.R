@@ -4,8 +4,7 @@
 # =========================================================================================================
 source(here::here("R/download.R"))
 
-# TODO (vertical slice / acquire phase):
-#   fetch_icis_air(RAW)    # bulk ICIS-Air tables
-#   fetch_frs(RAW)         # FRS coordinates
-#   fetch_greenbook(RAW)   # Green Book shapefiles (+ assisted Wayback snapshots for history)
-cat("01_download.R -- stub (no sources wired yet). See README > Roadmap.\n")
+fetch_icis_air(RAW)          # bulk ICIS-Air tables (idempotent; large)
+# TODO (later slices):
+#   fetch_frs(RAW)           # FRS coordinates
+#   fetch_greenbook(RAW)     # Green Book shapefiles (+ assisted Wayback snapshots for history)

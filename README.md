@@ -72,7 +72,7 @@ caa-regdata/
 ## Roadmap
 
 - [x] Scaffold (structure, config, `run_all.R`, docs skeleton)
-- [ ] Vertical slice: **violations** end-to-end (download → clean → dictionary → distribution → test)
+- [x] Vertical slice: **violations** end-to-end (download → clean → dictionary → distribution → test)
 - [ ] Remaining cleaners + facilities spine
 - [ ] Quarto site: generated dictionary + distributions, nuances, decisions
 - [ ] `build_panel()` + sample panels + codebooks

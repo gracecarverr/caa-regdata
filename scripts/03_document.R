@@ -5,7 +5,6 @@
 # =========================================================================================================
 source(here::here("R/document.R"))
 
-# TODO (document phase):
-#   dict <- collect_dictionary(); saveRDS(dict, here::here("docs/_generated/dictionary.rds"))
-#   for (a in list_assets()) variable_distributions(a)
-cat("03_document.R -- stub. See README > Roadmap.\n")
+gen <- here::here("docs/_generated"); dir.create(gen, showWarnings = FALSE, recursive = TRUE)
+saveRDS(collect_dictionary(), file.path(gen, "dictionary.rds"))    # combined data dictionary
+for (a in list_assets()) { cat(" - distributions:", a, "\n"); variable_distributions(a) }

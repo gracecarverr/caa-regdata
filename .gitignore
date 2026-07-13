@@ -1,13 +1,18 @@
 # ---- data -------------------------------------------------------------------
 # Raw downloads are immutable but not tracked (large; rebuilt via 01_download).
+# Keep the .gitkeep and the provenance MANIFEST.
 data/raw/*
 !data/raw/.gitkeep
-!data/raw/MANIFEST.csv          # keep provenance record in git
+!data/raw/MANIFEST.csv
 # Built panels are rebuilt from code.
 data/panels/*
 !data/panels/.gitkeep
-# Large clean assets are rebuilt; small lookups may be force-added case by case.
-data/clean/*.csv.gz
+# Clean assets + their generated dictionaries are rebuilt from code (force-add lookups case by case).
+data/clean/*
+!data/clean/.gitkeep
+
+# Generated documentation inputs (rebuilt by scripts/03_document.R before `quarto render`).
+docs/_generated/
 
 # ---- R / renv ---------------------------------------------------------------
 renv/library/

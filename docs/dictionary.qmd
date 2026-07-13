@@ -3,17 +3,21 @@ title: "Data Dictionary"
 ---
 
 Every column of every clean asset, defined. Generated from the dictionaries each cleaning
-script registers via `write_asset()`, so it always matches the data.
-
-::: {.callout-note}
-Scaffold. Once assets exist, this page renders `collect_dictionary()` (see `R/document.R`)
-as a per-asset table of `column` / `definition`.
-:::
+script registers via `write_asset()`, so it always matches the data. Regenerate with
+`Rscript run_all.R` (or `source("scripts/03_document.R")`).
 
 ```{r}
-#| eval: false
-source(here::here("R/setup.R")); source(here::here("R/document.R"))
-collect_dictionary() |>
-  dplyr::group_split(asset) |>
-  lapply(\(d) knitr::kable(d[c("column","definition")], caption = d$asset[1]))
+#| echo: false
+#| output: asis
+library(here)
+f <- here::here("docs/_generated/dictionary.rds")
+if (!file.exists(f)) {
+  cat("::: {.callout-note}\nNo assets built yet -- run the pipeline first.\n:::\n")
+} else {
+  dict <- readRDS(f)
+  for (a in sort(unique(dict$asset))) {
+    cat("\n\n### ", a, "\n\n")
+    print(knitr::kable(dict[dict$asset == a, c("column", "definition")], col.names = c("Column", "Definition")))
+  }
+}
 ```

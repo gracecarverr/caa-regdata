@@ -20,7 +20,7 @@ geography:
 sources:
   icis_air:
     name: "ICIS-Air (EPA ECHO bulk download)"
-    url:  "TODO: confirm ECHO/ICIS-Air bulk download URL"
+    url:  "https://echo.epa.gov/files/echodownloads/ICIS-AIR_downloads.zip"
   frs:
     name: "EPA Facility Registry Service (FRS)"
     url:  "TODO: confirm FRS bulk download URL"
