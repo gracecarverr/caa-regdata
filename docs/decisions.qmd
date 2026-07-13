@@ -1,0 +1,11 @@
+---
+title: "Construction Decisions"
+---
+
+What was decided when building the clean assets and the panels, and **why** — every choice
+tied to the script that implements it and the data issue it addresses.
+
+::: {.callout-note}
+Scaffold. Port and refine the existing construction-decisions record here (cross-cutting
+conventions, per-asset choices, panel-build levers).
+:::

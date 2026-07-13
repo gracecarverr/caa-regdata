@@ -1,0 +1,19 @@
+---
+title: "Data Dictionary"
+---
+
+Every column of every clean asset, defined. Generated from the dictionaries each cleaning
+script registers via `write_asset()`, so it always matches the data.
+
+::: {.callout-note}
+Scaffold. Once assets exist, this page renders `collect_dictionary()` (see `R/document.R`)
+as a per-asset table of `column` / `definition`.
+:::
+
+```{r}
+#| eval: false
+source(here::here("R/setup.R")); source(here::here("R/document.R"))
+collect_dictionary() |>
+  dplyr::group_split(asset) |>
+  lapply(\(d) knitr::kable(d[c("column","definition")], caption = d$asset[1]))
+```

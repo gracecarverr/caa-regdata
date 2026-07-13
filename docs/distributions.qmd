@@ -1,0 +1,10 @@
+---
+title: "Variable Distributions"
+---
+
+Per-variable summaries for each clean asset — counts, missingness, ranges, and top values /
+histograms — generated from `data/clean/` so they never drift from the data.
+
+::: {.callout-note}
+Scaffold. `scripts/03_document.R` will write one distribution artifact per asset; this page displays them.
+:::

@@ -1,0 +1,29 @@
+# config.yml -- single source of truth for the pipeline. Read by R/setup.R.
+project: caa-regdata
+
+# Analysis window. Assets keep ALL dated events; panels filter to this window.
+window:
+  start: 2005
+  end: 2025
+
+# Paths are relative to the project root.
+paths:
+  raw:    data/raw
+  clean:  data/clean
+  panels: data/panels
+
+# Restrict geography to the 48 contiguous states + DC (excludes AK, HI, territories).
+geography:
+  conus_only: true
+
+# Raw data sources. Fill in exact endpoints when wiring 01_download.R.
+sources:
+  icis_air:
+    name: "ICIS-Air (EPA ECHO bulk download)"
+    url:  "TODO: confirm ECHO/ICIS-Air bulk download URL"
+  frs:
+    name: "EPA Facility Registry Service (FRS)"
+    url:  "TODO: confirm FRS bulk download URL"
+  greenbook:
+    name: "EPA Green Book attainment (+ Wayback snapshots for history)"
+    url:  "TODO: confirm Green Book URL; Wayback fetch is semi-manual"

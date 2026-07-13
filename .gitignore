@@ -1,0 +1,28 @@
+# ---- data -------------------------------------------------------------------
+# Raw downloads are immutable but not tracked (large; rebuilt via 01_download).
+data/raw/*
+!data/raw/.gitkeep
+!data/raw/MANIFEST.csv          # keep provenance record in git
+# Built panels are rebuilt from code.
+data/panels/*
+!data/panels/.gitkeep
+# Large clean assets are rebuilt; small lookups may be force-added case by case.
+data/clean/*.csv.gz
+
+# ---- R / renv ---------------------------------------------------------------
+renv/library/
+renv/local/
+renv/cellar/
+renv/staging/
+.Rhistory
+.RData
+.Rproj.user/
+*.Rproj
+
+# ---- Quarto -----------------------------------------------------------------
+docs/_site/
+docs/.quarto/
+/.quarto/
+
+# ---- OS ---------------------------------------------------------------------
+.DS_Store

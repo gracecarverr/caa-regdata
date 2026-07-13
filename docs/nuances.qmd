@@ -1,0 +1,11 @@
+---
+title: "Data Nuances"
+---
+
+The gotchas an analyst must know before using this data — reporting artifacts, coverage
+ramps, duplicate structure, date-rule choices, and unplaceable facilities.
+
+::: {.callout-note}
+Scaffold. To be populated as each dataset is cleaned (port and refine the existing
+data-issues register / construction nuances).
+:::
