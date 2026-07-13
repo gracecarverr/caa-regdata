@@ -53,7 +53,8 @@ caa-regdata/
 
 - **Raw is immutable.** Nothing in `data/raw/` is ever edited; every asset rebuilds from code.
 - **One job per file.** One cleaning script per dataset; cleaning never does sample
-  selection or aggregation (that lives in the panel layer).
+  selection or aggregation (that lives in the panel layer). Each cleaner ships a companion
+  `<name>.md` documenting its source, decisions, columns, and nuances.
 - **Docs are generated from the data**, so they can't drift from it.
 - **Reproducible.** `renv` pins packages; `run_all.R` rebuilds everything from raw;
   `data/raw/MANIFEST.csv` records source URLs, dates, and checksums; `tests/` assert invariants.

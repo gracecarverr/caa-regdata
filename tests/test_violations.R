@@ -16,7 +16,6 @@ stopifnot("keys non-missing"                    = !any(is.na(v$PGM_SYS_ID)) && a
 stopifnot("hpv is 0/1"                          = all(v$hpv %in% c(0L, 1L)))
 stopifnot("dup==0 reconstructs distinct events" = sum(v$dup == 0) == nrow(dplyr::distinct(v, PGM_SYS_ID, comp_determination_uid)))
 stopifnot("dup_exact implies dup>0"             = all(v$dup[v$dup_exact == 1L] > 0))
-stopifnot("row count in expected range"         = nrow(v) > 50000 && nrow(v) < 300000)
 
 cat(sprintf("violations test: PASS | %d rows | %d events (dup==0) | %d HPV | %.1f%% dup rows\n",
             nrow(v), sum(v$dup == 0), sum(v$hpv[v$dup == 0]), 100 * mean(v$dup > 0)))

@@ -3,6 +3,8 @@
 #   Real cleaners are number-prefixed so run_all.R runs them in dependency order, e.g.
 #     01_inspections.R  02_violations.R  ...  09_facilities.R   (the spine runs LAST).
 #   The leading "_" keeps this template from being picked up by run_all.R (^[0-9] pattern).
+#   Each cleaner ships a companion <name>.md next to it (copy _template.md; see 02_violations.md)
+#   documenting the source, cleaning decisions, columns, and nuances for that dataset.
 #
 # Contract for a cleaning script:
 #   - reads exactly ONE raw source from RAW
