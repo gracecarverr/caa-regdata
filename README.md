@@ -78,7 +78,7 @@ caa-regdata/
 - [x] Quarto site: generated dictionary + distributions, nuances, decisions
 - [x] Sample panels — standalone scripts in `scripts/04_panels/` (no configurable builder)
 - [x] Validation tests (`tests/test_assets.R`)
-- [ ] Attainment (Green Book / Wayback) + treatment panel — the semi-manual acquisition piece
+- [x] Attainment (Green Book / Wayback) + treatment panel (`electric.R`) — PM2.5 (2012); ozone next
 
 ## License
 

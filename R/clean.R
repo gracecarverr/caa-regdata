@@ -16,8 +16,8 @@ write_asset <- function(df, name, dict) {
   readr::write_csv(df, file.path(CLEAN, paste0(name, ".csv.gz")))
   saveRDS(tibble::tibble(asset = name, column = names(dict), definition = unname(dict)),
           file.path(CLEAN, paste0(name, ".dict.rds")))     # 03_document reads these
-  cat(sprintf("asset %-14s %d rows | %d cols | %d events (dup==0)\n",
-              name, nrow(df), ncol(df), if ("dup" %in% names(df)) sum(df$dup == 0) else nrow(df)))
+  ev <- if ("dup" %in% names(df)) sprintf(" | %d events (dup==0)", sum(df$dup == 0)) else ""
+  cat(sprintf("asset %-14s %d rows | %d cols%s\n", name, nrow(df), ncol(df), ev))
   invisible(df)
 }
 

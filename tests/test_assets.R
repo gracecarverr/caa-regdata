@@ -37,4 +37,13 @@ stopifnot("one row per facility"       = nrow(f) == dplyr::n_distinct(f$PGM_SYS_
 stopifnot("required spine columns"     = all(c("REGISTRY_ID","county_fips","AIR_POLLUTANT_CLASS_DESC",
                                                "prog_titlev","n_programs") %in% names(f)))
 cat(sprintf("facilities   PASS | %d facilities (one row each) | %d columns\n", nrow(f), ncol(f)))
+
+# Attainment: facility x year inside a PM2.5 NAA (treatment layer).
+a <- readr::read_csv(file.path(CLEAN, "attainment.csv.gz"),
+  col_types = cols(PGM_SYS_ID = col_character(), year = col_integer(), .default = col_guess()), show_col_types = FALSE)
+stopifnot("attainment status is N/M"        = all(a$status %in% c("N", "M")))
+stopifnot("attainment required columns"     = all(c("composid","area_name","status","imputed") %in% names(a)))
+stopifnot("one row per facility-year-area"  = nrow(a) == nrow(dplyr::distinct(a, PGM_SYS_ID, year, composid)))
+cat(sprintf("attainment   PASS | %d facility-years | %d facilities in a NAA | %d areas\n",
+            nrow(a), dplyr::n_distinct(a$PGM_SYS_ID), dplyr::n_distinct(a$composid)))
 cat("\nall asset invariants passed\n")

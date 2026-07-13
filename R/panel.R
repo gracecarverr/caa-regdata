@@ -35,3 +35,24 @@ facility_year_panel <- function(facs, measures, years) {
     left_join(facs,   by = "PGM_SYS_ID") |>
     arrange(PGM_SYS_ID, year)
 }
+
+# Attach PM2.5 (2012) nonattainment treatment to a facility x year panel (needs latitude/longitude columns).
+#   Adds, from the attainment asset:
+#     pm25_status = N (nonattainment) / M (maintenance) / NA (not inside a PM2.5 NAA, or outside coverage)
+#     pm25_area   = NAA area name (NA if none)
+#     naa_pm25    = 1 nonattainment / 0 maintenance-or-attainment /
+#                   NA outside the PM2.5 coverage window or for an unplaceable facility (no coordinate).
+#   Coverage window is read from the asset itself (PM2.5 2012 std only).
+attach_pm25_attainment <- function(panel) {
+  att   <- read_csv(file.path(CLEAN, "attainment.csv.gz"),
+                    col_select = c(PGM_SYS_ID, year, status, area_name),
+                    col_types = cols(PGM_SYS_ID = col_character(), year = col_integer(), .default = col_guess()),
+                    show_col_types = FALSE)
+  cover <- range(att$year)                                  # PM2.5 snapshot window
+  panel |>
+    left_join(transmute(att, PGM_SYS_ID, year, pm25_status = status, pm25_area = area_name),
+              by = c("PGM_SYS_ID", "year")) |>
+    mutate(naa_pm25 = if_else(!(year >= cover[1] & year <= cover[2]) | is.na(latitude) | is.na(longitude),
+                              NA_integer_,
+                              if_else(is.na(pm25_status), 0L, as.integer(pm25_status == "N"))))
+}

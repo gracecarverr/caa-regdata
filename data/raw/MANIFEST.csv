@@ -10,3 +10,13 @@ icis_air,ICIS-AIR_TITLEV_CERTS.csv,https://echo.epa.gov/files/echodownloads/ICIS
 icis_air,ICIS-AIR_VIOLATION_HISTORY.csv,https://echo.epa.gov/files/echodownloads/ICIS-AIR_downloads.zip,2026-07-13T12:04:06-0400,3d9e9435fe13889abbcb7b29c6610144
 frs,FRS_FACILITIES.csv,https://www.epa.gov/frs/epa-state-combined-csv-download-files,2026-07-13T12:04:06-0400,bd3df511a490f9109fa1320f26cd780b
 us_counties,us_counties.shp,https://www.census.gov/geographies/mapping-files/time-series/geo/cartographic-boundary.html,2026-07-13T12:04:07-0400,8a86522e3af171edeeacc5437db032d1
+greenbook,2016.dbf,https://www.epa.gov/green-book,2026-07-13T14:17:32-0400,8acf9a938dc29df28d22f2a07bcf2878
+greenbook,2017.dbf,https://www.epa.gov/green-book,2026-07-13T14:17:32-0400,5a5c894781fedfef3f9ae5c74bb7c157
+greenbook,2018.dbf,https://www.epa.gov/green-book,2026-07-13T14:17:32-0400,5a5c894781fedfef3f9ae5c74bb7c157
+greenbook,2019.dbf,https://www.epa.gov/green-book,2026-07-13T14:17:32-0400,1b5e0948919142f4e63f7b3288c832df
+greenbook,2020.dbf,https://www.epa.gov/green-book,2026-07-13T14:17:32-0400,1b5e0948919142f4e63f7b3288c832df
+greenbook,2021.dbf,https://www.epa.gov/green-book,2026-07-13T14:17:32-0400,897f045d5982518da6c8ad33aa978b4a
+greenbook,2022.dbf,https://www.epa.gov/green-book,2026-07-13T14:17:32-0400,897f045d5982518da6c8ad33aa978b4a
+greenbook,2024.dbf,https://www.epa.gov/green-book,2026-07-13T14:17:32-0400,cebdab6ca04d3f5bfce81eae7c349ad5
+greenbook,2025.dbf,https://www.epa.gov/green-book,2026-07-13T14:17:32-0400,7966f8354d9f532dbe3adde5f9a1dd76
+greenbook,PM25_2012Std_NAA.shp,https://www.epa.gov/green-book,2026-07-13T14:17:32-0400,ab5d15d229fc896fb1250cf328591bfe
