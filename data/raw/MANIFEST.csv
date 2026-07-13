@@ -1,2 +1,12 @@
 source,file,url,downloaded_at,md5
-icis_air,ICIS-AIR_VIOLATION_HISTORY.csv,https://echo.epa.gov/files/echodownloads/ICIS-AIR_downloads.zip,2026-07-13T10:58:45-0400,3d9e9435fe13889abbcb7b29c6610144
+icis_air,ICIS-AIR_FACILITIES.csv,https://echo.epa.gov/files/echodownloads/ICIS-AIR_downloads.zip,2026-07-13T12:04:03-0400,0fad81e90013f80fb118e5aa1975d7b7
+icis_air,ICIS-AIR_FCES_PCES.csv,https://echo.epa.gov/files/echodownloads/ICIS-AIR_downloads.zip,2026-07-13T12:04:03-0400,6f29e57f45170488da1df40c50ea099b
+icis_air,ICIS-AIR_FORMAL_ACTIONS.csv,https://echo.epa.gov/files/echodownloads/ICIS-AIR_downloads.zip,2026-07-13T12:04:04-0400,2703535bac790b446a0b8a81e94d576e
+icis_air,ICIS-AIR_INFORMAL_ACTIONS.csv,https://echo.epa.gov/files/echodownloads/ICIS-AIR_downloads.zip,2026-07-13T12:04:04-0400,3354d510d349e794c0f75f2edbfc6297
+icis_air,ICIS-AIR_POLLUTANTS.csv,https://echo.epa.gov/files/echodownloads/ICIS-AIR_downloads.zip,2026-07-13T12:04:04-0400,acd41cdd0a2a52fe4754a7b8fbf70d99
+icis_air,ICIS-AIR_PROGRAMS.csv,https://echo.epa.gov/files/echodownloads/ICIS-AIR_downloads.zip,2026-07-13T12:04:05-0400,0ec2e4d01917691320113b532a478195
+icis_air,ICIS-AIR_STACK_TESTS.csv,https://echo.epa.gov/files/echodownloads/ICIS-AIR_downloads.zip,2026-07-13T12:04:05-0400,db3cf1ac0cf4676407758ee4d130aa4b
+icis_air,ICIS-AIR_TITLEV_CERTS.csv,https://echo.epa.gov/files/echodownloads/ICIS-AIR_downloads.zip,2026-07-13T12:04:05-0400,cd6ca8c1d56103a94ead46bdbe4b2fcf
+icis_air,ICIS-AIR_VIOLATION_HISTORY.csv,https://echo.epa.gov/files/echodownloads/ICIS-AIR_downloads.zip,2026-07-13T12:04:06-0400,3d9e9435fe13889abbcb7b29c6610144
+frs,FRS_FACILITIES.csv,https://www.epa.gov/frs/epa-state-combined-csv-download-files,2026-07-13T12:04:06-0400,bd3df511a490f9109fa1320f26cd780b
+us_counties,us_counties.shp,https://www.census.gov/geographies/mapping-files/time-series/geo/cartographic-boundary.html,2026-07-13T12:04:07-0400,8a86522e3af171edeeacc5437db032d1
