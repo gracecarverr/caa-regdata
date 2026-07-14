@@ -4,14 +4,16 @@
 #   interval-based HPV status, formal penalties, the facility spine, and PM2.5 (2012) nonattainment
 #   TREATMENT attached.
 #   in : data/panels/{spine,attainment}.csv.gz  +  data/clean/{inspections,violations,formal_actions,informal_actions,certs,stacktests}.csv.gz
-#   out: data/panels/electric.csv.gz   (81 columns = the 77-column detail panel + 4 PM2.5 treatment columns)
+#   out: data/panels/electric.csv.gz   (97 columns = 77 detail + obs_source + 5 spell + 10 year-varying wayback status + 4 PM2.5 treatment)
 #   Standalone: the panel recipe is spelled out inline (no shared helpers, no config). The recipe mirrors
 #   the CAA_Project panel builder; this is the major/synthetic-minor recipe restricted to electric utilities
 #   plus the attainment attach.
 #
-#   COUNT SEMANTICS (every n_* is EVENT-level, dup == 0, unless the name ends in _raw):
-#     0   = the facility-year was OBSERVED (>=1 event of some measure) but had none of THIS measure -- a true zero.
-#     NA  = the facility-year was NOT observed at all; we cannot assert a zero (balanced rectangle only).
+#   COUNT SEMANTICS (every n_* is EVENT-level, dup == 0, unless the name ends in _raw). obs_source records why:
+#     0   = the facility-year is OBSERVED but had none of THIS measure -- a true zero. Observed via either
+#           obs_source=="event" (>=1 event of some measure) OR obs_source=="operating" (facility OPERATING in the
+#           wayback snapshot that year, operating==1, even with zero events -- a known structural zero).
+#     NA  = obs_source=="unobserved": no event AND not known-operating (incl. closed/CLS & pre-2015) -- no zero asserted.
 #   _raw columns count EVERY row incl. duplicate artifacts (n_certs_raw ~5x, n_enforcement_raw ~1.6x n_*).
 # =========================================================================================================
 library(readr); library(dplyr); library(tidyr); library(lubridate)
@@ -181,12 +183,32 @@ attach_pm25_attainment <- function(panel) {
   panel
 }
 
+# ---- historical operating status + program-active flags from the ICIS-AIR wayback snapshots -------------
+#   Year-varying (facility x year), 2015-2025 only; pre-2015 and unobserved facility-years stay NA (we cannot
+#   assert a status where no snapshot exists). op_status_code = raw ICIS code; operating = code in {OPR,TMP,SEA}.
+attach_wayback <- function(panel, ids) {
+  fs <- read_csv(file.path(CLEAN, "wayback_facility_status.csv.gz"),
+                 col_select = c(PGM_SYS_ID, year, op_status_code, operating),
+                 col_types = cols(PGM_SYS_ID = col_character(), year = col_integer(),
+                                  op_status_code = col_character(), operating = col_integer()),
+                 show_col_types = FALSE) |> filter(PGM_SYS_ID %in% ids, year %in% YEARS)
+  ps <- read_csv(file.path(CLEAN, "wayback_program_status.csv.gz"),
+                 col_types = cols(PGM_SYS_ID = col_character(), year = col_integer(), .default = col_integer()),
+                 show_col_types = FALSE) |> filter(PGM_SYS_ID %in% ids, year %in% YEARS)
+  panel |> left_join(fs, by = c("PGM_SYS_ID","year")) |> left_join(ps, by = c("PGM_SYS_ID","year"))
+}
+
 # canonical column order (facility attributes come straight from the spine)
 ATTR_COLS  <- c("REGISTRY_ID","FACILITY_NAME","STREET_ADDRESS","CITY","COUNTY_NAME","county_fips","STATE",
                 "ZIP_CODE","EPA_REGION","latitude","longitude","NAICS_CODES","SIC_CODES","FACILITY_TYPE_CODE",
-                "facility_type","AIR_POLLUTANT_CLASS_DESC","AIR_OPERATING_STATUS_DESC",
+                "facility_type","AIR_POLLUTANT_CLASS_DESC","op_status_current_desc",
+                "entered_year","exited_year","exit_source","left_censored","right_censored",
                 "emits_voc","emits_pm","emits_co","emits_nox","emits_so2","emits_hap",
                 "prog_sip","prog_titlev","prog_nsps","prog_mact","prog_neshap","prog_fesop","prog_nsr","prog_psd","n_programs")
+# year-varying wayback status block (2015-2025; NA elsewhere)
+WAYBACK_COLS <- c("op_status_code","operating",
+                  "prog_sip_active","prog_titlev_active","prog_nsps_active","prog_mact_active",
+                  "prog_neshap_active","prog_fesop_active","prog_nsr_active","prog_psd_active")
 PANEL_COLS <- c("PGM_SYS_ID","year",
                 "n_inspections","n_fce","n_pce","n_insp_epa","n_insp_state","n_insp_local",
                 "n_violations","n_hpv","n_frv","n_viol_sip","n_viol_titlev","n_viol_nsps","n_viol_mact",
@@ -194,9 +216,31 @@ PANEL_COLS <- c("PGM_SYS_ID","year",
                 "n_enforcement","n_enforcement_raw","n_formal","n_informal","n_penalty_action","n_warning_letter",
                 "n_admin_np","n_civil_judicial","n_nov","n_admin_order","n_enf_epa","n_enf_state","n_enf_local",
                 "n_certs","n_certs_raw","n_certs_deviation","n_stack_tests","n_stack_pass","n_stack_fail",
-                "any_inspections","any_violations","any_enforcement","any_certs",
-                ATTR_COLS, "hpv_active","hpv_active_1mo","penalty_amount",
+                "any_inspections","any_violations","any_enforcement","any_certs","obs_source",
+                ATTR_COLS, WAYBACK_COLS, "hpv_active","hpv_active_1mo","penalty_amount",
                 "pm25_status","pm25_area","naa_pm25_2012","any_naa")
+
+# count/flag block that gets known-zero coding (all EVENT-derived measures + interval HPV flags; NOT penalty)
+COUNT_COLS <- c("n_inspections","n_fce","n_pce","n_insp_epa","n_insp_state","n_insp_local",
+                "n_violations","n_hpv","n_frv","n_viol_sip","n_viol_titlev","n_viol_nsps","n_viol_mact",
+                "n_viol_fesop","n_viol_epa","n_viol_state","n_viol_local",
+                "n_enforcement","n_enforcement_raw","n_formal","n_informal","n_penalty_action","n_warning_letter",
+                "n_admin_np","n_civil_judicial","n_nov","n_admin_order","n_enf_epa","n_enf_state","n_enf_local",
+                "n_certs","n_certs_raw","n_certs_deviation","n_stack_tests","n_stack_pass","n_stack_fail",
+                "any_inspections","any_violations","any_enforcement","any_certs","hpv_active","hpv_active_1mo")
+
+# ---- known-zero coding: a facility-year OPERATING in the wayback snapshot (operating==1) but with no events is
+#   a TRUE structural zero, not "unobserved" -> fill NA->0 across COUNT_COLS for those rows. obs_source records
+#   provenance: "event" (>=1 event, original semantics), "operating" (new wayback-based zeros), "unobserved" (NA).
+#   Must run AFTER attach_wayback (needs `operating`) and after attach_hpv_status (so hpv_active exists).
+code_known_zeros <- function(panel) {
+  had_event <- !is.na(panel$n_inspections)                 # a count row existed => >=1 event of some measure
+  op        <- !is.na(panel$operating) & panel$operating == 1L
+  fill      <- op & !had_event                             # known-operating, zero-event -> structural zeros
+  panel |>
+    mutate(obs_source = if_else(had_event, "event", if_else(op, "operating", "unobserved")),
+           across(all_of(COUNT_COLS), \(x) if_else(fill, coalesce(x, 0L), x)))
+}
 
 # balanced facility x year panel with the full detail block for facility frame `facs`.
 facility_year_panel <- function(facs) {
@@ -211,7 +255,7 @@ facility_year_panel <- function(facs) {
   for (m in c("inspections", "violations", "enforcement", "certs"))        # any_* flags (NA-safe)
     panel[[paste0("any_", m)]] <- as.integer(panel[[paste0("n_", m)]] > 0)
   panel |> left_join(facs, by = "PGM_SYS_ID") |>
-    attach_hpv_status(ids) |> attach_penalty(ids)         # cols 1-77; treatment attached after (electric only)
+    attach_hpv_status(ids) |> attach_penalty(ids) |> attach_wayback(ids) |> code_known_zeros()  # treatment attached after (electric only)
 }
 
 # facilities in scope: CONUS major / synthetic-minor electric utilities (NAICS 2211 or SIC 4911)

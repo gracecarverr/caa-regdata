@@ -1,7 +1,7 @@
 # =========================================================================================================
 # scripts/04_panels/00_spine.R -- build the FACILITY SPINE used by the panels (a derived construction, not a
 #   raw-source clean asset). One row per ever-active facility, with coordinates, county, and static profiles.
-#   in : data/clean/{inspections,violations,formal_actions,informal_actions,certs}.csv.gz  (active set)
+#   in : data/clean/{inspections,violations,formal_actions,informal_actions,certs,stacktests}.csv.gz  (active set)
 #        data/clean/{facilities,pollutants,programs}.csv.gz  +  data/raw/frs/FRS_FACILITIES.csv
 #        data/raw/us_counties/us_counties.shp
 #   out: data/panels/spine.csv.gz
@@ -13,8 +13,8 @@ FACILITY_TYPE <- c(POF = "Privately owned", COR = "Corporation", CNG = "County g
                    CTG = "City government", FDF = "Federal facility", STF = "State facility",
                    DIS = "District", NON = "Non-classified")
 
-# active universe = facilities with >= 1 event (in YEARS) across the five event assets
-active <- unique(unlist(lapply(c("inspections","violations","formal_actions","informal_actions","certs"), function(a)
+# active universe = facilities with >= 1 event (in YEARS) across the six event assets
+active <- unique(unlist(lapply(c("inspections","violations","formal_actions","informal_actions","certs","stacktests"), function(a)
   read_csv(file.path(CLEAN, paste0(a, ".csv.gz")), col_select = c(PGM_SYS_ID, year),
            col_types = cols(PGM_SYS_ID = col_character(), year = col_integer()), show_col_types = FALSE) |>
     filter(year %in% YEARS) |> pull(PGM_SYS_ID))))
@@ -22,7 +22,8 @@ active <- unique(unlist(lapply(c("inspections","violations","formal_actions","in
 attrs <- read_csv(file.path(CLEAN, "facilities.csv.gz"),
   col_types = cols(.default = col_character()), show_col_types = FALSE) |>
   select(PGM_SYS_ID, REGISTRY_ID, FACILITY_NAME, STREET_ADDRESS, CITY, COUNTY_NAME, STATE, ZIP_CODE, EPA_REGION,
-         NAICS_CODES, SIC_CODES, FACILITY_TYPE_CODE, AIR_POLLUTANT_CLASS_DESC, AIR_OPERATING_STATUS_DESC) |>
+         NAICS_CODES, SIC_CODES, FACILITY_TYPE_CODE, AIR_POLLUTANT_CLASS_DESC,
+         op_status_current_desc = AIR_OPERATING_STATUS_DESC) |>   # CURRENT snapshot only; year-varying status lives in the panels
   filter(PGM_SYS_ID %in% active) |> distinct(PGM_SYS_ID, .keep_all = TRUE)
 
 frs <- read_csv(file.path(RAW, "frs", "FRS_FACILITIES.csv"),
@@ -61,10 +62,18 @@ progs <- read_csv(file.path(CLEAN, "programs.csv.gz"),
     prog_nsr = as.integer(any(PROGRAM_CODE == "CAANSR")), prog_psd = as.integer(any(PROGRAM_CODE == "CAAPSD")),
     n_programs = n_distinct(PROGRAM_CODE), .groups = "drop")
 
+# reconstructed entry/exit spell summary from the ICIS-AIR wayback snapshots (built in scripts/02_clean/18_).
+# Time-INVARIANT per facility (one row); the year-varying operating status itself lives in the panels.
+spells <- read_csv(file.path(CLEAN, "wayback_facility_spells.csv.gz"),
+  col_types = cols(PGM_SYS_ID = col_character(), entered_year = col_integer(), exited_year = col_integer(),
+                   exit_source = col_character(), left_censored = col_integer(), right_censored = col_integer()),
+  show_col_types = FALSE) |> filter(PGM_SYS_ID %in% active)
+
 flags <- c("emits_voc","emits_pm","emits_co","emits_nox","emits_so2","emits_hap",
            "prog_sip","prog_titlev","prog_nsps","prog_mact","prog_neshap","prog_fesop","prog_nsr","prog_psd","n_programs")
 spine <- fac |> left_join(fac_fips, by = "PGM_SYS_ID") |>
   left_join(prof, by = "PGM_SYS_ID") |> left_join(progs, by = "PGM_SYS_ID") |>
+  left_join(spells, by = "PGM_SYS_ID") |>
   mutate(facility_type = unname(FACILITY_TYPE[FACILITY_TYPE_CODE]),
          across(all_of(flags), \(x) as.integer(coalesce(x, 0L)))) |>
   relocate(county_fips, .after = COUNTY_NAME) |>
