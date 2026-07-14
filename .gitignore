@@ -29,5 +29,10 @@ docs/_site/
 docs/.quarto/
 /.quarto/
 
+# ---- Local scratch ----------------------------------------------------------
+# Ad-hoc preview helper: dumps the first N rows of each built panel to plain CSV for eyeballing.
+scripts/preview_panels.R
+data/panels/_preview/
+
 # ---- OS ---------------------------------------------------------------------
 .DS_Store
