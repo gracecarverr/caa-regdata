@@ -10,9 +10,9 @@ panel, the PM2.5 attainment treatment (`01_attainment.R` → `data/panels/attain
 
 | script | panel | cols | facilities |
 |---|---|---|---|
-| [`universe.R`](universe.R) | `data/panels/universe.csv.gz` | 77 | all ever-active facilities (contiguous US) |
-| [`major_synmin.R`](major_synmin.R) | `data/panels/major_synmin.csv.gz` | 77 | + Major / Synthetic Minor emissions class |
-| [`electric.R`](electric.R) | `data/panels/electric.csv.gz` | 81 | + electric utilities (NAICS 2211 / SIC 4911), with PM2.5 attainment treatment |
+| [`universe.R`](universe.R) | `data/panels/universe.csv.gz` | 93 | all ever-active facilities (contiguous US) |
+| [`major_synmin.R`](major_synmin.R) | `data/panels/major_synmin.csv.gz` | 93 | + Major / Synthetic Minor emissions class |
+| [`electric.R`](electric.R) | `data/panels/electric.csv.gz` | 97 | + electric utilities (NAICS 2211 / SIC 4911), with PM2.5 attainment treatment |
 
 ## Shape (all sample panels)
 
@@ -32,8 +32,16 @@ in order:
 - **Stack tests** `n_stack_tests`, `n_stack_pass`, `n_stack_fail` (Pending/Incomplete/N-A uncounted).
 - **Any-flags** `any_inspections` / `any_violations` / `any_enforcement` / `any_certs` — `1` if the
   matching `n_*` > 0, else `0` (NA where the count is NA).
-- **Facility attributes** — the full facility spine (identity, geography, industry, class, operating
-  status, `emits_*`, `prog_*`, `n_programs`).
+- **Observation source** `obs_source` — why a facility-year's counts are `0` vs `NA`: `event` (≥ 1 event of
+  some measure that year — original semantics), `operating` (no event, but the facility is OPERATING in that
+  year's wayback snapshot, so a zero-event year is a **true structural zero**), `unobserved` (neither → `NA`).
+- **Facility attributes** — the full facility spine (identity, geography, industry, class, `op_status_current_desc`
+  = *current* snapshot, `emits_*`, `prog_*`, `n_programs`) plus the reconstructed entry/exit spell summary
+  `entered_year` / `exited_year` / `exit_source` / `left_censored` / `right_censored` (time-invariant per facility).
+- **Wayback status** (year-varying) `op_status_code` (raw ICIS code) + `operating` (1 if code ∈ {OPR,TMP,SEA})
+  and `prog_{sip,titlev,nsps,mact,neshap,fesop,nsr,psd}_active` — historical operating & program status from the
+  11 annual ICIS-AIR wayback snapshots. **Populated 2015–2025 only; `NA` for 2005–2014** (no snapshot exists —
+  we cannot assert a status). See `docs/panel_construction_decisions.md` §B.7 / F7.
 - **HPV status** `hpv_active`, `hpv_active_1mo` — interval-based (in HPV status during any part of the
   year / for > 30 days), from the HPV spell, *distinct from* the recorded-year count `n_hpv`.
 - **Penalty** `penalty_amount` — sum of formal-action penalties that facility-year (0 / none → NA).
@@ -43,8 +51,17 @@ Every `n_*` is **event-level** (`dup == 0`) unless the name ends in `_raw`.
 
 ### Count meaning
 
-- `0` — the facility-year was **observed** (≥ 1 event of some measure) but had none of *this* measure — a true zero.
-- `NA` — the facility-year was **not observed** at all; we cannot assert a zero.
+A facility-year is **observed** (so a zero-count is a *true* zero) if `obs_source ∈ {event, operating}`:
+
+- `0` — observed but had none of *this* measure. Observed either because it had ≥ 1 event of some measure
+  (`obs_source == "event"`) **or** because the facility is OPERATING in that year's wayback snapshot
+  (`operating == 1` → `obs_source == "operating"`), even with zero events.
+- `NA` — `obs_source == "unobserved"`: no event **and** not known-operating (includes closed/`CLS` years and
+  all pre-2015 years, where no snapshot exists). We cannot assert a zero.
+
+The `operating` channel is what lets us code known-zeros for facilities that exist but had a quiet year;
+it only ever turns an `NA` into a `0` (never overwrites a positive count), and `penalty_amount` is exempt
+(it keeps its own `0`/none → `NA` rule). Recover the original event-only semantics with `obs_source == "event"`.
 
 ### Treatment (electric panel)
 
