@@ -75,6 +75,11 @@
 - **Question:** Panel is keyed on `PGM_SYS_ID` (regulated facility) carrying `REGISTRY_ID` (physical site). Many `PGM_SYS_ID`s map to one `REGISTRY_ID` (ownership/permit restructuring) `[D1]`. Do we ever collapse to the physical site?
 - **Lean:** Keep `PGM_SYS_ID` as the panel unit (regulation attaches to the permit); carry `REGISTRY_ID` for cross-system joins `[D3]`. Flag site-collapse as a modeling choice, not a data default.
 
+**D-C4 · Are wayback `dropout` exits real closures or extract artifacts?** `[F7, N8]`
+- **Question:** `exit_source == "dropout"` (**11,801** facilities — last seen operating, then gone from later snapshots) is deliberately not merged into confirmed `cls` (**18,802**) because a disappearance can be an ICIS extract artifact rather than a closure (F7). Can we classify which is which? The natural test — post-vanish regulatory activity — **fails**: only 1 of the 11,801 dropouts appears in any of the six event assets (they are ~disjoint from the event universe, N8), so events give no signal for this group.
+- **Options:** (a) leave `dropout` as an unresolved catch-all; scope claims to `cls` when a clean exit is needed. (b) Probe independent, year-stamped activity channels that don't require a regulatory *event*: programs `UPDATED_DATE` (a stamp after `exited_year` = live registration) and `POLL_RPT_COMBINED_EMISSIONS` (emissions reporting). (c) Cross-check against a later ECHO/ICIS pull to see which "dropouts" reappear.
+- **Lean:** (b) as a diagnostic to *bound* the artifact share, not to reclassify individual rows in v1; keep `cls`/`dropout` distinct in the meantime. Untested — flagged, not run.
+
 ### 1.4 What goes in the panel (measures & covariates)
 
 **D-D1 · Outcomes & double-counting** `[B1, B2]`
