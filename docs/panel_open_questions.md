@@ -80,6 +80,11 @@
 - **Options:** (a) leave `dropout` as an unresolved catch-all; scope claims to `cls` when a clean exit is needed. (b) Probe independent, year-stamped activity channels that don't require a regulatory *event*: programs `UPDATED_DATE` (a stamp after `exited_year` = live registration) and `POLL_RPT_COMBINED_EMISSIONS` (emissions reporting). (c) Cross-check against a later ECHO/ICIS pull to see which "dropouts" reappear.
 - **Lean:** (b) as a diagnostic to *bound* the artifact share, not to reclassify individual rows in v1; keep `cls`/`dropout` distinct in the meantime. Untested — flagged, not run.
 
+**D-C5 · Should `prog_*_active` match the facility `operating` status convention?** `[N11]`
+- **Question:** `prog_X_active` (19_) is a *blacklist* — active for every status except `CLS`, so `PLN` (planned) and `CNS` (under construction) count as active. The facility `operating` flag (17_) is a *whitelist* — `1` only for `OPR/TMP/SEA`. So a facility in `PLN` reads `operating = 0` but `prog_X_active = 1` the same year. Magnitude of the divergent statuses: `PLN` 22,340 + `CNS` 13,910 + `NER/NED/NES/LDF` 1,717 in-group program rows (~0.98% of kept). The NA→active branch is currently vacuous (0 rows).
+- **Options:** (a) keep the blacklist — read `prog_X_active` as *subject-to/enrolled under* program X (a permit obligation can attach before the plant operates), and document that it deliberately differs from `operating`. (b) Switch `19_` to the `17_` whitelist (`OPR/TMP/SEA` only) so a program is "active" only while the facility is operating — the two flags then agree.
+- **Lean:** (a) for now — the two flags answer genuinely different questions (enrollment vs operation); reconciling would conflate them. Revisit only if a spec needs "operating *and* enrolled" as a single indicator, which can instead be built as `operating == 1 & prog_X_active == 1` at use time.
+
 ### 1.4 What goes in the panel (measures & covariates)
 
 **D-D1 · Outcomes & double-counting** `[B1, B2]`
