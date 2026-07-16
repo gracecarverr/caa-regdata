@@ -5,8 +5,12 @@ published data dictionaries. Each entry lists the source CSV, a one-line descrip
 with its type/length (where EPA publishes them) and definition.
 
 **Sources:** EPA ECHO data downloads — ICIS-Air, AFS (the pre-2014 Air Facility System), and the CAA
-Compliance Pipeline. See <https://echo.epa.gov/tools/data-downloads/>. Source PDFs are in
-`docs/data_dictionaries/`; regenerate this file with `python3 scripts/build_data_dictionary.py`.
+Compliance Pipeline. See <https://echo.epa.gov/tools/data-downloads/>.
+
+> **Note:** this file was ported from the predecessor CAA_Project, where it was generated from EPA's source
+> PDF dictionaries. The generator script and source PDFs are **not yet ported into this repo** — until they
+> are, treat this dictionary as a maintained-by-hand reference (field names/types/lengths are exact as
+> transcribed from EPA). Per-asset counts and institutional caveats live in `data/processed/README.md`.
 
 > A few descriptions inherit run-together words (missing spaces) from the source PDFs; field names,
 > types, and lengths are exact.

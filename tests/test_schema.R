@@ -4,7 +4,7 @@
 #   Standalone: no shared helpers, no config.
 # =========================================================================================================
 library(readr); library(dplyr)
-CLEAN <- here::here("data/clean")
+CLEAN <- here::here("data/processed")
 
 # TODO (validate phase), per asset:
 #   - required columns present; keys non-missing

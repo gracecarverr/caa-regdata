@@ -3,7 +3,7 @@
 #   Cleaners keep every column and every row, so we only assert the flags behave.
 # =========================================================================================================
 library(readr); library(dplyr)
-CLEAN <- here::here("data/clean")
+CLEAN <- here::here("data/processed")
 
 # event sources carry dup / dup_exact
 events <- c("inspections","violations","formal_actions","informal_actions","certs","stacktests")
