@@ -7,12 +7,18 @@ data/raw/*
 # Built panels are rebuilt from code.
 data/panels/*
 !data/panels/.gitkeep
-# Clean assets + their generated dictionaries are rebuilt from code (force-add lookups case by case).
-data/clean/*
-!data/clean/.gitkeep
+# Processed (clean) assets + their generated dictionaries are rebuilt from code (force-add lookups case by case).
+data/processed/*
+!data/processed/.gitkeep
 
-# docs/index.html is GENERATED (by scripts/03_build_site.R) but tracked on purpose, so GitHub Pages
-# serves it directly with no build step. Regenerate with run_all.R.
+# docs/index.html is GENERATED (by code/diagnostics/build_site.R) but tracked on purpose, so
+# GitHub Pages serves it directly with no build step. Regenerate with code/RUN_ALL.R.
+
+# ---- output -----------------------------------------------------------------
+# sessionInfo.txt is a volatile per-run record (rewritten every run) -- don't track it.
+# The generated LaTeX tables under output/tables/ are left untracked by default; force-add if you want
+# to commit a snapshot alongside a paper.
+output/sessionInfo.txt
 
 # ---- R / renv ---------------------------------------------------------------
 renv/library/
@@ -31,7 +37,7 @@ docs/.quarto/
 
 # ---- Local scratch ----------------------------------------------------------
 # Ad-hoc preview helper: dumps the first N rows of each built panel to plain CSV for eyeballing.
-scripts/preview_panels.R
+code/diagnostics/preview_panels.R
 data/panels/_preview/
 
 # ---- OS ---------------------------------------------------------------------

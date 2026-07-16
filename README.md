@@ -1,83 +1,108 @@
 # caa-regdata
 
-Regulatory data infrastructure for EPA stationary-source air-pollution enforcement.
-A reproducible pipeline that **downloads** raw EPA data, **cleans** each source into a
-one-table-per-source data asset, **summarizes** the assets in a static site, and **builds**
-sample facility × year panels.
+Regulatory data infrastructure for **EPA stationary-source air-pollution enforcement** under the Clean Air
+Act. A reproducible pipeline that **downloads** raw EPA data, **cleans** each source into a
+one-table-per-source asset, **builds** facility × year panels (with attainment treatment), and **documents**
+everything in a generated static site.
 
-> **Status: scaffold.** Structure and conventions are in place; the pipeline stages are
-> stubs to be filled in dataset by dataset. See *Roadmap* below.
+## What this is for
+
+Building facility × year panels of regulatory activity — inspections, violations, enforcement, Title V
+certifications, stack tests, emissions — for empirical work on enforcement and compliance. The `electric`
+panel pairs regulatory activity with **PM2.5 (2012) nonattainment treatment**; the Wayback reconstruction
+recovers year-varying operating status and facility entry/exit that the current EPA download lacks. See
+[`briefs/00_institutional_overview.md`](briefs/00_institutional_overview.md) for the institutional setting.
 
 ## Reproduce
 
 ```r
 # once, to install pinned package versions:
 install.packages("renv"); renv::restore()
-
-# full rebuild from raw (downloads, cleans, documents, builds panels):
-Rscript run_all.R
+```
+```sh
+# full rebuild from raw (download → clean → panels → docs):
+Rscript code/RUN_ALL.R
 
 # skip the slow download step (reuse whatever is in data/raw/):
-DOWNLOAD=false Rscript run_all.R
+DOWNLOAD=false Rscript code/RUN_ALL.R
+
+# also skip regenerating the docs site:
+DOWNLOAD=false SKIP_SITE=true Rscript code/RUN_ALL.R
 ```
 
-The documentation site (`docs/index.html`) is regenerated as part of `run_all.R` (the build-site step)
-and committed, so GitHub Pages serves it directly with no build step.
+The documentation site (`docs/index.html`) is regenerated as part of `RUN_ALL.R` and committed, so GitHub
+Pages serves it directly with no build step.
 
 ## Layout
 
 ```
 caa-regdata/
-├── run_all.R           one command: sources the numbered pipeline in order
-├── scripts/            the pipeline — self-contained scripts (no shared R/ layer, no config)
-│   ├── 01_download.R   raw sources into data/raw/ (immutable) + provenance
-│   ├── 02_clean/       one bare-bones cleaner per raw table (numbered)
-│   ├── 03_build_site.R writes docs/index.html summary tables from data/clean/
-│   └── 04_panels/      facility spine (00), attainment treatment (01), then sample panels
+├── code/                the pipeline (run with code/RUN_ALL.R)
+│   ├── 00_setup/        package check, options, session record
+│   ├── 01_data_download/  raw sources -> data/raw/ (immutable) + MANIFEST provenance
+│   ├── 02_cleaning/     one bare-bones clean asset per raw table -> data/processed/
+│   │                      (functions + parameters + a wayback/ subfolder for the bespoke cleaners)
+│   ├── 03_panel_building/  facility spine + attainment treatment + the sample panels -> data/panels/
+│   │                      (build_panel() functions + PANEL_SPECS parameters)
+│   └── diagnostics/     NOT part of the build: panel summaries, site generation, previews, one-offs
 ├── data/
-│   ├── raw/            immutable downloads (gitignored) + MANIFEST.csv (provenance)
-│   ├── clean/          one clean asset per raw table (gitignored, rebuilt from code)
-│   └── panels/         spine + attainment + sample panels (gitignored, rebuilt from code)
-├── docs/               committed static site (index.html) + nuances.md / decisions.md
-└── tests/              invariant checks
+│   ├── raw/             immutable downloads (gitignored) + MANIFEST.csv (provenance)
+│   ├── processed/       one clean asset per raw table (gitignored, rebuilt from code)
+│   └── panels/          spine + attainment + sample panels (gitignored, rebuilt from code)
+├── briefs/              institutional overview + construction-decision & open-question briefs
+├── docs/                generated static site (index.html) + data_dictionary.md
+├── output/             generated tables/figures (e.g. panel-summary LaTeX) + sessionInfo.txt
+└── tests/              invariant checks on the built assets
 ```
 
-Every script is standalone: it hard-codes its own paths and constants and inlines whatever it needs,
-so it can be read and run on its own without chasing sourced helpers.
+Every folder has a `README.md`. Start with [`code/README.md`](code/README.md) for the pipeline and
+[`data/README.md`](data/README.md) for the data.
 
 ## Design principles
 
 - **Raw is immutable.** Nothing in `data/raw/` is ever edited; every asset rebuilds from code.
-- **One job per file.** One cleaner per raw table; cleaning keeps every column and every row (adds only
-  `date`/`year`/`dup`/`dup_exact`) and never does sample selection or aggregation (that lives in the
-  panel layer).
-- **Self-contained scripts.** No shared `R/` helper layer and no `config.yml`; each script hard-codes its
-  own paths and constants, so nothing is hidden behind a `source()`.
-- **Docs are generated from the data** (`03_build_site.R`), so they can't drift from it.
-- **Reproducible.** `renv` pins packages; `run_all.R` rebuilds everything from raw;
-  `data/raw/MANIFEST.csv` records source URLs, dates, and checksums; `tests/` assert invariants.
+- **Cleaning is lossless.** One clean asset per raw table, keeping every column and every row (adds only
+  `date`/`year`/`dup`/`dup_exact`). Sample selection, aggregation, and treatment live in the panel layer, so
+  the processed assets stay a faithful, auditable image of the raw data.
+- **Modular where it pays.** The two stages with heavy repetition (cleaning, panel building) are factored into
+  a small set of **functions** plus a **parameters** file listing what differs per source/panel, driven by a
+  thin loop. Genuinely one-off scripts (spine, attainment, the Wayback cleaners) stay explicit.
+- **Docs are generated from the data**, so they can't drift from it.
+- **Reproducible & deterministic.** `renv` pins packages; `RUN_ALL.R` rebuilds everything from raw;
+  `data/raw/MANIFEST.csv` records source URLs/dates/checksums; there is no stochastic step (so no seed);
+  `tests/` assert invariants.
+
+## Documentation map
+
+| you want… | look in |
+|-----------|---------|
+| to run the pipeline | [`code/README.md`](code/README.md), `code/RUN_ALL.R` |
+| the institutional setting (statute, data systems) | [`briefs/00_institutional_overview.md`](briefs/00_institutional_overview.md) |
+| **why** a construction choice was made | [`briefs/panel_construction_decisions.md`](briefs/panel_construction_decisions.md) |
+| what's still undecided | [`briefs/panel_open_questions.md`](briefs/panel_open_questions.md) |
+| column/field definitions | [`docs/data_dictionary.md`](docs/data_dictionary.md) |
+| what each data file is + caveats | the per-layer READMEs under [`data/`](data/README.md) |
 
 ## Data sources
 
 | Source | What | Acquisition |
-|---|---|---|
-| ICIS-Air (EPA ECHO) | facilities, inspections, violations, enforcement, Title V certs, stack tests, programs | bulk download |
-| FRS | facility coordinates / cross-system ids | bulk download |
-| EPA Green Book | attainment / nonattainment status | current shapefiles + **Wayback snapshots** for history (semi-manual) |
+|--------|------|-------------|
+| ICIS-Air (EPA ECHO) | facilities, inspections, violations, enforcement, Title V certs, stack tests, programs | bulk download (automated) |
+| ICIS-Air Wayback | 11 annual snapshots (2015–2025) → operating-status history & entry/exit | archived, staged manually |
+| AFS | legacy (pre-2001) actions, air program, HPV, historical compliance | staged manually |
+| FRS | facility coordinates / cross-system ids | staged manually |
+| EPA Green Book | PM2.5 (2012) attainment status — current shapefiles + Wayback snapshots for history | staged manually |
+| Combined emissions | facility emissions by pollutant × year | staged manually |
 
-> Caveat: attainment *history* is only recoverable from archived Green Book snapshots
-> (Wayback). That fetcher is assisted, not fully one-click — see `scripts/01_download.R`.
+> Only the ICIS-Air current bulk download is one-click; the Wayback snapshots and other sources are staged
+> into `data/raw/` by hand (see [`code/01_data_download/README.md`](code/01_data_download/README.md)).
 
-## Roadmap
+## Status
 
-- [x] Scaffold (structure, `run_all.R`, docs skeleton)
-- [x] Vertical slice: **violations** end-to-end (download → clean → test)
-- [x] Remaining cleaners + facilities spine
-- [x] Static site (`03_build_site.R`): per-asset summary tables; committed nuances / decisions
-- [x] Sample panels — standalone scripts in `scripts/04_panels/` (no configurable builder)
-- [x] Flatten to self-contained scripts (remove the `R/` helper layer and `config.yml`)
-- [x] Validation tests (`tests/test_assets.R`)
-- [x] Attainment (Green Book / Wayback) + treatment panel (`electric.R`) — PM2.5 (2012); ozone next
+Reorganized into the staged `code/` + `data/` + `briefs/` structure with per-folder and per-stage
+documentation. The pipeline builds end-to-end (ICIS-Air + AFS + emissions cleaners, facility spine, PM2.5
+attainment, and the universe / major_synmin / electric panels). Ozone/SO₂/lead attainment and the AFS↔ICIS
+crosswalk are future work — see [`briefs/panel_open_questions.md`](briefs/panel_open_questions.md).
 
 ## License
 
