@@ -1,0 +1,33 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Data-quality audit. Top block: internal-consistency checks run across all three panels; the value is the worst-case number of violating facility-years (all expected to be $0$). Bottom block: values that are correct but unexpected, worth knowing before use.}
+\label{tab:data_quality}
+\begin{tabular}{lr}
+\toprule
+Check / flag & Value \\
+\midrule
+\emph{Internal-consistency checks (rows violating; expect 0)} &  \\
+Agency split $=$ total (inspections, enforcement) & \checkmark\ 0 \\
+formal $+$ informal $=$ enforcement & \checkmark\ 0 \\
+FCE $+$ PCE $\leq$ inspections & \checkmark\ 0 \\
+stack pass $+$ fail $\leq$ tests & \checkmark\ 0 \\
+HPV $\leq$ violations & \checkmark\ 0 \\
+any negative count (any $n\_$ column) & \checkmark\ 0 \\
+penalty $> 0$ with no formal action & \checkmark\ 0 \\
+operating status present pre-2015 & \checkmark\ 0 \\
+exited\_year $<$ entered\_year & \checkmark\ 0 \\
+\emph{Flagged values to be aware of} &  \\
+Max stack tests in one facility-year & 2,609 \\
+Max inspections in one facility-year & 439 \\
+Min / max nonzero penalty (universe) & \$1 / \$64,500,000 \\
+\emph{hpv\_active}$=1$ with no violation record & 1,805 \\
+Universe facilities: class other/missing & 7,835 \\
+Universe facilities: planned / under constr. & 372 \\
+Most-frequent state (Major/SynMin, Universe) & OK (oil \& gas minors) \\
+\bottomrule
+\end{tabular}
+\\[2pt]
+{\footnotesize \emph{hpv\_active} with no violation record is \emph{expected} (N6): interval HPV status carries across years with no new determination, so a spell-year reads $1$ where the recorded-year violation count is \texttt{NA}. The stack-test and inspection maxima are extreme but not impossible (large multi-unit sources); inspect before using as covariates. \$1 penalties are nominal/placeholder amounts.}
+\end{table}
+

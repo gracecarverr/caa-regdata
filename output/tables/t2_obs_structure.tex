@@ -1,0 +1,20 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Observation structure: facility-years by \emph{obs\_source} within each era. Before 2015 no wayback snapshot exists, so a facility-year is only ever \emph{event} (an observed regulatory event) or \emph{unobserved} (\texttt{NA}); the wayback \emph{operating} zero channel is available only 2015--2025. ``\% observed'' $=$ share of facility-years that are not \emph{unobserved}.}
+\label{tab:obs_structure}
+\begin{tabular}{lrr rrr r}
+\toprule
+  & \multicolumn{2}{c}{2005--2014 (pre-wayback)} & \multicolumn{3}{c}{2015--2025 (wayback)} &   \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-6}
+Panel & event & unobs. & event & operating & unobs. & \% observed \\
+\midrule
+Electric & 20,854 & 9,396 & 21,690 & 6,234 & 5,351 & 76.8\% \\
+Major/SynMin & 222,243 & 231,987 & 232,389 & 156,425 & 110,839 & 64.1\% \\
+Universe & 398,104 & 954,026 & 342,183 & 781,929 & 363,231 & 53.6\% \\
+\bottomrule
+\end{tabular}
+\\[2pt]
+{\footnotesize The \emph{operating} channel recovers wayback-confirmed structural zeros (facility in service, no event) that would otherwise be \texttt{NA}; it is what raises ``\% observed'' above the event-only share and is unavailable pre-2015 by construction (W3).}
+\end{table}
+
