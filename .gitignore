@@ -4,12 +4,15 @@
 data/raw/*
 !data/raw/.gitkeep
 !data/raw/MANIFEST.csv
+!data/raw/README*
 # Built panels are rebuilt from code.
 data/panels/*
 !data/panels/.gitkeep
+!data/panels/README*
 # Processed (clean) assets + their generated dictionaries are rebuilt from code (force-add lookups case by case).
 data/processed/*
 !data/processed/.gitkeep
+!data/processed/README*
 
 # docs/index.html is GENERATED (by code/diagnostics/build_site.R) but tracked on purpose, so
 # GitHub Pages serves it directly with no build step. Regenerate with code/RUN_ALL.R.
