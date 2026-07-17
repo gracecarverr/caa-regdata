@@ -40,6 +40,11 @@ pts <- fac |> filter(!is.na(latitude), !is.na(longitude)) |>
 fac_fips <- st_join(pts, co["GEOID"], join = st_within) |> st_drop_geometry() |>
   transmute(PGM_SYS_ID, county_fips = as.character(GEOID)) |> distinct(PGM_SYS_ID, .keep_all = TRUE)
 
+# coordinate-quality flag: is the FRS coordinate in the ICIS-listed county? (helper does the vintage-safe
+# name resolution + distance grading; see code/diagnostics/coord_county_check/ for the analysis behind it.)
+source(here::here("code/03_panel_building/coord_county_flag.R"))
+coord_flags <- flag_coord_county(fac |> left_join(fac_fips, by = "PGM_SYS_ID"), co)
+
 prof <- read_csv(file.path(CLEAN, "pollutants.csv.gz"),
   col_types = cols(.default = col_character()), show_col_types = FALSE) |>
   filter(PGM_SYS_ID %in% active) |>
@@ -60,7 +65,13 @@ progs <- read_csv(file.path(CLEAN, "programs.csv.gz"),
     prog_nsps = as.integer(any(PROGRAM_CODE %in% c("CAANSPS","CAANSPSM"))), prog_mact = as.integer(any(PROGRAM_CODE == "CAAMACT")),
     prog_neshap = as.integer(any(PROGRAM_CODE == "CAANESH")), prog_fesop = as.integer(any(PROGRAM_CODE == "CAAFESOP")),
     prog_nsr = as.integer(any(PROGRAM_CODE == "CAANSR")), prog_psd = as.integer(any(PROGRAM_CODE == "CAAPSD")),
-    n_programs = n_distinct(PROGRAM_CODE), .groups = "drop")
+    n_programs = n_distinct(PROGRAM_CODE),
+    # earliest program-enrollment year from BEGIN_DATE (MM/DD/YYYY). Facility-level, provisional -- no end
+    # date, so this dates first enrollment only (see data/processed/README.md). Junk years guarded to NA.
+    program_begin_year = { y <- suppressWarnings(as.integer(sub(".*/", "", BEGIN_DATE)))
+                           y <- y[!is.na(y) & y >= 1900 & y <= 2026]
+                           if (length(y) == 0) NA_integer_ else min(y) },
+    .groups = "drop")
 
 # reconstructed entry/exit spell summary from the ICIS-AIR wayback snapshots (built in code/02_cleaning/wayback/18_).
 # Time-INVARIANT per facility (one row); the year-varying operating status itself lives in the panels.
@@ -72,11 +83,13 @@ spells <- read_csv(file.path(CLEAN, "wayback_facility_spells.csv.gz"),
 flags <- c("emits_voc","emits_pm","emits_co","emits_nox","emits_so2","emits_hap",
            "prog_sip","prog_titlev","prog_nsps","prog_mact","prog_neshap","prog_fesop","prog_nsr","prog_psd","n_programs")
 spine <- fac |> left_join(fac_fips, by = "PGM_SYS_ID") |>
+  left_join(coord_flags, by = "PGM_SYS_ID") |>
   left_join(prof, by = "PGM_SYS_ID") |> left_join(progs, by = "PGM_SYS_ID") |>
   left_join(spells, by = "PGM_SYS_ID") |>
   mutate(facility_type = unname(FACILITY_TYPE[FACILITY_TYPE_CODE]),
          across(all_of(flags), \(x) as.integer(coalesce(x, 0L)))) |>
   relocate(county_fips, .after = COUNTY_NAME) |>
+  relocate(coord_county_dist_km, coord_gross_error, .after = county_fips) |>
   relocate(facility_type, .after = FACILITY_TYPE_CODE) |> arrange(PGM_SYS_ID)
 
 dir.create(PANELS, showWarnings = FALSE, recursive = TRUE)

@@ -32,4 +32,6 @@ P1–P8); open caveats in [`briefs/panel_open_questions.md`](../../briefs/panel_
 - **Attainment is PM2.5-2012, 2016–2025, coordinate-placed** — facilities without coordinates are unplaceable
   (`naa_pm25_2012 = NA`).
 - **Facility class/industry are the current snapshot** applied to all years; program `prog_*` flags are
-  ever-enrolled and undated (F6/N7).
+  ever-enrolled and undated (F6/N7). `program_begin_year` (facility-level, time-invariant) dates the
+  *earliest* program enrollment from `ICIS-AIR_PROGRAMS.BEGIN_DATE`; `NA` where no program record. No close
+  date exists, so this dates entry only.

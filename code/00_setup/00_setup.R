@@ -19,7 +19,9 @@ REQUIRED_PKGS <- c(
   "tidyr",      # reshaping (pivot/expand_grid)
   "lubridate",  # date parsing
   "data.table", # fast grouped ops (wayback LOCF, panel summaries)
-  "sf"          # spatial join (facility coordinate -> county / attainment area)
+  "sf",         # spatial join (facility coordinate -> county / attainment area)
+  "ggplot2",    # figures (diagnostics/06_panel_profile)
+  "scales"      # axis label formatting for figures
 )
 
 missing_pkgs <- REQUIRED_PKGS[!vapply(REQUIRED_PKGS, requireNamespace, logical(1), quietly = TRUE)]
