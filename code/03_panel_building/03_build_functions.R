@@ -7,14 +7,19 @@
 #   Requires (in scope when build_panel() runs): YEARS (defined in 03_build_parameters.R) and the cleaned
 #   event assets in data/processed/ + the spine/attainment in data/panels/.
 #
-#   COUNT SEMANTICS (every n_* is EVENT-level, dup == 0, unless the name ends in _raw). obs_source records why
-#   a facility-year's counts are 0 vs NA:
+#   COUNT SEMANTICS (every n_* counts ALL rows -- NO dedup). Duplicate load is surfaced, never removed:
+#   for the families that actually carry duplicates (inspections, enforcement incl. formal/informal, certs)
+#   two indicators accompany the headline count -- n_*_dup (event-key repeats, dup>0) and n_*_dup_exact
+#   (byte-identical repeats, dup_exact==1). Distinct = count - dup. Violations & stacktests have zero dups
+#   (asserted in their aggregators). penalty_amount sums ALL formal rows; penalty_amount_dup gives the dollar
+#   inflation from event-key dups. EXCEPTION: the HPV interval flag (hpv_active) keeps the dup==0 filter --
+#   it is a status flag, not a count, and duplicate spell rows carry the same interval (output-identical).
+#   obs_source records why a facility-year's counts are 0 vs NA:
 #     0   = OBSERVED but none of THIS measure -- a true zero. Observed via obs_source=="event" (>=1 event of
 #           some measure) OR obs_source=="operating" (facility OPERATING in the wayback snapshot that year,
 #           operating==1, even with zero events -- a known structural zero).
 #     NA  = obs_source=="unobserved": no event AND not known-operating (incl. closed/CLS & pre-2015).
-#   _raw columns count EVERY row incl. duplicate artifacts (n_certs_raw ~5x, n_enforcement_raw ~1.6x n_*).
-#   Extracted verbatim from the former standalone panel scripts; see 03_build_functions_README.md.
+#   Extracted from the former standalone panel scripts, then de-deduplicated; see 03_build_functions_README.md.
 # =========================================================================================================
 library(readr); library(dplyr); library(tidyr); library(lubridate)
 
@@ -27,23 +32,27 @@ rd <- function(name, cols)                                    # read one clean a
 
 # ---- per-source facility-year aggregators (event-level unless noted) -------------------------------------
 # Inspections: FCE/PCE monitor-type split (overlap; need not sum) + conducting-agency split (partition).
+#   All rows counted; n_inspections_dup / _dup_exact report the duplicate load.
 agg_inspections <- function(ids) {
-  rd("inspections", c("PGM_SYS_ID","year","dup","COMP_MONITOR_TYPE_DESC","STATE_EPA_FLAG")) |>
-    filter(PGM_SYS_ID %in% ids, year %in% YEARS, dup == 0) |>
+  rd("inspections", c("PGM_SYS_ID","year","dup","dup_exact","COMP_MONITOR_TYPE_DESC","STATE_EPA_FLAG")) |>
+    filter(PGM_SYS_ID %in% ids, year %in% YEARS) |>
     group_by(PGM_SYS_ID, year) |> summarise(
       n_inspections = n(),
       n_fce         = sum(grepl("^FCE", COMP_MONITOR_TYPE_DESC)),
       n_pce         = sum(grepl("^PCE", COMP_MONITOR_TYPE_DESC)),
       n_insp_epa    = sum(STATE_EPA_FLAG == "E"),
       n_insp_state  = sum(STATE_EPA_FLAG == "S"),
-      n_insp_local  = sum(STATE_EPA_FLAG == "L"), .groups = "drop")
+      n_insp_local  = sum(STATE_EPA_FLAG == "L"),
+      n_inspections_dup       = sum(dup > 0),
+      n_inspections_dup_exact = sum(dup_exact == "1"), .groups = "drop")
 }
 
 # Violations: HPV/FRV (high-priority = has an HPV day-zero date), program split (overlap), agency (partition).
 agg_violations <- function(ids) {
-  rd("violations", c("PGM_SYS_ID","year","dup","HPV_DAYZERO_DATE","PROGRAM_DESCS","AGENCY_TYPE_DESC")) |>
-    filter(PGM_SYS_ID %in% ids, year %in% YEARS, dup == 0) |>
-    mutate(hpv = !is.na(HPV_DAYZERO_DATE) & HPV_DAYZERO_DATE != "") |>
+  v <- rd("violations", c("PGM_SYS_ID","year","dup","HPV_DAYZERO_DATE","PROGRAM_DESCS","AGENCY_TYPE_DESC")) |>
+    filter(PGM_SYS_ID %in% ids, year %in% YEARS)
+  stopifnot("violations: unexpected dup>0 rows -- counts would silently inflate; add a dup indicator (see build plan)" = all(v$dup == 0))
+  v |> mutate(hpv = !is.na(HPV_DAYZERO_DATE) & HPV_DAYZERO_DATE != "") |>
     group_by(PGM_SYS_ID, year) |> summarise(
       n_violations  = n(),
       n_hpv         = sum(hpv), n_frv = sum(!hpv),
@@ -57,14 +66,14 @@ agg_violations <- function(ids) {
       n_viol_local  = sum(AGENCY_TYPE_DESC %in% c("Local", "County", "Tribal")), .groups = "drop")
 }
 
-# Enforcement: formal + informal pooled. n_enforcement = distinct actions; n_enforcement_raw = all rows.
-#   action-type buckets are EXACT ENF_TYPE_DESC matches (unmapped types dropped -> need not sum); agency partition.
+# Enforcement: formal + informal pooled. n_enforcement counts ALL rows; n_enforcement_dup / _dup_exact (and the
+#   formal/informal splits) report the duplicate load. action-type buckets are EXACT ENF_TYPE_DESC matches
+#   (unmapped types dropped -> need not sum); agency partition.
 agg_enforcement <- function(ids) {
-  one <- function(name, kind) rd(name, c("PGM_SYS_ID","year","dup","STATE_EPA_FLAG","ENF_TYPE_DESC")) |>
+  one <- function(name, kind) rd(name, c("PGM_SYS_ID","year","dup","dup_exact","STATE_EPA_FLAG","ENF_TYPE_DESC")) |>
     filter(PGM_SYS_ID %in% ids, year %in% YEARS) |> mutate(kind = kind)
   all <- bind_rows(one("formal_actions", "formal"), one("informal_actions", "informal"))
-  raw <- count(all, PGM_SYS_ID, year, name = "n_enforcement_raw")
-  all |> filter(dup == 0) |> group_by(PGM_SYS_ID, year) |> summarise(
+  all |> group_by(PGM_SYS_ID, year) |> summarise(
       n_enforcement    = n(),
       n_formal         = sum(kind == "formal"), n_informal = sum(kind == "informal"),
       n_penalty_action = sum(ENF_TYPE_DESC == "CAA 113D1 Action For Penalty"),
@@ -75,26 +84,33 @@ agg_enforcement <- function(ids) {
       n_admin_order    = sum(ENF_TYPE_DESC == "Administrative Order"),
       n_enf_epa        = sum(STATE_EPA_FLAG == "E"),
       n_enf_state      = sum(STATE_EPA_FLAG == "S"),
-      n_enf_local      = sum(STATE_EPA_FLAG == "L"), .groups = "drop") |>
-    full_join(raw, by = c("PGM_SYS_ID", "year"))
+      n_enf_local      = sum(STATE_EPA_FLAG == "L"),
+      n_enforcement_dup       = sum(dup > 0),
+      n_enforcement_dup_exact = sum(dup_exact == "1"),
+      n_formal_dup            = sum(kind == "formal"   & dup > 0),
+      n_formal_dup_exact      = sum(kind == "formal"   & dup_exact == "1"),
+      n_informal_dup          = sum(kind == "informal" & dup > 0),
+      n_informal_dup_exact    = sum(kind == "informal" & dup_exact == "1"), .groups = "drop")
 }
 
-# Certifications: distinct certs + all-row raw + self-reported-deviation count.
+# Certifications: all rows counted; n_certs_dup / _dup_exact report the (heavy) duplicate load; self-reported-
+#   deviation count. NB certs are ~81% event-key duplicates -- n_certs_dup will dominate n_certs.
 agg_certs <- function(ids) {
-  d   <- rd("certs", c("PGM_SYS_ID","year","dup","FACILITY_RPT_DEVIATION_FLAG")) |>
-    filter(PGM_SYS_ID %in% ids, year %in% YEARS)
-  raw <- count(d, PGM_SYS_ID, year, name = "n_certs_raw")
-  d |> filter(dup == 0) |> group_by(PGM_SYS_ID, year) |> summarise(
+  rd("certs", c("PGM_SYS_ID","year","dup","dup_exact","FACILITY_RPT_DEVIATION_FLAG")) |>
+    filter(PGM_SYS_ID %in% ids, year %in% YEARS) |>
+    group_by(PGM_SYS_ID, year) |> summarise(
       n_certs           = n(),
-      n_certs_deviation = sum(FACILITY_RPT_DEVIATION_FLAG == "Y", na.rm = TRUE), .groups = "drop") |>
-    full_join(raw, by = c("PGM_SYS_ID", "year"))
+      n_certs_deviation = sum(FACILITY_RPT_DEVIATION_FLAG == "Y", na.rm = TRUE),
+      n_certs_dup       = sum(dup > 0),
+      n_certs_dup_exact = sum(dup_exact == "1"), .groups = "drop")
 }
 
-# Stack tests: distinct tests + Pass/Fail (Pending/Incomplete/N-A left uncounted -> need not sum).
+# Stack tests: all rows counted + Pass/Fail (Pending/Incomplete/N-A left uncounted -> need not sum).
 agg_stacktests <- function(ids) {
-  rd("stacktests", c("PGM_SYS_ID","year","dup","AIR_STACK_TEST_STATUS_DESC")) |>
-    filter(PGM_SYS_ID %in% ids, year %in% YEARS, dup == 0) |>
-    group_by(PGM_SYS_ID, year) |> summarise(
+  s <- rd("stacktests", c("PGM_SYS_ID","year","dup","AIR_STACK_TEST_STATUS_DESC")) |>
+    filter(PGM_SYS_ID %in% ids, year %in% YEARS)
+  stopifnot("stacktests: unexpected dup>0 rows -- counts would silently inflate; add a dup indicator (see build plan)" = all(s$dup == 0))
+  s |> group_by(PGM_SYS_ID, year) |> summarise(
       n_stack_tests = n(),
       n_stack_pass  = sum(AIR_STACK_TEST_STATUS_DESC == "Pass", na.rm = TRUE),
       n_stack_fail  = sum(AIR_STACK_TEST_STATUS_DESC == "Fail", na.rm = TRUE), .groups = "drop")
@@ -140,7 +156,10 @@ attach_hpv_status <- function(panel, ids) {
   panel
 }
 
-# ---- penalty: sum of FORMAL-action penalties per facility-year (dup==0); 0 / none / unobserved -> NA ----
+# ---- penalty: sum of FORMAL-action penalties per facility-year over ALL rows (no dedup) --------------------
+#   penalty_amount     = sum over every formal row; 0 / none / unobserved -> NA (unchanged coding).
+#   penalty_amount_dup = dollars contributed by event-key duplicate rows (dup>0) -- the inflation from not
+#                        deduping. (dup_exact dollars are 0: formal_actions has no byte-identical rows.)
 #   NB per-facility amounts include broadcast multi-facility settlements -- do NOT sum across facilities.
 attach_penalty <- function(panel, ids) {
   pen <- read_csv(file.path(CLEAN, "formal_actions.csv.gz"),
@@ -148,9 +167,11 @@ attach_penalty <- function(panel, ids) {
                   col_types = cols(PGM_SYS_ID = col_character(), year = col_integer(),
                                    dup = col_integer(), PENALTY_AMOUNT = col_character()),
                   show_col_types = FALSE) |>
-    filter(dup == 0, PGM_SYS_ID %in% ids, year %in% YEARS) |>
+    filter(PGM_SYS_ID %in% ids, year %in% YEARS) |>
     mutate(penalty = parse_number(PENALTY_AMOUNT)) |>
-    group_by(PGM_SYS_ID, year) |> summarise(penalty_amount = sum(penalty, na.rm = TRUE), .groups = "drop")
+    group_by(PGM_SYS_ID, year) |> summarise(
+      penalty_amount     = sum(penalty, na.rm = TRUE),
+      penalty_amount_dup = sum(penalty[dup > 0], na.rm = TRUE), .groups = "drop")
   panel <- left_join(panel, pen, by = c("PGM_SYS_ID", "year"))
   panel$penalty_amount[is.na(panel$penalty_amount) | panel$penalty_amount == 0] <- NA_real_
   panel
@@ -210,22 +231,28 @@ WAYBACK_COLS <- c("op_status_code","operating",
 # base panel columns (universe / major_synmin); electric appends TREATMENT_COLS
 PANEL_COLS <- c("PGM_SYS_ID","year",
                 "n_inspections","n_fce","n_pce","n_insp_epa","n_insp_state","n_insp_local",
+                "n_inspections_dup","n_inspections_dup_exact",
                 "n_violations","n_hpv","n_frv","n_viol_sip","n_viol_titlev","n_viol_nsps","n_viol_mact",
                 "n_viol_fesop","n_viol_epa","n_viol_state","n_viol_local",
-                "n_enforcement","n_enforcement_raw","n_formal","n_informal","n_penalty_action","n_warning_letter",
+                "n_enforcement","n_formal","n_informal","n_penalty_action","n_warning_letter",
                 "n_admin_np","n_civil_judicial","n_nov","n_admin_order","n_enf_epa","n_enf_state","n_enf_local",
-                "n_certs","n_certs_raw","n_certs_deviation","n_stack_tests","n_stack_pass","n_stack_fail",
+                "n_enforcement_dup","n_enforcement_dup_exact","n_formal_dup","n_formal_dup_exact",
+                "n_informal_dup","n_informal_dup_exact",
+                "n_certs","n_certs_deviation","n_certs_dup","n_certs_dup_exact","n_stack_tests","n_stack_pass","n_stack_fail",
                 "any_inspections","any_violations","any_enforcement","any_certs","obs_source",
-                ATTR_COLS, WAYBACK_COLS, "hpv_active","hpv_active_1mo","penalty_amount")
+                ATTR_COLS, WAYBACK_COLS, "hpv_active","hpv_active_1mo","penalty_amount","penalty_amount_dup")
 TREATMENT_COLS <- c("pm25_status","pm25_area","naa_pm25_2012","any_naa")
 
 # count/flag block that gets known-zero coding (all EVENT-derived measures + interval HPV flags; NOT penalty)
 COUNT_COLS <- c("n_inspections","n_fce","n_pce","n_insp_epa","n_insp_state","n_insp_local",
+                "n_inspections_dup","n_inspections_dup_exact",
                 "n_violations","n_hpv","n_frv","n_viol_sip","n_viol_titlev","n_viol_nsps","n_viol_mact",
                 "n_viol_fesop","n_viol_epa","n_viol_state","n_viol_local",
-                "n_enforcement","n_enforcement_raw","n_formal","n_informal","n_penalty_action","n_warning_letter",
+                "n_enforcement","n_formal","n_informal","n_penalty_action","n_warning_letter",
                 "n_admin_np","n_civil_judicial","n_nov","n_admin_order","n_enf_epa","n_enf_state","n_enf_local",
-                "n_certs","n_certs_raw","n_certs_deviation","n_stack_tests","n_stack_pass","n_stack_fail",
+                "n_enforcement_dup","n_enforcement_dup_exact","n_formal_dup","n_formal_dup_exact",
+                "n_informal_dup","n_informal_dup_exact",
+                "n_certs","n_certs_deviation","n_certs_dup","n_certs_dup_exact","n_stack_tests","n_stack_pass","n_stack_fail",
                 "any_inspections","any_violations","any_enforcement","any_certs","hpv_active","hpv_active_1mo")
 
 # ---- known-zero coding: a facility-year OPERATING in the wayback snapshot (operating==1) but with no events is
