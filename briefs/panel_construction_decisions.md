@@ -7,6 +7,20 @@
 > `data/processed/`. Being reconciled during line-by-line verification — confirm exact locations in the
 > current `code/` tree. See `briefs/00_institutional_overview.md` for the institutional hub.
 
+> 📌 **REVISION 2026-07-17 — panel counts are no longer deduped (supersedes P2 core/raw semantics, and the
+> penalty `dup==0` in E4).** Every panel `n_*` now counts **all rows** (no `dup==0` filter). Duplicate load
+> is surfaced, never removed, by two indicators per duplicated family — `n_*_dup` (event-key repeats, `dup>0`)
+> and `n_*_dup_exact` (byte-identical, `dup_exact==1`) — for **inspections**, **enforcement** (+ `n_formal_dup`
+> / `n_informal_dup`), and **certs**; `violations`/`stacktests` carry zero dups (asserted in the build).
+> Recover the old event-distinct count as `n_x − n_x_dup`. The old all-row twins `n_certs_raw` /
+> `n_enforcement_raw` are **removed** (now equal to the headline count). **Penalty:** `penalty_amount` now
+> sums **all** formal rows; a new `penalty_amount_dup` reports the dollars from event-key duplicate rows.
+> **Exception:** the interval HPV flag `hpv_active` (P8) keeps `dup==0` — it is a status flag, not a count,
+> and duplicate spell rows carry the same interval (output-identical). The **asset layer is unchanged** —
+> CC9 still keeps every raw row flagged; only the panel aggregation stopped deduping. *Why:* counts should be
+> honest about the raw record and make duplication measurable in-place rather than silently dropping it. The
+> P2 / "Core counts" / "Raw counts" / W6 / E4 wording below describes the pre-revision behavior.
+
 ---
 
 ## Part A · every asset

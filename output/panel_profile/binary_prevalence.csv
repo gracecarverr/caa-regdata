@@ -1,7 +1,7 @@
 panel,flag,window,n,share_1,pct_na
 Electric,any_inspections,2005-2025,63525,0.682,0.232
 Electric,any_violations,2005-2025,63525,0.063,0.232
-Electric,any_enforcement,2005-2025,63525,0.097,0.232
+Electric,any_enforcement,2005-2025,63525,0.098,0.232
 Electric,any_certs,2005-2025,63525,0.674,0.232
 Electric,emits_voc,2005-2025,63525,0.622,0
 Electric,emits_pm,2005-2025,63525,0.7,0

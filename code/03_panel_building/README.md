@@ -25,9 +25,9 @@ function, not three copied scripts):
 
 | panel | cols | facilities in scope |
 |-------|------|---------------------|
-| `universe`     | 93 | all ever-active facilities (contiguous US + DC) |
-| `major_synmin` | 93 | + Major / Synthetic Minor emissions class |
-| `electric`     | 97 | + electric utilities (NAICS 2211 / SIC 4911), **with PM2.5 attainment treatment** (4 extra cols) |
+| `universe`     | 105 | all ever-active facilities (contiguous US + DC) |
+| `major_synmin` | 105 | + Major / Synthetic Minor emissions class |
+| `electric`     | 109 | + electric utilities (NAICS 2211 / SIC 4911), **with PM2.5 attainment treatment** (4 extra cols) |
 
 ## Shape (all sample panels)
 
@@ -35,15 +35,18 @@ Balanced **facility × year** (every in-scope facility × every year in `YEARS`,
 order:
 
 - **Inspections** `n_inspections`, `n_fce`, `n_pce` (FCE/PCE monitor type — overlap, need not sum),
-  `n_insp_epa` / `n_insp_state` / `n_insp_local` (conducting agency — partition).
+  `n_insp_epa` / `n_insp_state` / `n_insp_local` (conducting agency — partition), and duplicate-load
+  indicators `n_inspections_dup` / `n_inspections_dup_exact`.
 - **Violations** `n_violations`, `n_hpv` / `n_frv` (high-priority = has an HPV day-zero date — partition),
   `n_viol_sip` / `n_viol_titlev` / `n_viol_nsps` / `n_viol_mact` / `n_viol_fesop` (program — overlap),
   `n_viol_epa` / `n_viol_state` / `n_viol_local` (agency — partition).
-- **Enforcement** (formal + informal pooled) `n_enforcement`, `n_enforcement_raw` (all rows incl. dup
-  artifacts, ~1.6×), `n_formal` / `n_informal` (partition), the action-type buckets `n_penalty_action`,
-  `n_warning_letter`, `n_admin_np`, `n_civil_judicial`, `n_nov`, `n_admin_order` (exact `ENF_TYPE_DESC`
-  matches — unmapped types dropped, so these need not sum), `n_enf_epa` / `n_enf_state` / `n_enf_local`.
-- **Certifications** `n_certs`, `n_certs_raw` (~5×), `n_certs_deviation`.
+- **Enforcement** (formal + informal pooled) `n_enforcement` (all rows), `n_formal` / `n_informal`
+  (partition), the action-type buckets `n_penalty_action`, `n_warning_letter`, `n_admin_np`,
+  `n_civil_judicial`, `n_nov`, `n_admin_order` (exact `ENF_TYPE_DESC` matches — unmapped types dropped, so
+  these need not sum), `n_enf_epa` / `n_enf_state` / `n_enf_local`, and duplicate-load indicators
+  `n_enforcement_dup` / `n_enforcement_dup_exact` (+ `n_formal_dup` / `n_informal_dup` and their `_dup_exact`).
+- **Certifications** `n_certs` (all rows), `n_certs_deviation`, and `n_certs_dup` / `n_certs_dup_exact`
+  (~81% of cert rows are event-key duplicates).
 - **Stack tests** `n_stack_tests`, `n_stack_pass`, `n_stack_fail` (Pending/Incomplete/N-A uncounted).
 - **Any-flags** `any_inspections` / `any_violations` / `any_enforcement` / `any_certs` — `1` if the matching
   `n_*` > 0, else `0` (NA where the count is NA).
@@ -59,10 +62,16 @@ order:
   (no snapshot exists — we cannot assert a status). See `briefs/panel_construction_decisions.md` §B.7 / F7.
 - **HPV status** `hpv_active`, `hpv_active_1mo` — interval-based (in HPV status during any part of the year /
   for > 30 days), from the HPV spell, *distinct from* the recorded-year count `n_hpv`.
-- **Penalty** `penalty_amount` — sum of formal-action penalties that facility-year (0 / none → NA).
+- **Penalty** `penalty_amount` — sum of formal-action penalties that facility-year over **all** rows
+  (0 / none → NA); `penalty_amount_dup` — the dollars contributed by event-key duplicate rows.
 - **Treatment** (electric only) `pm25_status`, `pm25_area`, `naa_pm25_2012`, `any_naa`.
 
-Every `n_*` is **event-level** (`dup == 0`) unless the name ends in `_raw`.
+Every `n_*` counts **all rows** — nothing is deduped. Duplicate load is surfaced (never removed) by the
+`_dup` (event-key repeats) and `_dup_exact` (byte-identical repeats) indicators on the families that carry
+duplicates (inspections, enforcement incl. formal/informal, certs); violations and stacktests have zero dups.
+Recover event-distinct counts as `n_x − n_x_dup`. The HPV interval flag `hpv_active` is the one exception — a
+status flag, not a count, so it still keys on `dup == 0` (output-identical, since duplicate spells repeat the
+same interval).
 
 ### Count meaning (the load-bearing zero-vs-NA semantic)
 
@@ -75,8 +84,8 @@ A facility-year is **observed** (so a zero-count is a *true* zero) if `obs_sourc
   all pre-2015 years, where no snapshot exists). We cannot assert a zero.
 
 The `operating` channel only ever turns an `NA` into a `0` (never overwrites a positive count), and
-`penalty_amount` is exempt (its own `0`/none → `NA` rule). Recover the original event-only semantics with
-`obs_source == "event"`.
+`penalty_amount` / `penalty_amount_dup` are exempt (their own `0`/none → `NA` rule). Recover the original
+event-only semantics with `obs_source == "event"`.
 
 ## Adding a panel
 

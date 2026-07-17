@@ -125,7 +125,7 @@ t3 <- do.call(rbind, t3_rows)
 write_table("t3_measures.tex", t3, "l rrr rr",
   header = c("Measure", paste0("\\textbf{", NAMES, "}"), "Max", "Total (univ.)"),
   groups = c(" " = 1, "\\% of observed facility-years with $\\geq 1$" = 3, " " = 2),
-  caption = "Outcome measures. Columns 1--3 give the share of \\emph{observed} facility-years (\\emph{obs\\_source} $\\neq$ unobserved) with at least one event; ``Max'' is the largest single facility-year count across all three panels; ``Total (univ.)'' sums events over the Universe panel. All counts are event-level (\\texttt{dup==0}).",
+  caption = "Outcome measures. Columns 1--3 give the share of \\emph{observed} facility-years (\\emph{obs\\_source} $\\neq$ unobserved) with at least one event; ``Max'' is the largest single facility-year count across all three panels; ``Total (univ.)'' sums events over the Universe panel. All counts include every row (no deduplication); duplicate load is reported separately in the \\texttt{\\_dup} / \\texttt{\\_dup\\_exact} columns.",
   label = "tab:measures",
   notes = "\\emph{formal}/\\emph{informal} partition \\emph{Enforcement actions} exactly. HPV status (interval-based, P8) is a $0/1$ flag, so its ``share'' and ``max'' differ in kind from the count rows. Denominator excludes \\emph{unobserved} facility-years so shares are not diluted by structural \\texttt{NA}s.")
 

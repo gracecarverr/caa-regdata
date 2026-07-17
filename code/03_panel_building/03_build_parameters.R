@@ -21,6 +21,14 @@ CONUS <- c("AL","AZ","AR","CA","CO","CT","DE","DC","FL","GA","ID","IL","IN","IA"
 # Emissions classes admitted by the major/synthetic-minor filter (and inherited by electric).
 MAJOR_SYNMIN_CLASSES <- c("Major Emissions", "Synthetic Minor Emissions")
 
+# Electric utilities among the major/synmin sources: NAICS 2211 OR SIC 4911. Shared by the electric panels
+#   so their facility set stays identical regardless of whether attainment treatment is attached.
+#   NAICS regex allows the 4-digit code anywhere not preceded by a digit; SIC regex anchors the 4-digit code.
+electric_filter <- function(s) dplyr::filter(s, STATE %in% CONUS,
+                                             AIR_POLLUTANT_CLASS_DESC %in% MAJOR_SYNMIN_CLASSES,
+                                             grepl("(^|[^0-9])2211", NAICS_CODES) |
+                                             grepl("(^|[^0-9])4911([^0-9]|$)", SIC_CODES))
+
 PANEL_SPECS <- list(
 
   # every ever-active facility in the contiguous US (+ DC)
@@ -32,11 +40,11 @@ PANEL_SPECS <- list(
        filter = function(s) dplyr::filter(s, STATE %in% CONUS,
                                           AIR_POLLUTANT_CLASS_DESC %in% MAJOR_SYNMIN_CLASSES)),
 
-  # electric utilities among the major/synmin sources: NAICS 2211 OR SIC 4911. Gets PM2.5 treatment.
-  #   NAICS regex allows the 4-digit code anywhere not preceded by a digit; SIC regex anchors the 4-digit code.
+  # electric utilities, WITH the PM2.5 (2012) attainment treatment block attached
   list(name = "electric", treatment = TRUE,
-       filter = function(s) dplyr::filter(s, STATE %in% CONUS,
-                                          AIR_POLLUTANT_CLASS_DESC %in% MAJOR_SYNMIN_CLASSES,
-                                          grepl("(^|[^0-9])2211", NAICS_CODES) |
-                                          grepl("(^|[^0-9])4911([^0-9]|$)", SIC_CODES)))
+       filter = electric_filter),
+
+  # same electric facility set, but WITHOUT attainment merged in (treatment cols absent) -- attach later
+  list(name = "electric_no_attainment", treatment = FALSE,
+       filter = electric_filter)
 )
