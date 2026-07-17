@@ -52,8 +52,11 @@ column and row is kept**; the only additions are `date`/`year`/`dup`/`dup_exact`
 - **`facilities`** is the *current snapshot* (class, industry, operating status are time-invariant here); the
   derived spine (`data/panels/spine.csv.gz`) selects the ever-active universe and adds coordinates/profiles.
   Year-varying operating status is reconstructed separately from the Wayback tables (F2).
-- **`programs`** has a `BEGIN_DATE` but **no end date**, so program enrollment can't be dated to when it
-  started/ended from this table alone (drives the "ever-enrolled, static" `prog_*` flags — F6/N7).
+- **`programs`** carries `BEGIN_DATE` + `UPDATED_DATE` but **no end date**, so enrollment start is datable
+  from `BEGIN_DATE` (surfaced as facility-level `program_begin_year` = earliest begin year, in the spine +
+  panels) but the close is not (drives the "ever-enrolled, static" `prog_*` flags — F6/N7).
+- **`program_subparts`** has **no dates of its own**; a subpart inherits its program's `BEGIN_DATE` via a join
+  on `(PGM_SYS_ID, PROGRAM_CODE)`.
 
 ## AFS — legacy Air Facility System (added: `dup_exact` only)
 

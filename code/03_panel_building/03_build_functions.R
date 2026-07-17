@@ -195,12 +195,14 @@ attach_pm25_attainment <- function(panel) {
 
 # ---- column inventory ----------------------------------------------------------------------------------
 # facility attributes come straight from the spine
-ATTR_COLS  <- c("REGISTRY_ID","FACILITY_NAME","STREET_ADDRESS","CITY","COUNTY_NAME","county_fips","STATE",
+ATTR_COLS  <- c("REGISTRY_ID","FACILITY_NAME","STREET_ADDRESS","CITY","COUNTY_NAME","county_fips",
+                "coord_county_dist_km","coord_gross_error","STATE",
                 "ZIP_CODE","EPA_REGION","latitude","longitude","NAICS_CODES","SIC_CODES","FACILITY_TYPE_CODE",
                 "facility_type","AIR_POLLUTANT_CLASS_DESC","op_status_current_desc",
                 "entered_year","exited_year","exit_source","left_censored","right_censored",
                 "emits_voc","emits_pm","emits_co","emits_nox","emits_so2","emits_hap",
-                "prog_sip","prog_titlev","prog_nsps","prog_mact","prog_neshap","prog_fesop","prog_nsr","prog_psd","n_programs")
+                "prog_sip","prog_titlev","prog_nsps","prog_mact","prog_neshap","prog_fesop","prog_nsr","prog_psd",
+                "n_programs","program_begin_year")
 # year-varying wayback status block (2015-2025; NA elsewhere)
 WAYBACK_COLS <- c("op_status_code","operating",
                   "prog_sip_active","prog_titlev_active","prog_nsps_active","prog_mact_active",
