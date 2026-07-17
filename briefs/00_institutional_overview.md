@@ -8,7 +8,9 @@ and [`panel_open_questions.md`](panel_open_questions.md), and column-level detai
 > Scope note: this project currently covers **stationary-source air** regulation under the Clean Air Act.
 > Facts below are stated at the level of detail the data needs; where a claim drives a construction choice,
 > the linked briefs carry the specifics. Statutory/agency descriptions should be verified against EPA
-> documentation before being cited in a paper.
+> documentation before being cited in a paper. Core CAA program, threshold, class, and MDR-reporting facts
+> here were cross-checked against EPA's MDR summary (Jan 2012) and ECHO data-entry requirements (2026-07-17);
+> see Valuable Links (§5).
 
 ---
 
@@ -25,9 +27,10 @@ enforcement authority.
   across levels of government unless deliberately split.
 
 **National Ambient Air Quality Standards (NAAQS).** Health-based ambient concentration limits for
-"criteria" pollutants (PM2.5, ozone, SO₂, etc.). Geographic areas are designated **attainment** (meeting
-the standard) or **nonattainment** (not), with a **maintenance** category for areas that were
-nonattainment and have since attained. Nonattainment triggers stricter requirements on sources in the area.
+"criteria" pollutants (PM2.5, PM10, ozone, SO₂, NO₂, CO, lead). Geographic areas are designated
+**attainment** (meeting the standard), **nonattainment** (not), or **unclassifiable** (insufficient data),
+with a **maintenance** category for areas that were nonattainment and have since attained. Nonattainment
+triggers stricter requirements on sources in the area, graded by severity.
 
 - **Data implication.** Attainment status is a **place × time × pollutant** attribute, and it changes as
   areas are redesignated. It is the basis of the treatment variable. This project builds **PM2.5 (2012
@@ -50,6 +53,12 @@ program/pollutant lookups.
 - **The live download is a single current snapshot.** It ships *current* operating status, class, and
   industry codes, and **no facility entry/exit dates**. Historical status therefore cannot be read off the
   live download — hence the Wayback reconstruction (§3).
+- **The reportable universe is selective.** Minimum-Data-Requirement reporting (MDR, EPA Jan 2012) covers
+  Title V **majors** (~14k), **synthetic minors** (~27k), Part 61 NESHAP minors, plus any facility in a CMS
+  (Compliance Monitoring Strategy) evaluation plan, with a formal action, or with an active HPV. Ordinary
+  **minors are largely absent** from compliance/enforcement records unless one of those triggers fires — so
+  facility-year coverage is **endogenous to size/class**, not a clean sample of all sources. Load-bearing for
+  any denominator or selection argument.
 
 ### AFS — the legacy predecessor
 The **Air Facility System** is ICIS-Air's pre-2001 predecessor. Retained here for historical actions,
@@ -102,10 +111,17 @@ snapshots**:
 inspection-type review of a source. Pooled here into "inspections," with `type` preserving full-vs-partial
 (decision **I1**). Date = evaluation end (`ACTUAL_END_DATE`).
 
-**Violations & High Priority Violations (HPV).** Sources can be found in violation; the most serious are
-flagged **High Priority Violations**, which have a "day-zero" clock start and (sometimes) a resolution date.
+- **Data implication.** The **FCE** is the MDR-required review; CMS policy targets an FCE every **2 years**
+  for majors and every **5** for synthetic minors (a target, not a guarantee). **PCEs are largely
+  discretionary** — reported only when part of a CMS plan or an HPV discovery — so PCE counts
+  **under-represent** actual partial reviews and should not be read as a complete census.
 
-- **Data implication.** An HPV is an **interval** `[day-zero, resolved]`, and most resolved spells span more
+**Violations — FRV & HPV.** Two severity tiers. A **Federally Reportable Violation (FRV)** is one the state
+must report to EPA (lower bar). A **High Priority Violation (HPV)** is the most serious class — it starts a
+"day-zero" clock and triggers EPA's enforcement-response-policy timeline, with (sometimes) a resolution date.
+
+- **Data implication.** ICIS Violation History tracks **both** FRV and HPV (`n_frv`, `n_hpv`); AFS's HPV
+  table tracks **HPV only**. An HPV is an **interval** `[day-zero, resolved]`, and most resolved spells span more
   than one calendar year — so "HPV *status* in year Y" (interval-based `hpv_active`) is a different question
   from "HPV *recorded* in year Y" (`n_hpv`). Open/unresolved spells are treated day-zero-year-only
   (conservative). See **P8**, **V6**, nuance **N6**.
@@ -125,10 +141,20 @@ file **annual compliance certifications**.
   Also, class-"Major" ≠ Title V annual certifier — only ~62%/yr of majors show a cert, so **don't assume one
   cert per major** (**T1**, **T3**, **F4**).
 
-**Facility class & program enrollment.** Facilities carry an air-pollutant **class** (Major, Synthetic Minor,
-etc.) and enroll in one or more **programs**: SIP (State Implementation Plan), NSPS (New Source Performance
-Standards), MACT/NESHAP (hazardous-air-pollutant standards), NSR/PSD (New Source Review / Prevention of
-Significant Deterioration), FESOP (federally-enforceable state operating permit), Title V.
+**Facility class & program enrollment.** Facilities carry an air-pollutant **class** — **Major**, **Synthetic
+Minor** (uncontrolled potential-to-emit over the threshold, but held below it by federally-enforceable
+limits), or **minor** — and enroll in one or more **programs**: SIP (State Implementation Plan), NSPS (New
+Source Performance Standards), MACT/NESHAP (hazardous-air-pollutant standards), NSR/PSD (New Source Review /
+Prevention of Significant Deterioration), FESOP (federally-enforceable state operating permit), Title V, and
+**Acid Rain / Title IV** (SO₂/NOx cap-and-trade, electric utilities only — AFS program code `A`, emissions in
+CAMD).
+
+Major-source status is **program- and pollutant-specific** and rests on **potential-to-emit** (full-capacity,
+uncontrolled): 100 tpy of a criteria pollutant for Title V/SIP (lower in nonattainment — 50/25/10 by
+severity), 10/25 tpy single/combined HAP under §112, 100 tpy (28 listed categories) or 250 tpy (else) for
+PSD. The facility-level `AIR_POLLUTANT_CLASSIFICATION_CODE` is the **worst case** across all pollutants and
+programs; the pollutant-level field carries the per-pollutant class. AFS's equivalent is
+`EPA_CLASSIFICATION_CODE` (A1/A2/B/SM).
 
 - **Data implication.** Enrollment is a **set**, not one value (median 2, max 15 programs/facility), encoded
   as non-exclusive `prog_*` indicators. Class/industry come from the **current snapshot** and are applied to
@@ -154,3 +180,10 @@ via `obs_source ∈ {event, operating, unobserved}` (**P3/P4**, **W6**).
   CC9, F7, P8).
 - Deciding something **still open**? → `panel_open_questions.md`.
 - Running the **pipeline**? → `code/README.md` and `code/RUN_ALL.R`.
+
+## Valuable Links
+
+- **Nonattainment & Maintenance Area Dashboard** — https://awsedap.epa.gov/public/extensions/specs-area-dashboard/index.html
+- **Minimum Data Requirements (MDRs) for CAA Stationary Sources** (EPA, Jan 2012) — https://www.epa.gov/sites/default/files/2013-10/documents/mdrshort.pdf
+- **ECHO / ICIS-Air data-entry requirements** — https://echo.epa.gov/resources/echo-data/data-entry-requirements
+- **Title V permit (example — Virginia DEQ)** — https://www.deq.virginia.gov/home/showpublisheddocument/5711/637951157567970000
