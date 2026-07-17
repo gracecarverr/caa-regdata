@@ -5,7 +5,7 @@
 #   the project up cold. Companion to 05_panel_summaries.R (which makes the paper-oriented LaTeX tables).
 #
 #   in : data/panels/{electric,major_synmin,universe}.csv.gz
-#   out: output/panel_profile/*.csv  (tabulations)
+#   out: output/panel_profile/*.csv  (tabulations, incl. summary_duplication.csv -- duplicate load)
 #        output/figures/*.png        (figures)
 #
 #   DISCIPLINE (do not "fix" away): counts are only meaningful for OBSERVED facility-years
@@ -43,8 +43,10 @@ fwrite_rounded <- function(dt, file, prop_cols = NULL, num_cols = NULL) {
   fwrite(d, file)
 }
 
-# count measures (the n_* block) + the key subset used in figures
-COUNT_COLS <- grep("^n_", names(P[["universe"]]), value = TRUE)           # 37 measures
+# count measures (the n_* block) + the key subset used in figures. NB grep("^n_") now also picks up the
+# duplicate-load indicators n_*_dup / n_*_dup_exact, so they get five-number summaries in summary_counts.csv
+# automatically; summary_duplication.csv (below) adds the dup *shares* per family.
+COUNT_COLS <- grep("^n_", names(P[["universe"]]), value = TRUE)           # 45 measures (incl. _dup / _dup_exact)
 KEY_MEAS   <- c(n_inspections = "Inspections", n_violations = "Violations", n_hpv = "HPV",
                 n_enforcement = "Enforcement", n_certs = "Certifications", n_stack_tests = "Stack tests")
 theme_set(theme_minimal(base_size = 11))
@@ -91,15 +93,42 @@ fwrite_rounded(summary_counts, file.path(OUT_CSV, "summary_counts.csv"),
                prop_cols = c("pct_na", "pct_zero", "pct_nonzero"), num_cols = c("mean", "sd"))
 
 # =========================================================================================================
-# CSV 3 -- penalty_amount: nonzero five-number summary + total (per panel)
+# CSV 3 -- penalty_amount: nonzero five-number summary + total (per panel). total now sums ALL formal rows;
+#   dup_total / dup_share report the share of penalty dollars carried by event-key duplicate rows.
 # =========================================================================================================
 summary_penalty <- rbindlist(lapply(names(P), function(nm) {
   p <- P[[nm]]$penalty_amount; p <- p[!is.na(p) & p > 0]
+  total     <- sum(p)
+  dup_total <- sum(P[[nm]]$penalty_amount_dup, na.rm = TRUE)
   data.table(panel = NAMES[nm], n_nonzero = length(p),
              min = min(p), p25 = quantile(p, .25), median = median(p), p75 = quantile(p, .75),
-             max = max(p), mean = mean(p), total = sum(p))
+             max = max(p), mean = mean(p), total = total,
+             dup_total = dup_total, dup_share = if (total > 0) dup_total / total else NA_real_)
 }))
-fwrite_rounded(summary_penalty, file.path(OUT_CSV, "summary_penalty.csv"), num_cols = c("mean", "total"))
+fwrite_rounded(summary_penalty, file.path(OUT_CSV, "summary_penalty.csv"),
+               num_cols = c("mean", "total", "dup_total"), prop_cols = "dup_share")
+
+# =========================================================================================================
+# CSV 3b -- duplicate load: how much of each family's (all-row) count is duplicate. dup = event-key repeats,
+#   dup_exact = byte-identical. Shares are Sum(dup) / Sum(count) over OBSERVED facility-years. Only the
+#   families that carry duplicates have indicators; violations/stacktests have none by construction.
+# =========================================================================================================
+DUP_FAMILIES <- c(inspections = "n_inspections", enforcement = "n_enforcement",
+                  formal = "n_formal", informal = "n_informal", certs = "n_certs")
+summary_duplication <- rbindlist(lapply(names(P), function(nm) {
+  d <- observed(P[[nm]])
+  rbindlist(lapply(names(DUP_FAMILIES), function(fam) {
+    base <- DUP_FAMILIES[[fam]]
+    tot  <- sum(d[[base]], na.rm = TRUE)
+    dup  <- sum(d[[paste0(base, "_dup")]],       na.rm = TRUE)
+    dex  <- sum(d[[paste0(base, "_dup_exact")]], na.rm = TRUE)
+    data.table(panel = NAMES[nm], family = fam, n_rows = tot, n_dup = dup, n_dup_exact = dex,
+               dup_share = if (tot > 0) dup / tot else NA_real_,
+               dup_exact_share = if (tot > 0) dex / tot else NA_real_)
+  }))
+}))
+fwrite_rounded(summary_duplication, file.path(OUT_CSV, "summary_duplication.csv"),
+               prop_cols = c("dup_share", "dup_exact_share"))
 
 # =========================================================================================================
 # CSV 4 -- categorical frequency tables (long)
