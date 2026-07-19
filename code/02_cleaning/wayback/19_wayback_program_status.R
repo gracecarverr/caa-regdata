@@ -8,7 +8,11 @@
 #        PGM_SYS_ID, year, prog_{sip,titlev,nsps,mact,neshap,fesop,nsr,psd}_active
 #
 #   prog_X_active in a given snapshot year = 1 iff the facility carries >=1 program in group X whose status is
-#   NOT Permanently-Closed (CLS); 0 if the facility is present in that snapshot but the group is absent/closed.
+#   ACTIVE under a PROGRAM-SPECIFIC rule: operating programs (sip/titlev/nsps/mact/neshap/fesop) are active only
+#   for {OPR,TMP,SEA} (mirrors the 17_ operating whitelist); the preconstruction programs NSR & PSD are ALSO
+#   active for {PLN,CNS} (planned / under-construction), since those permits attach before a source operates.
+#   CLS, the rare NER/NED/NES/LDF, and a missing status are inactive for every group. 0 if the facility is
+#   present in that snapshot but the group has no active row.
 #   BEGIN_DATE is deliberately IGNORED (unreliable per project decision) -- snapshot presence is the truth.
 #   Interior gaps (facility absent from a middle snapshot) are LOCF-filled within the facility's observed span,
 #   mirroring 17_wayback_facility_status.R. Values at the leading/trailing edge are not extrapolated.
@@ -25,6 +29,11 @@ GROUPS <- list(
 code2group <- stack(GROUPS) |> transmute(PROGRAM_CODE = values, grp = as.character(ind))
 GRP_COLS <- paste0("prog_", names(GROUPS), "_active")
 
+# program-specific "active" rule (replaces the old status != CLS blacklist)
+OPERATING_ACTIVE      <- c("OPR", "TMP", "SEA")   # mirrors the 17_ operating whitelist
+PRECONSTRUCTION_GRPS  <- c("nsr", "psd")          # NSR/PSD permits attach before a source operates
+PRECONSTRUCTION_EXTRA <- c("PLN", "CNS")          # ...so planned / under-construction are active for those too
+
 read_csv_snap <- function(y, file, cols)
   suppressWarnings(read_csv(file.path(RAW, sprintf("ICIS-AIR_downloads_%d", y), file),
                             col_select = all_of(cols), col_types = cols(.default = col_character()),
@@ -40,7 +49,8 @@ active <- bind_rows(lapply(SNAP_YEARS, read_csv_snap, file = "ICIS-AIR_PROGRAMS.
                            cols = c("PGM_SYS_ID", "PROGRAM_CODE", "AIR_OPERATING_STATUS_CODE"))) |>
   filter(!is.na(PGM_SYS_ID)) |>
   inner_join(code2group, by = "PROGRAM_CODE") |>                       # keep only the 8 groups
-  filter(is.na(AIR_OPERATING_STATUS_CODE) | AIR_OPERATING_STATUS_CODE != "CLS") |>
+  filter(AIR_OPERATING_STATUS_CODE %in% OPERATING_ACTIVE |             # program-specific active rule
+         (grp %in% PRECONSTRUCTION_GRPS & AIR_OPERATING_STATUS_CODE %in% PRECONSTRUCTION_EXTRA)) |>
   distinct(PGM_SYS_ID, year, grp) |>
   mutate(active = 1L) |>
   pivot_wider(names_from = grp, values_from = active, names_glue = "prog_{grp}_active", values_fill = 0L)
