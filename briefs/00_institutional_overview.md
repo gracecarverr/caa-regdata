@@ -1,189 +1,293 @@
-# Institutional Overview
-
-The setting this data describes, and — for each institutional fact — its **implication for the data**.
-This is the hub brief; deep dives live in [`panel_construction_decisions.md`](panel_construction_decisions.md)
-and [`panel_open_questions.md`](panel_open_questions.md), and column-level detail in
-`data/processed/*.README.md`.
-
-> Scope note: this project currently covers **stationary-source air** regulation under the Clean Air Act.
-> Facts below are stated at the level of detail the data needs; where a claim drives a construction choice,
-> the linked briefs carry the specifics. Statutory/agency descriptions should be verified against EPA
-> documentation before being cited in a paper. Core CAA program, threshold, class, and MDR-reporting facts
-> here were cross-checked against EPA's MDR summary (Jan 2012) and ECHO data-entry requirements (2026-07-17);
-> see Valuable Links (§5).
-
----
-
-## 1. The statute and the regulator
-
-**Clean Air Act (CAA).** The federal statute governing air-pollution control. For stationary sources
-(factories, power plants, refineries — as opposed to mobile sources like cars), it sets up permitting,
-emissions standards, monitoring, and enforcement, administered by the EPA together with state/local
-agencies. Most day-to-day compliance work is delegated to states; EPA retains oversight and its own
-enforcement authority.
-
-- **Data implication.** Regulatory activity is recorded by *whichever* agency acted — federal, state, or
-  local (an `agency` / `STATE_EPA_FLAG` field on the event assets marks E/S/L). Enforcement counts pool
-  across levels of government unless deliberately split.
-
-**National Ambient Air Quality Standards (NAAQS).** Health-based ambient concentration limits for
-"criteria" pollutants (PM2.5, PM10, ozone, SO₂, NO₂, CO, lead). Geographic areas are designated
-**attainment** (meeting the standard), **nonattainment** (not), or **unclassifiable** (insufficient data),
-with a **maintenance** category for areas that were nonattainment and have since attained. Nonattainment
-triggers stricter requirements on sources in the area, graded by severity.
-
-- **Data implication.** Attainment status is a **place × time × pollutant** attribute, and it changes as
-  areas are redesignated. It is the basis of the treatment variable. This project builds **PM2.5 (2012
-  standard) only, 2016–2025 only** so far (see attainment decisions AT1–AT5). Areas can be **sub-county**,
-  so facilities are placed by coordinate, not county FIPS.
-
----
-
-## 2. The data systems
-
-### ICIS-Air (EPA ECHO) — the primary source
-EPA's **Integrated Compliance Information System – Air** is the current system of record for CAA stationary-
-source compliance and enforcement. Distributed as bulk CSV tables via EPA ECHO. Provides facilities,
-compliance evaluations, violations, formal/informal enforcement, Title V certifications, stack tests, and
-program/pollutant lookups.
-
-- **Facility key = `PGM_SYS_ID`** (the ICIS-Air regulated-facility / permit id). This is the project's
-  facility identifier. Note "facility" is genuinely ambiguous — many `PGM_SYS_ID` can map to one physical
-  site (`REGISTRY_ID`); regulation attaches to the permit. (Decision **CC1**.)
-- **The live download is a single current snapshot.** It ships *current* operating status, class, and
-  industry codes, and **no facility entry/exit dates**. Historical status therefore cannot be read off the
-  live download — hence the Wayback reconstruction (§3).
-- **The reportable universe is selective.** Minimum-Data-Requirement reporting (MDR, EPA Jan 2012) covers
-  Title V **majors** (~14k), **synthetic minors** (~27k), Part 61 NESHAP minors, plus any facility in a CMS
-  (Compliance Monitoring Strategy) evaluation plan, with a formal action, or with an active HPV. Ordinary
-  **minors are largely absent** from compliance/enforcement records unless one of those triggers fires — so
-  facility-year coverage is **endogenous to size/class**, not a clean sample of all sources. Load-bearing for
-  any denominator or selection argument.
-
-### AFS — the legacy predecessor
-The **Air Facility System** is ICIS-Air's pre-2001 predecessor. Retained here for historical actions,
-air-program, HPV, and historical-compliance tables (the `afs_*` assets).
-
-- **Data implication.** AFS uses its own identifiers and coding; joining AFS to ICIS-Air is non-trivial and
-  is treated as a documented, separate lineage (see the AFS↔FRS matching work). Do not assume AFS and
-  ICIS-Air ids align without an explicit crosswalk.
-
-### FRS — the facility registry (coordinates)
-EPA's **Facility Registry Service** is the cross-program registry of physical sites, keyed by `REGISTRY_ID`.
-Used here for facility **coordinates** (latitude/longitude).
-
-- **Data implication.** Coordinates come from FRS via `REGISTRY_ID`. A facility with **no FRS match or bad
-  coordinates gets `NA` coordinates**, which cascades: no county, no attainment placement (nuance **N4**).
-  Coordinate coverage is the gate for every geography-based join.
-
-### Green Book — attainment status
-EPA's **Green Book** lists NAAQS nonattainment/maintenance areas. Current status comes from shapefiles;
-**history is recovered from archived (Wayback) Green Book snapshots**, which is semi-manual.
-
-- **Data implication.** Attainment *history* exists only as far back as usable snapshots — the narrow
-  PM2.5-2016–2025 window reflects snapshot coverage, not a modeling choice.
-
----
-
-## 3. Why the "Wayback" reconstruction exists
-
-Two things the analysis needs are **not** in the current downloads: (a) *when* facilities and programs were
-actually in service over time, and (b) attainment history. Both are recovered from **archived annual
-snapshots**:
-
-- **ICIS-Air Wayback** — 11 annual snapshots of the ICIS-Air download (captured ~Q4 each year, **2015–2025**),
-  staged under `data/raw/ICIS_AIR_WAYBACK/`. One snapshot = one panel year. These reconstruct facility
-  operating-status history, facility entry/exit spells, and program-active history — see
-  `code/02_cleaning/wayback/` and decisions **F7 / B.7 / W1–W6**.
-- **Green Book Wayback** — archived attainment status for the PM2.5 history.
-
-- **Data implication.** Anything built from Wayback inherits its window (**2015–2025**; pre-2015 is `NA`,
-  not back-filled), is **left/right-censored** at the window edges, and rests on **snapshot presence** as the
-  measure of existence (begin/close dates are unreliable and deliberately ignored). Interior snapshot gaps
-  are LOCF-filled; disappearances ("dropout") are kept distinct from confirmed closures because a vanish can
-  be an extract artifact. These caveats are load-bearing — see W1–W6 and nuances N8–N11.
-
----
-
-## 4. Key regulatory concepts (and their data handling)
-
-**Compliance evaluations — FCE / PCE.** A **Full** or **Partial Compliance Evaluation** is EPA/state
-inspection-type review of a source. Pooled here into "inspections," with `type` preserving full-vs-partial
-(decision **I1**). Date = evaluation end (`ACTUAL_END_DATE`).
-
-- **Data implication.** The **FCE** is the MDR-required review; CMS policy targets an FCE every **2 years**
-  for majors and every **5** for synthetic minors (a target, not a guarantee). **PCEs are largely
-  discretionary** — reported only when part of a CMS plan or an HPV discovery — so PCE counts
-  **under-represent** actual partial reviews and should not be read as a complete census.
-
-**Violations — FRV & HPV.** Two severity tiers. A **Federally Reportable Violation (FRV)** is one the state
-must report to EPA (lower bar). A **High Priority Violation (HPV)** is the most serious class — it starts a
-"day-zero" clock and triggers EPA's enforcement-response-policy timeline, with (sometimes) a resolution date.
-
-- **Data implication.** ICIS Violation History tracks **both** FRV and HPV (`n_frv`, `n_hpv`); AFS's HPV
-  table tracks **HPV only**. An HPV is an **interval** `[day-zero, resolved]`, and most resolved spells span more
-  than one calendar year — so "HPV *status* in year Y" (interval-based `hpv_active`) is a different question
-  from "HPV *recorded* in year Y" (`n_hpv`). Open/unresolved spells are treated day-zero-year-only
-  (conservative). See **P8**, **V6**, nuance **N6**.
-
-**Enforcement — formal vs. informal.** Formal actions (administrative/judicial, may carry penalties) and
-informal actions (notices, warning letters). Pooled with a `kind` tag (**E1**).
-
-- **Data implication.** **Only formal actions carry penalties**; informal → `NA` penalty (**E3**). A single
-  settlement can span **multiple co-defendant facilities and repeats one penalty across each** — so penalties
-  must be summed over first-occurrence rows only (`dup==0`), never over raw rows (**E4**, **F2**).
-
-**Title V operating permits & annual certifications.** Major sources hold **Title V** operating permits and
-file **annual compliance certifications**.
-
-- **Data implication.** The certs table is **~81% duplicate rows** (one raw row per program/pollutant), so a
-  certification count (`n_certs`, first-occurrence) differs sharply from a raw-row count (`n_certs_raw`).
-  Also, class-"Major" ≠ Title V annual certifier — only ~62%/yr of majors show a cert, so **don't assume one
-  cert per major** (**T1**, **T3**, **F4**).
-
-**Facility class & program enrollment.** Facilities carry an air-pollutant **class** — **Major**, **Synthetic
-Minor** (uncontrolled potential-to-emit over the threshold, but held below it by federally-enforceable
-limits), or **minor** — and enroll in one or more **programs**: SIP (State Implementation Plan), NSPS (New
-Source Performance Standards), MACT/NESHAP (hazardous-air-pollutant standards), NSR/PSD (New Source Review /
-Prevention of Significant Deterioration), FESOP (federally-enforceable state operating permit), Title V, and
-**Acid Rain / Title IV** (SO₂/NOx cap-and-trade, electric utilities only — AFS program code `A`, emissions in
-CAMD).
-
-Major-source status is **program- and pollutant-specific** and rests on **potential-to-emit** (full-capacity,
-uncontrolled): 100 tpy of a criteria pollutant for Title V/SIP (lower in nonattainment — 50/25/10 by
-severity), 10/25 tpy single/combined HAP under §112, 100 tpy (28 listed categories) or 250 tpy (else) for
-PSD. The facility-level `AIR_POLLUTANT_CLASSIFICATION_CODE` is the **worst case** across all pollutants and
-programs; the pollutant-level field carries the per-pollutant class. AFS's equivalent is
-`EPA_CLASSIFICATION_CODE` (A1/A2/B/SM).
-
-- **Data implication.** Enrollment is a **set**, not one value (median 2, max 15 programs/facility), encoded
-  as non-exclusive `prog_*` indicators. Class/industry come from the **current snapshot** and are applied to
-  all years (time-invariant); enrollment flags are **ever-enrolled** with **no end date**, so they cannot
-  date *when* a program attached — use with care in event-study/timing designs (**F6**, **N7**, and the
-  year-varying Wayback alternative **W5/N10/N11**).
-
-**Duplicates are flagged, never dropped.** Across every event asset, no rows are removed; each carries `dup`
-(occurrence index within its event id; `0` = first) and `dup_exact` (byte-identical repeat). `filter(dup==0)`
-reproduces the deduplicated view exactly, while duplication stays auditable in place (**CC9**, nuance **N1**).
-
-**Zero vs. missing.** The load-bearing panel semantic: within an **observed** facility-year, a measure with
-no event is a true **0**; an **unobserved** facility-year is `NA`, never `0`. The Wayback `operating` flag
-adds a second observation channel — an operating facility-year with no events is a *structural zero*, tracked
-via `obs_source ∈ {event, operating, unobserved}` (**P3/P4**, **W6**).
-
----
-
-## 5. Where to go next
-
-- Building or reading an **asset**? → its `data/processed/<name>.README.md` + `docs/data_dictionary.md`.
-- Want the **reasoning** behind a choice? → `panel_construction_decisions.md` (find the decision code, e.g.
-  CC9, F7, P8).
-- Deciding something **still open**? → `panel_open_questions.md`.
-- Running the **pipeline**? → `code/README.md` and `code/RUN_ALL.R`.
+# Clean Air Act Overview
 
 ## Valuable Links
 
-- **Nonattainment & Maintenance Area Dashboard** — https://awsedap.epa.gov/public/extensions/specs-area-dashboard/index.html
-- **Minimum Data Requirements (MDRs) for CAA Stationary Sources** (EPA, Jan 2012) — https://www.epa.gov/sites/default/files/2013-10/documents/mdrshort.pdf
-- **ECHO / ICIS-Air data-entry requirements** — https://echo.epa.gov/resources/echo-data/data-entry-requirements
-- **Title V permit (example — Virginia DEQ)** — https://www.deq.virginia.gov/home/showpublisheddocument/5711/637951157567970000
+Nonattainment and Maintenance Area Dashboard: https://awsedap.epa.gov/public/extensions/specs-area-dashboard/index.html
+
+Title V Virginia Permit: https://www.deq.virginia.gov/home/showpublisheddocument/5711/637951157567970000
+
+Minimum Data Reporting Requirements:
+https://www.epa.gov/sites/default/files/2013-10/documents/mdrshort.pdf
+https://echo.epa.gov/resources/echo-data/data-entry-requirements
+
+## General Information
+
+Comprehensive federal law that regulates air emissions from stationary and mobile sources. Authorizes the EPA to establish National Ambient Air Quality Standards (NAAQS).
+
+* First passed in 1963, but the operative version was created by the 1970 amendments (same year EPA was established). Substantial expansions in 1977 and 1990.
+* Cooperative federalism: the federal EPA sets standards, and the states do most of the implementation and enforcement, subject to federal approval/backstop.
+* Distinguishes between mobile sources (cars, trucks, planes) and stationary sources (power plants, factories, refineries).
+
+> **Data implication.** This project covers **stationary sources only**. Cooperative federalism shows up
+> directly in the data as `STATE_EPA_FLAG` / `agency` on every event asset (E/S/L) — enforcement counts pool
+> across levels of government unless deliberately split by agency.
+
+## NAAQS
+
+Foundation of the CAA. Set under section 108, EPA designates a set of "criteria pollutants" (currently ozone, particulate matter (PM2.5 and PM10), sulfur dioxide, nitrogen dioxide, carbon monoxide, and lead). Under section 109, NAAQS are set for each.
+
+* Primary standards: protect public health. Secondary standards: protect welfare (crops, visibility, materials).
+* NAAQS are about ambient air quality in a geographic area, not about any individual stack.
+* Areas are classified as attainment (meeting the standard), nonattainment (not meeting it), or unclassifiable. These designations trigger different regulatory regimes.
+   * Nonattainment areas are further graded by severity, which drives how strict the requirements are.
+   * Official designations are re-evaluated by the EPA whenever the NAAQS are updated. The EPA is legally required to review the NAAQS for all criteria air pollutants at least every 5 years.
+
+> **Data implication.** Attainment status is a **place × time × pollutant** attribute, not a facility
+> attribute — it's the panel's treatment variable, and facilities are placed into an area by coordinate
+> (sub-county), not county FIPS. This project has so far built only **PM2.5 (2012 standard), 2016–2025**;
+> ozone/SO₂/lead attainment history is not yet constructed.
+
+## State Implementation Plans (SIPs)
+
+Section 110. Each state writes a plan showing how it will achieve and maintain the NAAQS.
+
+* If a state fails to produce an adequate plan, EPA can impose a Federal Implementation Plan.
+
+> **Data implication.** SIP enrollment (`prog_sip`) is the most common program flag in the data — ~90% of
+> active facilities carry it, consistent with "applies to essentially everyone." It's an **ever-enrolled**,
+> time-invariant flag with no end date, so it can't date *when* a facility came under its SIP obligations.
+
+## Stationary Source Programs
+
+Stationary-source regulation runs on: standard-setting programs that say how clean a source must be (NSPS, NESHAP/MACT, SIP limits), and permitting programs that bind those standards onto a specific facility and make them federally enforceable (NSR/PSD at construction, Title V during operation).
+
+* Section 111: New Source Performance Standards (NSPS). Technology-based, nationally uniform emissions standards set by source category (power plants, cement kilns, etc).
+   * NSPS apply to sources that are newly constructed or that undergo "modification."
+      * Older sources can avoid the standard until they modify - incentive to keep aging plants running?
+      * NSPS standards are largely "self-implementing"; they bind the source directly whether or not they've been written into a permit yet.
+* Section 112: NESHAP and MACT: two regulatory generations under the same statutory section. Emissions of hazardous air pollutants (HAPs). Older Part 61 NESHAPs are pollutant-by-pollutant standards. (pre-1990 approach). Part 63 standards are MACT standards
+created by 1990 amendments (set category-by-category at the level already being achieved by the lower-emitting sources of an industrial sector). A separate track for toxic air pollutants regulated through technology-based standards rather than ambient standards.
+
+* 1990 amendments revised section 112 to require issuance of technology-based standards for
+major sources and certain area sources.
+
+* Major sources: a stationary source or group of stationary sources that emit or have potential to emit 10 tons per year or more of a HAP or 25 tons per year or more of a combination of HAPs.
+   * For major sources, section 112 requires EPA to establish emission standards that require the maximum degree of reduction in emissions of HAPs. Commonly referred to as "maximum achievable control technology" or MACT standards.
+* Area source: stationary source that is not a major source.
+
+* Section 110: SIP - State Implementation Plans as an enforceable source of limits. The SIP itself is a direct source of federally enforceable emission limits on individual facilities.
+   * Each SIP must include a permit program to regulate the modification and construction of any stationary source of air pollution.
+
+> **Data implication.** `prog_nsps` pools **both** the major-source code (`CAANSPS`) and the non-major code
+> (`CAANSPSM`) into one flag, so it doesn't by itself distinguish major/area-source NSPS status.
+> `prog_mact`/`prog_neshap` are separate flags; the area-source GACT code (`CAAGACTM`) is deliberately **not**
+> folded into `prog_mact`. All are static/ever-enrolled (see SIP note above).
+
+## PSD and NSR
+
+Preconstruction (New Source Review Permitting). Permitting half of the new source track. NSR splits geographically by attainment status:
+
+* PSD (Prevention of Significant Deterioration): applies in attainment/unclassifiable areas. New or modified major sources must install Best Available Control Technology (BACT) and show their emissions won't deteriorate air quality beyond allowed increments. Major-source thresholds here are 100 tons/year for 28 source categories and 250 tons/year otherwise.
+* Nonattainment NSR (NNSR) applies in nonattainment areas and is stricter: new/modified major sources must meet the Lowest Achievable Emissions Rate (LAER) and obtain emission offsets from existing sources, so net area emissions do not rise.
+   * Major-source thresholds are lower and become stricter with the severity of nonattainment.
+
+> **Data implication.** These are *preconstruction* permits, which the panel's year-varying program-active
+> flags now encode directly: `prog_nsr_active` / `prog_psd_active` are active not only while a facility is
+> **operating** (`OPR`/`TMP`/`SEA`) but also while it's **planned or under construction** (`PLN`/`CNS`) —
+> unlike the other six program-active flags (SIP, Title V, NSPS, MACT, NESHAP, FESOP), which require the
+> facility to actually be operating. A facility can therefore read `prog_nsr_active = 1` while `operating = 0`
+> in the same year — that's not a contradiction, it reflects that the NSR/PSD obligation attaches before
+> operation begins. (Decision **N11**, `panel_construction_decisions.md`.)
+
+## Title V: Operating Permits (compliance backbone)
+
+* Title V does not set new emission limits, but it consolidates all of a major source's existing obligations (NSPS, NESHAP/MACT, SIP, NSR/PSD terms) into one enforceable operating permit.
+   * Threshold: 100 tons per year potential-to-emit of a regulated pollutant, lower in nonattainment areas and for HAPs.
+* Required annual compliance certification: source attests to its own compliance.
+* Failure to apply for a Title V permit or failure to submit the annual compliance certification is itself a federally reportable violation.
+
+> **Data implication.** The Title V certs table (`TITLEV_CERTS`) is **~81% duplicate rows** (one raw row per
+> program/pollutant on the same certification), so a certification count (`n_certs`) differs sharply from the
+> raw row count — the panel now surfaces this with `n_certs_dup` rather than silently deduping. Separately,
+> "required annual" does not mean "always observed": among **operating Major Emissions facilities**, only
+> **72.5%** have a reported cert in 2025 (9,428 of 13,012), down from 77.5% in 2015 — a gap consistent with
+> **reporting lag** in the ICIS extract (older certs for the same facilities exist through 2020–2024) rather
+> than confirmed non-compliance. (Decision **N12**.)
+
+## Layers of CAA Regulation
+
+### Layer 1: Two Logics of CAA Regulation
+
+1. Ambient-based (NAAQS -> SIPS). "The air in this area must be clean." EPA sets the standard, states figure out how to meet it. The SIP is the vehicle. Geographically driven, the same factory faces different requirements depending on whether it is located in an attainment or nonattainment area.
+2. Source-based (technology standards). "This type of facility must control emissions this much." Doesn't matter where you are; if you are a cement plant, you meet the cement standard. NSPS, NESHAP/MACT, and the preconstruction permits (PSD/NSR) all work this way.
+
+Title V sits on top of both. It doesn't create new requirements, it consolidates everything a facility owes into a single permit.
+
+### Layer 2: Which Program Does What?
+
+A facility going through its regulatory life:
+
+* Before it's built: Does it need a construction permit?
+   * In a clean-air area -> PSD, prevention of significant deterioration (best available control technology)
+   * In a dirty-air area -> NNSR, new source review (lowest-achievable emission rate + offsets)
+   * These are one-time permits, not ongoing programs. A source is subject to this regulation until it faces modification, which could change its designation potentially.
+* Once it's operating: what ongoing standards apply?
+   * SIPS: applies to essentially everyone. The state's plan for meeting NAAQS. Federally enforceable.
+      * The state figures out which facilities need to do what (might set emission limits on specific plants, require certain control technologies, monitoring requirements). Different facilities in the same state can face very different SIP obligations depending on their size, industry, and location.
+   * NSPS (New Source Performance Standards): applies if you're a new or modified source in a listed industrial category. Technology-based emission limits. "New" means built after the standard was published for your category.
+      * Applies the moment you're a new source in a covered category.
+   * NESHAP (National Emissions Standards for Hazardous Air Pollutants) (Part 61): original hazardous air pollutant standards. A short list of specific toxics (asbestos, benzene, beryllium, vinyl chloride, etc.)
+      * Subject when you start operating.
+   * MACT (Part 63): 1990 amendments replaced the old NESHAP approach with industry-wide technology standards for ~187 HAPs. "Maximum Achievable Control Technology." Big one for toxics.
+   * FESOP (Federally Enforceable State Operating Permit): mechanism for states to cap a source's potential emissions below major source thresholds, making it a synthetic minor. Keeps small sources out of Title V.
+* If it's a major source:
+   * Title V: must hold a comprehensive operating permit. Must submit annual compliance certifications. This is the permitting program, not a substantive standard. Bundles everything else into one document.
+   * Acid Rain (Title IV): only electric utilities. SO2/NOx cap-and-trade. CAMD data in emissions dataset.
+   * Major source thresholds are set per pollutant. The facility-level classification is the "worst case": if you're major for one pollutant, you're a major facility. Regulatory burden is pollutant-specific.
+
+> **Data implication.** "Once it's operating" is directly measurable via the year-varying `operating` flag
+> (`1` iff status ∈ {OPR, TMP, SEA}, 2015–2025 only; `NA` before 2015 — no snapshot exists to assert a status).
+> The "before it's built" / "once it's operating" split is exactly the NSR/PSD-vs-the-rest program-active
+> distinction described under **PSD and NSR** above.
+
+## Facility Classification
+
+### What the Classifications Mean
+
+Some basic terms:
+
+* SIC (Standard Industrial Classification): older system (1930s-1990s). 4-digit codes (e.g. 2911 is petroleum refining, 4911 is electric services).
+* NAICS (North American Industry Classification System): replaced SIC in 1997. 6-digit codes, more granular. Harmonized across the U.S., Canada, and Mexico.
+   * NSPS and MACT standards are written for specific source categories.
+
+**Major source.** A facility whose actual or potential emissions exceed the threshold for at least one pollutant. Potential is key, it means what the facility could emit if it ran at full capacity, 24/7, 365 days per year, with no controls.
+
+The threshold depends on the program:
+
+* SIP/Title V (criteria pollutants): 100 tons/year of any single criteria pollutant in attainment areas. In nonattainment areas, the threshold drops to 50, 25, or even 10 tons/year depending on how badly the area misses the NAAQS.
+* HAPs (Section 112): 10 tons/year of any single HAP or 25 tons/year of all HAPs combined.
+* PSD: 100 tons/year for sources in 28 listed industrial categories, 250 tons/year for everything else.
+* Acid Rain: specific to electric utilities based on capacity and fuel type.
+
+A facility can be major under one program's threshold and not another. Facility-level classification reflects the highest classification across all applicable programs and pollutants.
+
+What being major means:
+
+* Subject to Title V permitting, must hold a comprehensive operating permit, pay permit fees, and submit annual compliance certifications
+* Higher inspection priority, EPA policy targets FCEs every 2 years for major sources
+* More likely to trigger PSD/NSR review for modifications
+* More extensive monitoring, recordkeeping, and reporting requirements
+* More likely to face formal enforcement if violations are found
+* Subject to MACT standards for applicable HAP categories
+
+> **Data implication.** "Facility-level classification is the worst case" matches `AIR_POLLUTANT_CLASSIFICATION_CODE`
+> in the Facilities table exactly (facility-level worst-case); the same field name in the Pollutants table is
+> the **pollutant-specific** classification, so don't conflate the two tables' meaning of the same column
+> name. Class is read from the **current snapshot only** and applied to every panel year (time-invariant) —
+> a facility that changed class over 2005–2025 shows only its latest class throughout.
+
+**Synthetic Minor.** A facility whose uncontrolled potential emissions would exceed the major source threshold, but which has accepted legally binding, federally enforceable limits on its operations or emissions that keep it below the threshold. The facility voluntarily constrains itself (through a FESOP or an SIP permit with enforceable conditions) in exchange for a lighter regulatory treatment.
+
+* This is a deliberate regulatory choice by the facility. Limits might cap production hours, restrict fuel types, require specific control equipment, or directly cap emission rates.
+* Limits must be federally enforceable, not just a promise, but a binding permit condition that EPA or state can act on.
+
+What being a synthetic minor means:
+
+* Avoids Title V permitting (main incentive, Title V permits are expensive and burdensome)
+* Lower inspection priority (EPA targets FCEs every 5 years instead of 2)
+* Still subject to NSPS and MACT if applicable to the source category
+* Still subject to SIP requirements
+* Enforceable limits themselves become compliance obligations. Violating the limit is an enforceable violation and can bump you back up to major
+
+Bunching below the threshold? Gaming potential to emit calculations? Differences for facilities just above or below the threshold?
+
+**Minor Source.** Actual and potential emissions are below all major source thresholds without needing enforceable limits. The lightest regulatory burden.
+
+What being a minor source means:
+
+* No Title V permit required
+* Lowest inspection priority, many minor sources go years or decades without an FCE
+* Still subject to SIP requirements (everyone is)
+* Still subject to NSPS and MACT if applicable, being minor doesn't exempt you from technology standards for your source category
+* May still need state-level operating permit (varies by state)
+* Minimal federal reporting requirements
+
+> **Data implication.** Minor sources are the class this project's compliance data represents *worst*: EPA's
+> Minimum Data Requirements (MDR, Jan 2012) mandate reporting for Title V majors, synthetic minors, Part 61
+> NESHAP minors, and any facility separately triggered by a CMS plan, formal action, or active HPV — ordinary
+> minors are largely **absent** from compliance/enforcement records unless one of those triggers fires. So
+> facility-year coverage in this data is **endogenous to size/class**, not a clean random sample of all
+> sources — load-bearing for any denominator or selection argument.
+
+"AIR_POLLUTANT_CLASSIFICATION_CODE" in Facilities table gives facility-level "worst case." In the Pollutants table, the same field is the pollutant-specific classification. In AFS, the equivalent is "EPA_CLASSIFICATION_CODE." A1 (actual or potential controlled >100 tons/year), A2 (actual <100, potential >100), B (potential uncontrolled <100), SM (synthetic minor).
+
+Classifications dependent on potential to emit are interesting.
+
+> **Data implication.** AFS's `EPA_CLASSIFICATION_CODE` has two more values beyond A1/A2/B/SM, verified
+> against EPA's AFS documentation: **C** ("Class is unknown") and **E1/E2**. Don't drop or ignore these as
+> parse failures — they're valid codes.
+
+## The Enforcement Process
+
+### Who Enforces?
+
+States do most enforcement. When the EPA "delegates" a program to a state, the state takes the primary responsibility for permitting, inspecting, and enforcing the program. EPA retains oversight and backstop authority (it can step in if the state isn't doing its job).
+
+* In the data, this is the "STATE_EPA_FLAG."
+* Local agencies (air quality management districts, mostly in California and a few other states) handle some share too.
+
+### The Enforcement Pipeline
+
+**Step 1: Compliance monitoring**
+
+* FCE (Full Compliance Evaluation): comprehensive review of a facility's compliance with all applicable requirements. Can be on-site (inspector visits) or off-site (record review). EPA policy says that major sources should get an FCE every 2 years, synthetic minors every 5 (are these targets frequently met)?
+* PCE (Partial Compliance Evaluation): focused on a specific aspect. Stack test review, CEM audit, record check.
+* Stack Tests: direct measurement of what is coming out of the stack. The facility usually conducts them, and the agency may view or observe the results.
+* Title V Certification Review: the facility self-certifies annual compliance; the agency reviews it.
+
+This is the FCE/PCEs table, Stack Tests table, and Title V Certs table. In AFS, these are all rows in the actions table differentiated by "NATIONAL_ACTION_TYPE."
+
+> **Data implication.** FCE/PCE are pooled into one "inspections" measure, with `type` preserving the
+> full-vs-partial split. PCEs are largely discretionary (reported only as part of a CMS plan or an HPV
+> discovery), so PCE counts under-represent actual partial reviews and shouldn't be read as a complete census
+> — the "are these targets frequently met?" question is directly testable from `n_fce`/`n_inspections` against
+> the 2-year/5-year CMS cadence, but hasn't been run yet.
+
+**Step 2: Violation found (the inspection or review reveals noncompliance)**
+
+* FRV (Federally Reportable Violation): serious enough that the state must report it to the EPA (reporting thresholds?), but doesn't necessarily trigger the full federal enforcement response. Threshold is lower.
+* HPV (High Priority Violation): the most serious category. Triggers EPA's enforcement response policy, which sets timelines for how quickly the violation must be addressed.
+   * Examples: failing to obtain a required permit, violating emissions limits detected via stack test, chronic violators.
+   * HPVs start a clock. Once a facility is designated "HPV" (day zero), EPA's policy says that it should be addressed within a specific timeframe.
+      * This is the Violation History Table (ICIS) and HPV History Table (AFS). ICIS tracks both FRV and HPV; AFS tracks HPVs.
+
+> **Data implication.** ICIS's `hpv` flag is read off `HPV_DAYZERO_DATE` non-blank. An HPV is an **interval**
+> `[day-zero, resolved]`, and **69%** of resolved spells span more than one calendar year — so "HPV *status* in
+> year Y" (`hpv_active`, interval-based) is a genuinely different question from "HPV *recorded* in year Y"
+> (`n_hpv`, the year it was determined). They will not agree year-to-year; use the one that matches the
+> question. Open/unresolved spells are treated day-zero-year-only (conservative, doesn't assume ongoing
+> status through the panel's end).
+
+**Step 3: Informal Action.** Agency's first response is typically informal (no legal force, but signals that a problem has been identified).
+
+* Notice of Violation (NOV)
+* Warning letter
+* Phone call
+* Compliance assistance
+
+Informal actions outnumber formal 3:1 in our data. This is our Informal Actions Table. In AFS, these are action codes like 6A (EPA NOV), 7C (state NOV), and 3E (warning).
+
+> **Data implication.** The two tiers also diverge sharply in duplicate load: **informal** enforcement rows
+> are **~48%** event-key duplicates (near-all byte-identical repeats) versus **~1%** for **formal** — so a raw
+> row count overstates informal activity roughly 2× relative to formal. The panel now flags this with
+> `n_informal_dup` / `n_formal_dup` rather than silently deduping.
+
+**Step 4: Formal Action.** If informal action doesn't work, or if the violation is serious enough, the agency escalates to an action with legal force.
+
+Three tiers:
+
+* Administrative (formal): the agency issues an order. Consent agreements, administrative orders, compliance schedules. The majority are these.
+* Judicial: the agency refers the case to court. Consent decrees, civil lawsuits. Rarer, reserved for the most serious or recalcitrant cases.
+* Penalties are assessed at this stage. Heavily right-skewed because most cases settle with small penalties and a few major cases drive the mean up.
+
+This is the Formal Actions Table.
+
+> **Data implication.** Only **formal** actions carry a penalty (`penalty_amount`; informal → `NA`). A single
+> multi-facility settlement **repeats the same penalty figure across every co-defendant's row**, so summing
+> `penalty_amount` **across facilities** double- (or multiply-) counts that settlement — this is a live risk,
+> not hypothetical: duplicate-row penalty dollars run **4.6%** of the total in the universe panel up to
+> **11.6%** in the electric panel (`penalty_amount_dup` isolates this).
+
+**Step 5: Resolution.** The violation is resolved, the facility returns to compliance, pays the penalty, and implements the required controls. The "HPV_RESOLVED_DATE" marks this.
+
+Most compliance happens through the threat of enforcement, not enforcement itself. Idea of 'marginal deterrence,' where the regulator underpenalizes small violations to create strong marginal incentives to avoid large violations.

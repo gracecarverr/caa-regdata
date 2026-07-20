@@ -30,8 +30,12 @@ DOWNLOAD=false Rscript code/RUN_ALL.R
 DOWNLOAD=false SKIP_SITE=true Rscript code/RUN_ALL.R
 ```
 
-The documentation site (`docs/index.html`) is regenerated as part of `RUN_ALL.R` and committed, so GitHub
-Pages serves it directly with no build step.
+The documentation site is a 4-page static site under `docs/` — Home (`index.html`, institutional overview),
+Raw Data (`raw_data.html`, per-source summary tables), Databases (`databases.html`), and Panels
+(`panels.html`, construction notes + live summary-stat tables). The first three are regenerated as part of
+`RUN_ALL.R` and committed, so GitHub Pages serves them directly with no build step; Panels is rebuilt by hand
+(`Rscript code/diagnostics/build_panels_page.R`, after `06_panel_profile.R`) since it depends on a
+hand-run diagnostic — see `code/diagnostics/README.md`.
 
 ## Layout
 
