@@ -2,13 +2,13 @@
 # code/02_cleaning/wayback/19_wayback_program_status.R -- HISTORICAL program status from the ICIS-AIR WAYBACK
 #   snapshots (2015-2025). The raw PROGRAMS table has an unreliable BEGIN_DATE and NO program-close date;
 #   we instead reconstruct a facility x year "is this program active?" series from snapshot PRESENCE +
-#   operating status. Covers the 8 program groups already flagged in the spine.
+#   operating status. Covers the 10 program groups already flagged in the spine.
 #   in : data/raw/ICIS_AIR_WAYBACK/ICIS-AIR_downloads_{2015..2025}/{ICIS-AIR_FACILITIES,ICIS-AIR_PROGRAMS}.csv
 #   out: data/processed/wayback_program_status.csv.gz
-#        PGM_SYS_ID, year, prog_{sip,titlev,nsps,mact,neshap,fesop,nsr,psd}_active
+#        PGM_SYS_ID, year, prog_{sip,titlev,nsps,mact,gact,neshap,fesop,nsr,psd,cfc}_active
 #
 #   prog_X_active in a given snapshot year = 1 iff the facility carries >=1 program in group X whose status is
-#   ACTIVE under a PROGRAM-SPECIFIC rule: operating programs (sip/titlev/nsps/mact/neshap/fesop) are active only
+#   ACTIVE under a PROGRAM-SPECIFIC rule: operating programs (sip/titlev/nsps/mact/gact/neshap/fesop/cfc) are active only
 #   for {OPR,TMP,SEA} (mirrors the 17_ operating whitelist); the preconstruction programs NSR & PSD are ALSO
 #   active for {PLN,CNS} (planned / under-construction), since those permits attach before a source operates.
 #   CLS, the rare NER/NED/NES/LDF, and a missing status are inactive for every group. 0 if the facility is
@@ -25,7 +25,9 @@ SNAP_YEARS <- 2015:2025
 # program_code -> group (matches the prog_* flags built in code/03_panel_building/00_spine.R)
 GROUPS <- list(
   sip    = "CAASIP",  titlev = "CAATVP", nsps = c("CAANSPS", "CAANSPSM"), mact = "CAAMACT",
-  neshap = "CAANESH", fesop  = "CAAFESOP", nsr = "CAANSR", psd  = "CAAPSD")
+  gact   = "CAAGACTM",                                     # Part 63 AREA sources (counterpart to mact)
+  neshap = "CAANESH", fesop  = "CAAFESOP", nsr = "CAANSR", psd  = "CAAPSD",
+  cfc    = "CAACFC")                                       # Title VI stratospheric ozone protection
 code2group <- stack(GROUPS) |> transmute(PROGRAM_CODE = values, grp = as.character(ind))
 GRP_COLS <- paste0("prog_", names(GROUPS), "_active")
 
@@ -48,7 +50,7 @@ present <- bind_rows(lapply(SNAP_YEARS, read_csv_snap, file = "ICIS-AIR_FACILITI
 active <- bind_rows(lapply(SNAP_YEARS, read_csv_snap, file = "ICIS-AIR_PROGRAMS.csv",
                            cols = c("PGM_SYS_ID", "PROGRAM_CODE", "AIR_OPERATING_STATUS_CODE"))) |>
   filter(!is.na(PGM_SYS_ID)) |>
-  inner_join(code2group, by = "PROGRAM_CODE") |>                       # keep only the 8 groups
+  inner_join(code2group, by = "PROGRAM_CODE") |>                       # keep only the 10 groups
   filter(AIR_OPERATING_STATUS_CODE %in% OPERATING_ACTIVE |             # program-specific active rule
          (grp %in% PRECONSTRUCTION_GRPS & AIR_OPERATING_STATUS_CODE %in% PRECONSTRUCTION_EXTRA)) |>
   distinct(PGM_SYS_ID, year, grp) |>
@@ -57,7 +59,7 @@ active <- bind_rows(lapply(SNAP_YEARS, read_csv_snap, file = "ICIS-AIR_PROGRAMS.
 
 # (3) join active flags onto the presence grid; present-but-absent group -> observed 0
 wide <- present |> left_join(active, by = c("PGM_SYS_ID", "year"))
-for (g in GRP_COLS) if (is.null(wide[[g]])) wide[[g]] <- 0L        # ensure all 8 columns exist
+for (g in GRP_COLS) if (is.null(wide[[g]])) wide[[g]] <- 0L        # ensure all 10 columns exist
 wide <- wide |> mutate(across(all_of(GRP_COLS), \(x) as.integer(coalesce(x, 0L))))
 
 # (4) LOCF-fill interior gaps within each facility's observed span (mirrors 17_), vectorized via data.table
@@ -68,7 +70,7 @@ grid[, year := first + sequence(span[, last - first + 1L]) - 1L][, c("first","la
 full <- dt[grid, on = c("PGM_SYS_ID","year")]                    # gap years -> NA in the 8 flag columns
 setorder(full, PGM_SYS_ID, year)
 full[, (GRP_COLS) := lapply(.SD, nafill, type = "locf"), by = PGM_SYS_ID, .SDcols = GRP_COLS]  # min year present -> no leading NA
-prog <- as_tibble(full) |> select(PGM_SYS_ID, year, all_of(GRP_COLS)) |> arrange(PGM_SYS_ID, year)
+prog <-as_tibble(full) |> select(PGM_SYS_ID, year, all_of(GRP_COLS)) |> arrange(PGM_SYS_ID, year)
 
 dir.create(here::here("data/processed"), showWarnings = FALSE, recursive = TRUE)
 write_csv(prog, here::here("data/processed/wayback_program_status.csv.gz"))

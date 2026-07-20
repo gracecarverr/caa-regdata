@@ -28,7 +28,7 @@ Returns the finished balanced panel for the facilities in `facs` (a filtered sli
 | `rd(name, cols)` | reads `data/processed/<name>.csv.gz`, keeping `cols`; `PGM_SYS_ID`/`year`/`dup` typed, rest character |
 | `agg_inspections(ids)` | facility-year inspection counts (all rows) + FCE/PCE + agency splits + `n_inspections_dup` / `_dup_exact` |
 | `agg_violations(ids)` | violations (all rows) + HPV/FRV + program + agency splits; asserts zero dups |
-| `agg_enforcement(ids)` | formal+informal pooled (all rows): `n_enforcement` + type/agency splits + `n_enforcement_dup` / `_dup_exact` and formal/informal `_dup` / `_dup_exact` |
+| `agg_enforcement(ids)` | formal+informal pooled (all rows): `n_enforcement` + type/agency splits + `n_enforcement_dup` / `_dup_exact` and formal/informal `_dup` / `_dup_exact`; `n_penalties` = formal rows with a positive `$` penalty (count companion to `penalty_amount`) + `n_penalties_dup` = those on `dup>0` rows |
 | `agg_certs(ids)` | `n_certs` (all rows) + deviation count + `n_certs_dup` / `_dup_exact` |
 | `agg_stacktests(ids)` | stack tests (all rows) + pass/fail; asserts zero dups |
 | `attach_hpv_status(panel, ids)` | interval-based `hpv_active` / `hpv_active_1mo` from the HPV spell (union of overlapping spells; open spells day-zero-year-only). Keeps `dup==0` — status flag, not a count; duplicate spells are output-identical |
@@ -42,8 +42,8 @@ Returns the finished balanced panel for the facilities in `facs` (a filtered sli
 - `ATTR_COLS` — spine attributes carried onto every panel.
 - `WAYBACK_COLS` — the year-varying status block.
 - `PANEL_COLS` — canonical order for `universe`/`major_synmin`; `TREATMENT_COLS` appended for `electric`.
-- `COUNT_COLS` — the measures eligible for known-zero filling (all `n_*`/`any_*`/HPV flags; **not**
-  `penalty_amount`).
+- `COUNT_COLS` — the measures eligible for known-zero filling (all `n_*`/`any_*`/HPV flags, incl.
+  `n_penalties` / `n_penalties_dup`; **not** `penalty_amount` / `_dup`, which stay NA-when-none).
 
 ## Load-bearing invariants (don't change without re-verifying panel output)
 

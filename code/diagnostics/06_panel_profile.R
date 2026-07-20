@@ -82,15 +82,15 @@ summarise_measure <- function(d_all, m) {
   x     <- observed(d_all)[[m]]                        # summarise over observed facility-years only
   x     <- x[!is.na(x)]
   data.table(
-    n_obs = length(x), n_na = sum(is.na(x_all)), pct_na = mean(is.na(x_all)),
+    n_obs = length(x), n_na = sum(is.na(x_all)),
     min = min(x), p25 = quantile(x, .25), median = median(x), p75 = quantile(x, .75), max = max(x),
-    mean = mean(x), sd = sd(x), pct_zero = mean(x == 0), pct_nonzero = mean(x > 0))
+    mean = mean(x), sd = sd(x))
 }
 summary_counts <- rbindlist(lapply(names(P), function(nm)
   rbindlist(lapply(COUNT_COLS, function(m)
     cbind(panel = NAMES[nm], measure = m, summarise_measure(P[[nm]], m))))))
 fwrite_rounded(summary_counts, file.path(OUT_CSV, "summary_counts.csv"),
-               prop_cols = c("pct_na", "pct_zero", "pct_nonzero"), num_cols = c("mean", "sd"))
+               num_cols = c("mean", "sd"))
 
 # =========================================================================================================
 # CSV 3 -- penalty_amount: nonzero five-number summary + total (per panel). total now sums ALL formal rows;
