@@ -70,7 +70,7 @@ grid[, year := first + sequence(span[, last - first + 1L]) - 1L][, c("first","la
 full <- dt[grid, on = c("PGM_SYS_ID","year")]                    # gap years -> NA in the 8 flag columns
 setorder(full, PGM_SYS_ID, year)
 full[, (GRP_COLS) := lapply(.SD, nafill, type = "locf"), by = PGM_SYS_ID, .SDcols = GRP_COLS]  # min year present -> no leading NA
-prog <-as_tibble(full) |> select(PGM_SYS_ID, year, all_of(GRP_COLS)) |> arrange(PGM_SYS_ID, year)
+prog <- as_tibble(full) |> select(PGM_SYS_ID, year, all_of(GRP_COLS)) |> arrange(PGM_SYS_ID, year)
 
 dir.create(here::here("data/processed"), showWarnings = FALSE, recursive = TRUE)
 write_csv(prog, here::here("data/processed/wayback_program_status.csv.gz"))
