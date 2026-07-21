@@ -1,0 +1,2 @@
+n_actions,n_facilities,n_settlements,year_min,year_max,pct_has_penalty,total_penalty_all_rows,total_penalty_dup0,pct_actions_multi_facility,pct_dup_gt0
+105656,37216,102745,1972,2026,0.684,5739530383.98,5499334295.74,0.031,0.008
