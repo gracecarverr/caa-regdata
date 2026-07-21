@@ -58,7 +58,7 @@ order:
   entry/exit spell summary `entered_year` / `exited_year` / `exit_source` / `left_censored` / `right_censored`
   (time-invariant per facility).
 - **Wayback status** (year-varying) `op_status_code` + `operating` (1 if code ∈ {OPR,TMP,SEA}) and
-  `prog_{sip,titlev,nsps,mact,neshap,fesop,nsr,psd}_active`. **Populated 2015–2025 only; `NA` for 2005–2014**
+  `prog_{sip,titlev,nsps,mact,gact,neshap,fesop,nsr,psd,cfc}_active`. **Populated 2015–2025 only; `NA` for 2005–2014**
   (no snapshot exists — we cannot assert a status). See `briefs/panel_construction_decisions.md` §B.7 / F7.
 - **HPV status** `hpv_active`, `hpv_active_1mo` — interval-based (in HPV status during any part of the year /
   for > 30 days), from the HPV spell, *distinct from* the recorded-year count `n_hpv`.

@@ -68,12 +68,13 @@ progs <- read_csv(file.path(CLEAN, "programs.csv.gz"),
     prog_titlev = as.integer(any(PROGRAM_CODE == "CAATVP")),
     prog_nsps   = as.integer(any(PROGRAM_CODE %in% c("CAANSPS", "CAANSPSM"))),
     prog_mact   = as.integer(any(PROGRAM_CODE == "CAAMACT")),
-    prog_gact   = as.integer(any(PROGRAM_CODE == "CAAGACTM")),   # Part 63 AREA-source counterpart to MACT
     prog_neshap = as.integer(any(PROGRAM_CODE == "CAANESH")),
     prog_fesop  = as.integer(any(PROGRAM_CODE == "CAAFESOP")),
     prog_nsr    = as.integer(any(PROGRAM_CODE == "CAANSR")),
     prog_psd    = as.integer(any(PROGRAM_CODE == "CAAPSD")),
-    prog_cfc    = as.integer(any(PROGRAM_CODE == "CAACFC")),     # Title VI stratospheric ozone protection
+    # prog_gact/prog_cfc (CAAGACTM/CAACFC) deliberately excluded per decision (2026-07-21) -- dropped to
+    # match the 8-group allowlist now used in dataset 1's PROG_*_ACTIVE (O3). n_programs still counts every
+    # PROGRAM_CODE including these two -- that column's scope is unchanged, only the per-program flags here.
     n_programs  = n_distinct(PROGRAM_CODE), .groups = "drop")
 
 # ---- per-source facility-year aggregators ---------------------------------------------------------------
