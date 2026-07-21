@@ -43,9 +43,11 @@ docs/.quarto/
 /.quarto/
 
 # ---- Local scratch ----------------------------------------------------------
-# Ad-hoc preview helper: dumps the first N rows of each built panel to plain CSV for eyeballing.
+# Ad-hoc preview helpers: dump the first N rows of each built panel/dataset to plain CSV for eyeballing.
 code/diagnostics/preview_panels.R
 data/panels/_preview/
+code/diagnostics/preview_datasets.R
+data/datasets/_preview/
 
 # ---- OS ---------------------------------------------------------------------
 .DS_Store

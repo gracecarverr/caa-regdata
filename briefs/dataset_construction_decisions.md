@@ -39,7 +39,7 @@ datasets 1–5.
 
 **Shape (rebuilt & audited this session):**
 ```
-5,863,431 rows | 82 cols | 279,211 facilities × 21 years | 751,963 observed facility-years (12.8%)
+5,863,431 rows | 80 cols | 279,211 facilities × 21 years | 751,963 observed facility-years (12.8%)
 ```
 
 ### B.1 Coding decisions
@@ -51,7 +51,7 @@ datasets 1–5.
 | **R3** | **Every `N_*` counts ALL rows; nothing deduped.** Duplicate load surfaced via `N_*_DUP` (event-key repeats, `dup>0`) and `N_*_DUP_EXACT` (byte-identical). Event-distinct = `count − dup`. | Dedup at aggregation (old `distinct`). | Honesty about the raw record + measurable duplication in place. Inherited from panel-layer CC9 / the 2026-07-17 no-dedup revision. Duplicated families: inspections, enforcement (incl. formal/informal split), certs. **Violations & stack tests carry zero dups — asserted in the build** (`all(dup == 0)`). |
 | **R4** | **`PENALTY_AMOUNT` obeys the zero-vs-NA rule** — real dollar sum (0 included) when observed, `NA` when unobserved. | Old convention: `NA` when no penalty. | One rule for the whole file. **Flagged for sign-off** — this changed penalty semantics from the panel layer. |
 | **R5** | **Facility characteristics are the current ICIS snapshot, time-invariant, applied to all 21 years.** (`FACILITY_NAME`, `STATE`, `NAICS_CODES`, `AIR_POLLUTANT_CLASS_DESC`, `OP_STATUS_CURRENT_DESC`, …) | Reconstruct history. | ICIS carries no history for these. An industry reclassification or ownership change is **not** visible — a known limitation, not a bug. |
-| **R6** | **`EMITS_*` (6) and `PROG_*` (10) are ever-reported / ever-enrolled, undated → time-invariant flags.** A facility absent from `pollutants`/`programs` gets flag = **0** (absent profile). | Treat absence as `NA`. | ICIS gives no start/end dates for pollutant or program association, so these can only be "ever" flags. Absence of an enrollment record = not enrolled in that program → a true 0. |
+| **R6** | **`EMITS_*` (6) and `PROG_*` (8) are ever-reported / ever-enrolled, undated → time-invariant flags.** A facility absent from `pollutants`/`programs` gets flag = **0** (absent profile). `PROG_GACT`/`PROG_CFC` (CAAGACTM/CAACFC) deliberately **excluded** (2026-07-21) to match the 8-group allowlist now used in dataset 1's `PROG_*_ACTIVE` (O3); `N_PROGRAMS` still counts every `PROGRAM_CODE` including these two — only the per-program flags dropped. | Treat absence as `NA`; or keep all 10 groups. | ICIS gives no start/end dates for pollutant or program association, so these can only be "ever" flags. Absence of an enrollment record = not enrolled in that program → a true 0. |
 | **R7** | **`N_PROGRAMS` is `NA`-able, never 0.** `n_distinct(PROGRAM_CODE)` is ≥1 for any facility present in `programs.csv.gz`, so a 0 never arises legitimately; a facility with **no program association** stays `NA`. | Coalesce to 0 like the `PROG_*` flags (the pre-fix behavior). | Distinguishes "not associated with **any** program" (`NA`) from the `PROG_*` flags' "not enrolled in **this** program" (0). **12,467 facilities (4.5%) are absent from `programs.csv.gz`** → `N_PROGRAMS = NA` for exactly those (261,807 facility-years). ⚠ **NA now carries two meanings in this file** — see R8. |
 | **R8** | **`program_begin_year` is deliberately ABSENT from ds 0.** | Carry it here alongside program enrollment. | `BEGIN_DATE` is a facility-lifecycle proxy, so it belongs with the operating evidence in **dataset 1**, not with the undated "ever-enrolled" flags. |
 
@@ -70,7 +70,7 @@ All passed on the rebuilt file:
 | check | result |
 |---|---|
 | `PGM_SYS_ID × YEAR` unique; rectangle complete (rows = 279,211 × 21) | ✓ |
-| all 82 column names uppercase | ✓ |
+| all 80 column names uppercase | ✓ |
 | observability rule across **all 48 event-count columns** (obs → never `NA`, unobs → always `NA`) | ✓ |
 | every observed row carries ≥1 real event (rule means what it claims) | ✓ 0 violations |
 | `N_HPV + N_FRV = N_VIOLATIONS`; `N_FORMAL + N_INFORMAL = N_ENFORCEMENT` | ✓ |

@@ -24,7 +24,7 @@ the known caveats these choices carry.
 |--------|--------|----------------|
 | `17_wayback_facility_status.R` | `wayback_facility_status.csv.gz` | facility × year operating status. `operating = 1` iff status ∈ {OPR, TMP, SEA} (Operating / Temporarily-closed / Seasonal all count as "in service"). Interior snapshot gaps are LOCF-filled within each facility's observed span `[first_snap, last_snap]`; edges are **not** extrapolated. |
 | `18_wayback_facility_spells.R` | `wayback_facility_spells.csv.gz` | one row per facility: reconstructed `entered_year` / `exited_year` with `exit_source` ∈ {`cls`, `other`, `dropout`} and `left_censored` / `right_censored` flags. Depends on 17's output. |
-| `19_wayback_program_status.R` | `wayback_program_status.csv.gz` | facility × year "is program group active?" flags for the 8 groups in the spine (`prog_{sip,titlev,nsps,mact,neshap,fesop,nsr,psd}_active`), from snapshot presence + status (≠ CLS). `BEGIN_DATE` is deliberately ignored. |
+| `19_wayback_program_status.R` | `wayback_program_status.csv.gz` | facility × year "is program group active?" flags for the 10 groups in the spine (`prog_{sip,titlev,nsps,mact,gact,neshap,fesop,nsr,psd,cfc}_active`), from snapshot presence + a program-specific active rule: operating groups are active for status ∈ {OPR,TMP,SEA}; the preconstruction groups NSR/PSD are additionally active for {PLN,CNS}. `BEGIN_DATE` is deliberately ignored. |
 
 ## Load-bearing conventions (do not change without re-verifying the panel)
 
@@ -36,6 +36,11 @@ the known caveats these choices carry.
   vanishing might be a real closure *or* an ICIS extract artifact — the panel layer decides.
 - **Close-then-reopen** does not create a spurious early exit: `exited_year` is defined off the *last*
   operating year.
+- **2018 has no real snapshot** (the raw folder was a mislabeled duplicate of 2019 and was removed from
+  `data/raw/`, 2026-07-21). It is asserted explicit `NA` in `op_status_code`/`op_status_desc`/`operating`
+  and all `prog_*_active` columns for that year — **not** LOCF-filled like an ordinary interior gap, since
+  there is no real observation for *any* facility to infer from. See W7 in
+  `briefs/panel_construction_decisions.md`.
 
 The program-group code → group mapping in `19_...R` (`GROUPS`) must stay aligned with the `prog_*` flags built
-in `code/03_panel_building/04_panels/00_spine.R`.
+in `code/03_panel_building/00_spine.R`.

@@ -3,7 +3,7 @@
 **Never edit anything here.** Raw is immutable; every derived asset is rebuilt from these by code. Files are
 **gitignored** (large); only `.gitkeep` and `MANIFEST.csv` are tracked. Acquisition is documented in
 [`code/01_data_download/README.md`](../../code/01_data_download/README.md); institutional context for each
-source is in [`briefs/00_institutional_overview.md`](../../briefs/00_institutional_overview.md).
+source is in [`briefs/institutional_overview.md`](../../briefs/institutional_overview.md).
 
 ## Sources
 

@@ -14,11 +14,26 @@
 #   ACTIVE under a PROGRAM-SPECIFIC rule: operating programs (sip/titlev/nsps/mact/gact/neshap/fesop/cfc) are active only
 #   for {OPR,TMP,SEA} (mirrors the 17_ operating whitelist); the preconstruction programs NSR & PSD are ALSO
 #   active for {PLN,CNS} (planned / under-construction), since those permits attach before a source operates.
-#   CLS, the rare NER/NED/NES/LDF, and a missing status are inactive for every group. 0 if the facility is
-#   present in that snapshot but the group has no active row.
+#   The rare NER/NED/NES/LDF is inactive (0) for every group -- these ARE a real, known status, just not one
+#   any group is active under. 0 if the facility is present in that snapshot (with a real, known status) but
+#   the group has no active row.
+#
+#   BLANK STATUS or CLS -> NA, not 0 (project decision 2026-07-21, W8). A facility's own
+#   AIR_OPERATING_STATUS_CODE that year (from ICIS-AIR_FACILITIES.csv, the same field 17_ reads) gates this:
+#   if it's blank, we have no real status evidence that year at all, so asserting "not enrolled" (0) for every
+#   group would be manufacturing certainty from an incomplete record -- NA instead. If it's CLS (Permanently
+#   Closed), mirrors the already-established W6 event-zero rule ("closed years stay NA... a shut plant can
+#   still carry legacy enforcement") -- a closed facility's program enrollment isn't confidently "none," it's
+#   simply not asserted. Every OTHER real status (OPR/TMP/SEA/PLN/CNS/NER/NED/NES/LDF) keeps a real 0/1 per the
+#   program-specific rule above -- only blank and CLS become NA.
 #   BEGIN_DATE is deliberately IGNORED (unreliable per project decision) -- snapshot presence is the truth.
 #   Interior gaps (facility absent from a middle snapshot) are LOCF-filled within the facility's observed span,
-#   mirroring 17_wayback_facility_status.R. Values at the leading/trailing edge are not extrapolated.
+#   mirroring 17_wayback_facility_status.R. Values at the leading/trailing edge are not extrapolated. The
+#   blank/CLS override runs AFTER this LOCF step (same pattern as the 2018 override below) so it can't be
+#   silently re-filled from a neighboring year. KNOWN RESIDUAL EDGE CASE: LOCF itself runs before the override,
+#   so a genuinely-absent gap year immediately adjacent to a blank/CLS year can still inherit that year's
+#   PRE-override computed value (0) rather than NA -- this requires both a roster-absence gap (~0.3% of
+#   facility-programs, W4) AND it landing next to a blank/CLS year, a rare compound case, not fixed here.
 # =========================================================================================================
 library(readr); library(dplyr); library(tidyr); library(data.table)
 
@@ -44,10 +59,16 @@ read_csv_snap <- function(y, file, cols)
                             col_select = all_of(cols), col_types = cols(.default = col_character()),
                             show_col_types = FALSE)) |> mutate(year = y)
 
-# (1) facility PRESENCE per real snapshot year (the observed facility-year grid)
-present <- bind_rows(lapply(SNAP_YEARS, read_csv_snap, file = "ICIS-AIR_FACILITIES.csv",
-                            cols = c("PGM_SYS_ID"))) |>
-  filter(!is.na(PGM_SYS_ID)) |> distinct(PGM_SYS_ID, year)
+# (1) facility PRESENCE per real snapshot year (the observed facility-year grid), carrying the facility's OWN
+#     operating-status field that year (same field 17_ reads) so blank/CLS years can be nulled out below (W8).
+present_raw <- bind_rows(lapply(SNAP_YEARS, read_csv_snap, file = "ICIS-AIR_FACILITIES.csv",
+                                cols = c("PGM_SYS_ID", "AIR_OPERATING_STATUS_CODE"))) |>
+  filter(!is.na(PGM_SYS_ID)) |> distinct(PGM_SYS_ID, year, .keep_all = TRUE)
+present <- present_raw |> select(PGM_SYS_ID, year)
+# facility-years where the status is unknown (blank) or the facility is Permanently Closed -- W8
+blank_or_closed <- present_raw |>
+  filter(is.na(AIR_OPERATING_STATUS_CODE) | AIR_OPERATING_STATUS_CODE %in% c("", "CLS")) |>
+  select(PGM_SYS_ID, year)
 
 # (2) active program groups per real snapshot year (status != CLS), mapped to the 8 groups
 active <- bind_rows(lapply(SNAP_YEARS, read_csv_snap, file = "ICIS-AIR_PROGRAMS.csv",
@@ -76,6 +97,9 @@ full[, (GRP_COLS) := lapply(.SD, nafill, type = "locf"), by = PGM_SYS_ID, .SDcol
 # 2018 has NO real snapshot for any facility (see 17_'s header note) -- force back to NA rather than
 # LOCF-inferring it, unlike an ordinary sporadic per-facility gap in a real snapshot year.
 full[year == 2018L, (GRP_COLS) := NA_integer_]
+# blank status / CLS (Permanently Closed) -> NA, not a confident 0 (W8, see header note). Runs AFTER LOCF so
+# these facility-years can't get silently re-filled from a neighboring year, same pattern as the 2018 override.
+full[as.data.table(blank_or_closed), on = c("PGM_SYS_ID", "year"), (GRP_COLS) := NA_integer_]
 prog <- as_tibble(full) |> select(PGM_SYS_ID, year, all_of(GRP_COLS)) |> arrange(PGM_SYS_ID, year)
 
 dir.create(here::here("data/processed"), showWarnings = FALSE, recursive = TRUE)

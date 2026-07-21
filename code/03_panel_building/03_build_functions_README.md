@@ -33,7 +33,7 @@ Returns the finished balanced panel for the facilities in `facs` (a filtered sli
 | `agg_stacktests(ids)` | stack tests (all rows) + pass/fail; asserts zero dups |
 | `attach_hpv_status(panel, ids)` | interval-based `hpv_active` / `hpv_active_1mo` from the HPV spell (union of overlapping spells; open spells day-zero-year-only). Keeps `dup==0` — status flag, not a count; duplicate spells are output-identical |
 | `attach_penalty(panel, ids)` | `penalty_amount` = Σ formal penalties over **all** rows (0/none → `NA`) + `penalty_amount_dup` = Σ penalty on `dup>0` rows |
-| `attach_wayback(panel, ids)` | year-varying `op_status_code`, `operating`, and 8 `prog_*_active` flags (2015–2025) |
+| `attach_wayback(panel, ids)` | year-varying `op_status_code`, `operating`, and 10 `prog_*_active` flags (2015–2025) |
 | `attach_pm25_attainment(panel)` | `pm25_status`, `pm25_area`, `naa_pm25_2012`, `any_naa` (treatment panels only) |
 | `code_known_zeros(panel)` | sets `obs_source ∈ {event, operating, unobserved}`; fills `NA→0` across `COUNT_COLS` for known-operating zero-event rows |
 
