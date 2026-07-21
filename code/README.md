@@ -10,6 +10,7 @@ code/
 ├── 01_data_download/  acquire raw sources -> data/raw/ (immutable)         + MANIFEST provenance
 ├── 02_cleaning/       one bare-bones clean asset per raw table -> data/processed/
 ├── 03_panel_building/  facility spine + attainment treatment + sample panels -> data/panels/
+├── 04_datasets/        six purpose-built deliverable datasets -> data/datasets/  (NOT yet wired into RUN_ALL)
 └── diagnostics/       NOT part of the build: panel summaries, site generation, previews, one-offs
 ```
 
@@ -21,6 +22,7 @@ code/
 | 01 download | `01_data_download/01_download.R` | `data/raw/*` | idempotent; skip with `DOWNLOAD=false` |
 | 02 clean | `02_cleaning/02_clean.R` | `data/processed/*.csv.gz` | keep every column/row; add only `date`/`year`/`dup`/`dup_exact` |
 | 03 panels | `03_panel_building/03_build.R` | `data/panels/*.csv.gz` | spine → attainment → universe/major_synmin/electric |
+| 04 datasets | `04_datasets/0{1..6}_*.R` (run individually) | `data/datasets/*.csv.gz` | six full-universe deliverables (regulatory, operating, hpv_spells, hpv_active, penalties, coordinates); attainment not yet built; **not run by `RUN_ALL.R`** — see `04_datasets/README.md` |
 | docs | `diagnostics/build_site.R` | `docs/index.html` | generated from `data/raw`; skip with `SKIP_SITE=true` |
 
 ## Run

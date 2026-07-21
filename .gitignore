@@ -9,6 +9,10 @@ data/raw/*
 data/panels/*
 !data/panels/.gitkeep
 !data/panels/README*
+# The six deliverable datasets are rebuilt from code (code/04_datasets).
+data/datasets/*
+!data/datasets/.gitkeep
+!data/datasets/README*
 # Processed (clean) assets + their generated dictionaries are rebuilt from code (force-add lookups case by case).
 data/processed/*
 !data/processed/.gitkeep
