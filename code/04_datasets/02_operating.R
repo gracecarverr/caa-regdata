@@ -35,8 +35,14 @@ status <- read_csv(file.path(CLEAN, "wayback_facility_status.csv.gz"),
                    show_col_types = FALSE) |>
   select(PGM_SYS_ID, year, op_status_code, op_status_desc, operating)
 
-# Program-active flags. Blacklist (active unless CLS) -- answers a different question than `operating` (N11).
+# Program-active flags, PROGRAM-SPECIFIC active rule (N11) -- answers a different question than `operating`.
+# Pinned to an explicit 8-group allowlist (sip/titlev/nsps/mact/neshap/fesop/nsr/psd) -- NOT gact/cfc, per
+# decision. wayback_program_status.csv.gz carries 10 groups (gact, cfc were added upstream); reading it
+# without col_select would silently absorb whatever columns that file happens to have, which is exactly how
+# this dataset picked up gact/cfc unintentionally when the file was regenerated (see O3 correction note).
+PROG_GROUPS <- c("sip", "titlev", "nsps", "mact", "neshap", "fesop", "nsr", "psd")
 progst <- read_csv(file.path(CLEAN, "wayback_program_status.csv.gz"),
+                   col_select = all_of(c("PGM_SYS_ID", "year", paste0("prog_", PROG_GROUPS, "_active"))),
                    col_types = cols(PGM_SYS_ID = col_character(), year = col_integer(),
                                     .default = col_integer()), show_col_types = FALSE)
 
