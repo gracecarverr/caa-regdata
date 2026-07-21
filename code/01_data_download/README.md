@@ -22,7 +22,7 @@ Every successfully extracted file gets a row appended to `data/raw/MANIFEST.csv`
 | **US counties** boundaries | `data/raw/us_counties/` | **automated** — Census cartographic boundary file (2022 vintage), full US incl. AK/HI/PR |
 | **Green Book** NAA boundary polygons (current) | `data/raw/greenbook/pm25_2012_naa/` | **automated** — direct EPA shapefile download |
 | **FRS** facility coordinates | `data/raw/frs/` | staged manually — see note below |
-| ICIS-Air **Wayback** snapshots (2015–2025) | `data/raw/ICIS_AIR_WAYBACK/ICIS-AIR_downloads_<year>/` | staged manually |
+| ICIS-Air **Wayback** snapshots (2015–2025) | `data/raw/ICIS_AIR_WAYBACK/ICIS-AIR_downloads_<year>/` | staged manually - all downlaoded in Q4 of given year|
 | **Green Book** yearly STATUS snapshots (2016–2025) | `data/raw/greenbook/pm25_2012_status/` | staged manually — no automatable source found |
 
 > Five of eight sources are automated (verified against the existing manually-staged files this session — byte-
