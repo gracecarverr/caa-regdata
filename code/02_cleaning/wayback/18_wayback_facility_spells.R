@@ -43,13 +43,25 @@ spells <- per_fac |> left_join(op_win, by = "PGM_SYS_ID") |>
     left_censored  = as.integer(ever_op & entered_year == FIRST_SNAP),
     right_censored = as.integer(ever_op & last_op_year == LAST_SNAP))
 
-# exit classification: look at the status code in the first non-operating year that FOLLOWS the last op year.
+# exit classification: look at the status code in the first REAL (non-NA) observation that FOLLOWS the last
+#   op year. Must skip NA years (2018 -- no real snapshot, W7) rather than take them as the "first post-
+#   operating year" with no evidence: a facility last operating in 2017 has its first real post-operating
+#   evidence in 2019, not the artificial 2018 gap -- taking 2018 as-is would wrongly force it into "dropout".
+#
+#   THE 2017-OP -> 2018-GAP -> 2019-CLOSED CASE (project decision 2026-07-21, W7 addendum): 4,258 facilities
+#   are operating in 2017 and non-operating in 2019 (4,211 CLS / 35 CNS / 12 PLN) with 2018 unobserved --
+#   real closure timing (2018 vs 2019) is UNKNOWABLE from this data. Resolved as CENSOR-AT-LAST-KNOWN, not
+#   assume-still-operating-through-2018: last_op_year stays 2017 (only real observations count, see per_fac/
+#   op_win above), exited_year is set to 2019 (the first REAL evidence), and 2018 itself is asserted NEITHER
+#   operating NOR closed -- exactly what this filter already does by construction, no extra code needed.
+#   Do NOT read exited_year==2019 here as "closed exactly in 2019" -- it means "last confirmed operating 2017,
+#   confirmed non-operating by 2019, exact transition year unknown." See panel_construction_decisions.md W7.
 exit_code <- st |>
   inner_join(spells |> filter(!is.na(last_op_year)) |> select(PGM_SYS_ID, last_op_year, last_year),
              by = "PGM_SYS_ID") |>
-  filter(year > last_op_year) |>                       # years strictly after last operating year
+  filter(year > last_op_year, !is.na(op_status_code)) |>  # years strictly after last operating year, real evidence only
   group_by(PGM_SYS_ID) |>
-  slice_min(year, n = 1, with_ties = FALSE) |>         # first post-operating year
+  slice_min(year, n = 1, with_ties = FALSE) |>         # first REAL post-operating observation
   ungroup() |>
   transmute(PGM_SYS_ID, exit_year_obs = year, exit_code = op_status_code)
 
