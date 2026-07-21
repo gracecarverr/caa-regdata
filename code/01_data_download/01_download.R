@@ -12,13 +12,7 @@
 #     national_combined.zip, ~1.26 GB) but that EPA endpoint proved unreliable across 4 real attempts
 #     (truncated connections at various points, never a clean complete transfer). Rather than ship an
 #     automation path that regularly fails, this stays manually staged.
-#   - data/raw/ICIS_AIR_WAYBACK/ICIS-AIR_downloads_<year>/ (11 years, 2015-2025) -- an Internet Archive
-#     Wayback Machine mechanism was built and verified for SOME years (2015, 2017, 2019, 2020, 2025 matched
-#     the existing staged files byte-for-byte) but NOT all: 2016 did not match even after correcting the
-#     capture-selection rule, and 2018 has ZERO captures of this URL in the Archive at any status code -- the
-#     staged 2018 data did not come from this mechanism. Given the reliability gap and no confirmed selection
-#     rule that works for every year, this stays manually staged rather than risk silently reproducing the
-#     wrong archived snapshot for a subset of years.
+#   - data/raw/WAYBACK -- all downloaded in Q4 of the given year. 
 #   - data/raw/greenbook/pm25_2012_status/<year>.dbf (11 yearly Green Book STATUS snapshots, distinct from
 #     the NAA boundary polygons below) -- no automatable source was found at all (a Wayback Machine query on
 #     the obvious URL returned zero captures).
