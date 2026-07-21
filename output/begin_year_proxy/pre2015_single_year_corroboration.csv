@@ -1,0 +1,5 @@
+corroboration,n_facilities,pct
+A: left-censored at 2015 (consistent -- earliest wayback evidence IS the window floor),112314,65.6
+B: first observed OPERATING after 2015 (gap between claimed begin-year and observed entry),13190,7.7
+"C: never observed operating, but present in wayback (e.g. already CLS by 2015 -- consistent with existing, then closing, pre-2015)",45712,26.7
+D: never appears in ANY real wayback snapshot 2015-2025 (no corroboration at all),108,0.1

@@ -21,8 +21,14 @@ REQUIRED_PKGS <- c(
   "data.table", # fast grouped ops (wayback LOCF, panel summaries)
   "sf",         # spatial join (facility coordinate -> county / attainment area)
   "ggplot2",    # figures (diagnostics/06_panel_profile)
-  "scales"      # axis label formatting for figures
+  "scales",     # axis label formatting for figures
+  "R.utils"     # lets data.table::fread() read .csv.gz directly (diagnostics/06_, 11_)
 )
+
+# R.utils is never library()'d or ::'d directly anywhere (it's an internal dependency data.table::fread()
+# uses to read .csv.gz), so renv's static "implicit" snapshot scan (renv/settings.json) can't discover it
+# from REQUIRED_PKGS alone -- this literal call exists purely so `renv::snapshot()` finds and pins it.
+invisible(requireNamespace("R.utils", quietly = TRUE))
 
 missing_pkgs <- REQUIRED_PKGS[!vapply(REQUIRED_PKGS, requireNamespace, logical(1), quietly = TRUE)]
 if (length(missing_pkgs)) {
