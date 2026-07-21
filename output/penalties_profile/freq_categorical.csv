@@ -1,0 +1,53 @@
+variable,level,n,pct
+ENF_TYPE_DESC,Administrative Order,87137,0.8315
+ENF_TYPE_DESC,CAA 113D1 Action For Penalty,6595,0.0629
+ENF_TYPE_DESC,Civil Judicial Action,5091,0.0486
+ENF_TYPE_DESC,CAA 113A Admin Compliance Order (Non-Penalty),4731,0.0451
+ENF_TYPE_DESC,CAA 113D Withdrawn,591,0.0056
+ENF_TYPE_DESC,CAA 113D1 Action For Penalty - 112(r) RMP Expedited Settlement Program,109,0.001
+ENF_TYPE_DESC,CAA 120 AO For Noncompliance Penalty,100,0.001
+ENF_TYPE_DESC,CAA 113D1 Action For Penalty - 112(r) Expedited Settlement Program,59,0.0006
+ENF_TYPE_DESC,EPCRA 325 Action For Penalty,57,0.0005
+ENF_TYPE_DESC,CAA 113 Notice Of Violation,40,0.0004
+ENF_TYPE_DESC,CAA 113D Delayed Comp Ord (Old),34,0.0003
+ENF_TYPE_DESC,CAA 205 Action For Vehicles and Engines,28,0.0003
+ENF_TYPE_DESC,CAA 113D1 Action For Penalty - Stationary Source MRR Expedited Settlement,28,0.0003
+ENF_TYPE_DESC,CAA 205 Action For Vehicles and Engines Defeat Device/Tampering Expedited Settlement Program,25,0.0002
+ENF_TYPE_DESC,Bankruptcy,25,0.0002
+ENF_TYPE_DESC,RCRA 3008A AO For Comp And/Or Penalty,23,0.0002
+ENF_TYPE_DESC,CAA 205 Action For Mobile/Title II Expedited Settlement Program,17,0.0002
+ENF_TYPE_DESC,CAA 167 AO For PSD,14,0.0001
+ENF_TYPE_DESC,TSCA 16 Action For Penalty,13,0.0001
+ENF_TYPE_DESC,Federal Facility Agreements,12,0.0001
+ENF_TYPE_DESC,CAA 205 Action For Vehicles and Engines Imports Expedited Settlement Program,9,0.0001
+ENF_TYPE_DESC,CAA 113A5A AO For NSR,7,0.0001
+ENF_TYPE_DESC,CAA 205 Action For Mobile/Title II,6,0.0001
+ENF_TYPE_DESC,CERCLA 109 Action For Penalty,6,0.0001
+ENF_TYPE_DESC,CWA 311B6B1 AO For Class I Penalty,6,0.0001
+ENF_TYPE_DESC,CWA 309G2B AO For Class II Penalties,5,0
+ENF_TYPE_DESC,CWA 311B6B2 AO For Class II Penalty,3,0
+ENF_TYPE_DESC,CWA 309A AO For Compliance,3,0
+ENF_TYPE_DESC,CAA 303 AO For Imminent Hazard,3,0
+ENF_TYPE_DESC,EPA/Customs Import Enforcement Action,2,0
+ENF_TYPE_DESC,SDWA 1423C1 AO For Penalty-Non Oil/Gas (UIC),2,0
+ENF_TYPE_DESC,FIFRA 14A Action For Penalty,2,0
+ENF_TYPE_DESC,CWA 309G2A AO For Class I Penalties,2,0
+ENF_TYPE_DESC,CAA 113D1 Action For Penalty - 112(r) GDC Expedited Settlement Program,1,0
+ENF_TYPE_DESC,"FIFRA 13A AO For Stop Sale,Use,Or Removal",1,0
+ENF_TYPE_DESC,SDWA 1414G3 AO For Penalties (PWS),1,0
+ENF_TYPE_DESC,CERCLA 122h Agrmt For Cost Recovery,1,0
+ENF_TYPE_DESC,Access Order,1,0
+ENF_TYPE_DESC,CAA 114 Information Request Letters (Old),1,0
+ENF_TYPE_DESC,CERCLA 106 AO For Resp Action/Imm Haz,1,0
+ENF_TYPE_DESC,CWA 311B6B1 AO For Class I Penalty - SPCC Expedited Settlement Program,1,0
+ENF_TYPE_DESC,RCRA 3013A AO For Testing & Reporting,1,0
+ENF_TYPE_DESC,CERCLA 122G1A Agrmt For De Minimus Cr,1,0
+ENF_TYPE_DESC,RCRA 3013(e) AO For Compliance,1,0
+ENF_TYPE_DESC,Pre-Referral Negotiation,1,0
+ENF_TYPE_DESC,Collection Action,1,0
+ENF_TYPE_DESC,CAA 112R9 AO For Imm Hazard/Accdntl Release,1,0
+ACTIVITY_TYPE_DESC,Administrative - Formal,99680,0.9512
+ACTIVITY_TYPE_DESC,Judicial,5119,0.0488
+STATE_EPA_FLAG,S,68766,0.6562
+STATE_EPA_FLAG,L,20846,0.1989
+STATE_EPA_FLAG,E,15187,0.1449
