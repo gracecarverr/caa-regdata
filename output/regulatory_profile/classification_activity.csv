@@ -1,0 +1,21 @@
+classification,measure,mean_count,pct_nonzero
+Other/Unknown,N_INSPECTIONS,0.95,0.746
+Minor,N_INSPECTIONS,1.27,0.876
+Major,N_INSPECTIONS,2.29,0.757
+Synthetic Minor,N_INSPECTIONS,1.55,0.86
+Other/Unknown,N_VIOLATIONS,0.07,0.05
+Minor,N_VIOLATIONS,0.04,0.041
+Major,N_VIOLATIONS,0.16,0.102
+Synthetic Minor,N_VIOLATIONS,0.08,0.068
+Other/Unknown,N_ENFORCEMENT,0.51,0.289
+Minor,N_ENFORCEMENT,0.27,0.134
+Major,N_ENFORCEMENT,0.52,0.161
+Synthetic Minor,N_ENFORCEMENT,0.28,0.125
+Other/Unknown,N_CERTS,1.1,0.164
+Minor,N_CERTS,0.6,0.076
+Major,N_CERTS,7.6,0.869
+Synthetic Minor,N_CERTS,1.09,0.139
+Other/Unknown,N_STACK_TESTS,0.16,0.062
+Minor,N_STACK_TESTS,0.18,0.073
+Major,N_STACK_TESTS,1.73,0.27
+Synthetic Minor,N_STACK_TESTS,0.41,0.145
