@@ -1,0 +1,4 @@
+begin_year_bucket,n_facilities,median_gap_years,mean_gap_years
+2000-2009,681,13,13.8
+2010-2014,12341,2,2.6
+<2000,168,26,28.3

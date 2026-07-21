@@ -102,6 +102,38 @@ agreement_by_year <- gt |> group_by(YEAR) |>
             overall_agreement = round(mean(proxy == OPERATING), 3), .groups = "drop")
 write_csv(agreement_by_year, file.path(OUT, "agreement_by_year.csv"))
 
+# ---- 6. SINGLE-YEAR ANCHOR CHECK: for facilities whose begin-year predates 2015 (the wayback floor), how
+#   corroborated is "this facility existed as of its begin-year" -- NOT "operating continuously since" --
+#   by what wayback actually shows once it starts observing in 2015? This is the population where the proxy
+#   would add genuinely NEW information (wayback has zero evidence before 2015 for anyone).
+fac <- op |> distinct(PGM_SYS_ID, EARLIEST_PROGRAM_BEGIN_YEAR, LEFT_CENSORED, ENTERED_YEAR, EXITED_YEAR, EXIT_SOURCE)
+ever_wb <- op |> filter(WAYBACK_OBSERVED == 1) |> distinct(PGM_SYS_ID) |> mutate(ever_wayback_observed = TRUE)
+fac <- fac |> left_join(ever_wb, by = "PGM_SYS_ID") |> mutate(ever_wayback_observed = coalesce(ever_wayback_observed, FALSE))
+
+pre2015 <- fac |> filter(!is.na(EARLIEST_PROGRAM_BEGIN_YEAR), EARLIEST_PROGRAM_BEGIN_YEAR < 2015) |>
+  mutate(corroboration = case_when(
+    LEFT_CENSORED == 1                                  ~ "A: left-censored at 2015 (consistent -- earliest wayback evidence IS the window floor)",
+    !is.na(ENTERED_YEAR) & ENTERED_YEAR > 2015           ~ "B: first observed OPERATING after 2015 (gap between claimed begin-year and observed entry)",
+    is.na(ENTERED_YEAR) & ever_wayback_observed          ~ "C: never observed operating, but present in wayback (e.g. already CLS by 2015 -- consistent with existing, then closing, pre-2015)",
+    is.na(ENTERED_YEAR) & !ever_wayback_observed         ~ "D: never appears in ANY real wayback snapshot 2015-2025 (no corroboration at all)",
+    TRUE ~ "other"))
+pre2015_corroboration <- pre2015 |> count(corroboration, name = "n_facilities") |>
+  mutate(pct = round(100 * n_facilities / sum(n_facilities), 1)) |> arrange(corroboration)
+write_csv(pre2015_corroboration, file.path(OUT, "pre2015_single_year_corroboration.csv"))
+write_csv(pre2015 |> select(PGM_SYS_ID, EARLIEST_PROGRAM_BEGIN_YEAR, LEFT_CENSORED, ENTERED_YEAR,
+                            EXITED_YEAR, EXIT_SOURCE, ever_wayback_observed, corroboration),
+          file.path(OUT, "pre2015_single_year_facilities.csv"))
+
+# for group B (the real discrepancy group), how big is the gap, and does it shrink for begin-years closer to 2015?
+group_b_gap <- pre2015 |> filter(!is.na(ENTERED_YEAR), ENTERED_YEAR > 2015) |>
+  mutate(gap_years = ENTERED_YEAR - EARLIEST_PROGRAM_BEGIN_YEAR,
+         begin_year_bucket = case_when(
+           EARLIEST_PROGRAM_BEGIN_YEAR < 2000 ~ "<2000", EARLIEST_PROGRAM_BEGIN_YEAR < 2010 ~ "2000-2009",
+           TRUE ~ "2010-2014")) |>
+  group_by(begin_year_bucket) |>
+  summarise(n_facilities = n(), median_gap_years = median(gap_years), mean_gap_years = round(mean(gap_years), 1), .groups = "drop")
+write_csv(group_b_gap, file.path(OUT, "pre2015_group_b_gap_by_begin_year.csv"))
+
 # ---- console summary ---------------------------------------------------------------------------------------
 cat("EARLIEST_PROGRAM_BEGIN_YEAR as an operating-status proxy -- diagnostic summary\n")
 cat("================================================================================\n\n")
@@ -123,3 +155,7 @@ cat("\n4. POST-EXIT FALSE POSITIVES (proxy=1 in years strictly after a confirmed
 print(as.data.frame(post_exit), row.names = FALSE)
 cat("\n4b. POST-EXIT FALSE POSITIVE RATE BY YEARS-SINCE-EXIT (does it decay?)\n")
 print(as.data.frame(post_exit_by_gap), row.names = FALSE)
+cat(sprintf("\n6. SINGLE-YEAR ANCHOR CHECK: facilities with begin-year < 2015, n=%s\n", format(nrow(pre2015), big.mark=",")))
+print(as.data.frame(pre2015_corroboration), row.names = FALSE)
+cat("\n6b. GROUP B GAP (entered_year - begin_year) BY BEGIN-YEAR BUCKET\n")
+print(as.data.frame(group_b_gap), row.names = FALSE)
