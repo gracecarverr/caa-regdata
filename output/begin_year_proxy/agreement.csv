@@ -1,0 +1,2 @@
+n_facility_years,base_rate_operating,sensitivity,specificity,overall_agreement,tp,fn,tn,fp
+2420480,0.717,0.9094,0.0096,0.6548,1578312,157223,6587,678358
