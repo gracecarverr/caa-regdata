@@ -63,8 +63,12 @@ progs <- read_csv(file.path(CLEAN, "programs.csv.gz"),
   group_by(PGM_SYS_ID) |> summarise(
     prog_sip = as.integer(any(PROGRAM_CODE == "CAASIP")), prog_titlev = as.integer(any(PROGRAM_CODE == "CAATVP")),
     prog_nsps = as.integer(any(PROGRAM_CODE %in% c("CAANSPS","CAANSPSM"))), prog_mact = as.integer(any(PROGRAM_CODE == "CAAMACT")),
+    # CAAGACTM = the Part 63 AREA-source counterpart to CAAMACT (major sources). Kept as its own flag, not
+    # folded into prog_mact, so the major/area distinction stays visible.
+    prog_gact = as.integer(any(PROGRAM_CODE == "CAAGACTM")),
     prog_neshap = as.integer(any(PROGRAM_CODE == "CAANESH")), prog_fesop = as.integer(any(PROGRAM_CODE == "CAAFESOP")),
     prog_nsr = as.integer(any(PROGRAM_CODE == "CAANSR")), prog_psd = as.integer(any(PROGRAM_CODE == "CAAPSD")),
+    prog_cfc = as.integer(any(PROGRAM_CODE == "CAACFC")),   # Title VI stratospheric ozone protection
     n_programs = n_distinct(PROGRAM_CODE),
     # earliest program-enrollment year from BEGIN_DATE (MM/DD/YYYY). Facility-level, provisional -- no end
     # date, so this dates first enrollment only (see data/processed/README.md). Junk years guarded to NA.
@@ -81,7 +85,8 @@ spells <- read_csv(file.path(CLEAN, "wayback_facility_spells.csv.gz"),
   show_col_types = FALSE) |> filter(PGM_SYS_ID %in% active)
 
 flags <- c("emits_voc","emits_pm","emits_co","emits_nox","emits_so2","emits_hap",
-           "prog_sip","prog_titlev","prog_nsps","prog_mact","prog_neshap","prog_fesop","prog_nsr","prog_psd","n_programs")
+           "prog_sip","prog_titlev","prog_nsps","prog_mact","prog_gact","prog_neshap","prog_fesop",
+           "prog_nsr","prog_psd","prog_cfc","n_programs")
 spine <- fac |> left_join(fac_fips, by = "PGM_SYS_ID") |>
   left_join(coord_flags, by = "PGM_SYS_ID") |>
   left_join(prof, by = "PGM_SYS_ID") |> left_join(progs, by = "PGM_SYS_ID") |>

@@ -31,7 +31,12 @@ P1–P8); open caveats in [`briefs/panel_open_questions.md`](../../briefs/panel_
 - **`n_*` count all rows — nothing is deduped.** Duplicate load is surfaced by `_dup` (event-key repeats)
   and `_dup_exact` (byte-identical) on inspections, enforcement (+ formal/informal), and certs; recover
   event-distinct counts as `n_x − n_x_dup`. `penalty_amount` sums all formal rows, with `penalty_amount_dup`
-  giving the duplicate dollars. (`hpv_active` is the lone `dup==0` exception — a status flag, not a count.)
+  giving the duplicate dollars; `n_penalties` is the **count** of formal rows carrying a positive `$` penalty
+  (with `n_penalties_dup` for the duplicate rows) — the count companion to `penalty_amount`'s dollar sum.
+  Note the coding differs by design: `n_penalties` is a count, so it follows `0`≠`NA` (observed-no-penalty
+  → `0`, unobserved → `NA`), whereas `penalty_amount` is `NA`-when-none — an observed facility-year with a
+  formal action but no penalty dollars reads `n_penalties = 0` **and** `penalty_amount = NA`. (`hpv_active` is
+  the lone `dup==0` exception — a status flag, not a count.)
 - **Wayback status columns are 2015–2025 only** (`NA` for 2005–2014).
 - **Attainment is PM2.5-2012, 2016–2025, coordinate-placed** — facilities without coordinates are unplaceable
   (`naa_pm25_2012 = NA`).

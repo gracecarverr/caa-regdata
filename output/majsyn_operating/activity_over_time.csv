@@ -1,0 +1,133 @@
+class,year,measure,mean_count
+Major,2015,Inspections,1.66920487335685
+Major,2016,Inspections,1.89920778100243
+Major,2017,Inspections,1.64979135501142
+Major,2018,Inspections,1.56764048408232
+Major,2019,Inspections,1.70346103445618
+Major,2020,Inspections,1.65087166884264
+Major,2021,Inspections,1.66548754229468
+Major,2022,Inspections,1.61075005734383
+Major,2023,Inspections,1.62215605435944
+Major,2024,Inspections,1.60022953328233
+Major,2025,Inspections,1.53197048877959
+Synthetic Minor,2015,Inspections,0.779943245703271
+Synthetic Minor,2016,Inspections,0.745823049174103
+Synthetic Minor,2017,Inspections,0.659526869436908
+Synthetic Minor,2018,Inspections,0.663109475620975
+Synthetic Minor,2019,Inspections,0.666421343146274
+Synthetic Minor,2020,Inspections,0.64570344266739
+Synthetic Minor,2021,Inspections,0.659416398138203
+Synthetic Minor,2022,Inspections,0.653192994869981
+Synthetic Minor,2023,Inspections,0.632543624456068
+Synthetic Minor,2024,Inspections,0.617055545881943
+Synthetic Minor,2025,Inspections,0.574482848345548
+Major,2015,Violations,0.146841936518115
+Major,2016,Violations,0.167385677308024
+Major,2017,Violations,0.151090465317692
+Major,2018,Violations,0.16233716179758
+Major,2019,Violations,0.183226701611038
+Major,2020,Violations,0.156977190691959
+Major,2021,Violations,0.186096585665949
+Major,2022,Violations,0.194739658995336
+Major,2023,Violations,0.206214689265537
+Major,2024,Violations,0.186534047436878
+Major,2025,Violations,0.172686750691669
+Synthetic Minor,2015,Violations,0.0323392407774268
+Synthetic Minor,2016,Violations,0.0426238845642681
+Synthetic Minor,2017,Violations,0.0423151982483697
+Synthetic Minor,2018,Violations,0.060165593376265
+Synthetic Minor,2019,Violations,0.0536338546458142
+Synthetic Minor,2020,Violations,0.0432818288605765
+Synthetic Minor,2021,Violations,0.0554958825635517
+Synthetic Minor,2022,Violations,0.0567397841853883
+Synthetic Minor,2023,Violations,0.0705463496110061
+Synthetic Minor,2024,Violations,0.0707818213477277
+Synthetic Minor,2025,Violations,0.0579383321046012
+Major,2015,HPV,0.0639628085924976
+Major,2016,HPV,0.0670640834575261
+Major,2017,HPV,0.0503897330918825
+Major,2018,HPV,0.050181145455947
+Major,2019,HPV,0.0595082093578972
+Major,2020,HPV,0.050072959066124
+Major,2021,HPV,0.0636727160873577
+Major,2022,HPV,0.0770701123939139
+Major,2023,HPV,0.0791723927317148
+Major,2024,HPV,0.0530986993114002
+Major,2025,HPV,0.0507992622194897
+Synthetic Minor,2015,HPV,0.00455105209616105
+Synthetic Minor,2016,HPV,0.00484146573001709
+Synthetic Minor,2017,HPV,0.00452187157884716
+Synthetic Minor,2018,HPV,0.00482980680772769
+Synthetic Minor,2019,HPV,0.00492180312787489
+Synthetic Minor,2020,HPV,0.0035691696033252
+Synthetic Minor,2021,HPV,0.00528105979233799
+Synthetic Minor,2022,HPV,0.00592605696090571
+Synthetic Minor,2023,HPV,0.00483495230978858
+Synthetic Minor,2024,HPV,0.003743687967961
+Synthetic Minor,2025,HPV,0.00229845179756277
+Major,2015,Enforcement,0.443972427059955
+Major,2016,Enforcement,0.439014824692133
+Major,2017,Enforcement,0.378080466105031
+Major,2018,Enforcement,0.38857627379943
+Major,2019,Enforcement,0.440915748092191
+Major,2020,Enforcement,0.341602027494048
+Major,2021,Enforcement,0.423254383266687
+Major,2022,Enforcement,0.448581695848306
+Major,2023,Enforcement,0.481523896778134
+Major,2024,Enforcement,0.402295332823259
+Major,2025,Enforcement,0.37557639102367
+Synthetic Minor,2015,Enforcement,0.119880066391819
+Synthetic Minor,2016,Enforcement,0.121938484906019
+Synthetic Minor,2017,Enforcement,0.116616688086058
+Synthetic Minor,2018,Enforcement,0.135142594296228
+Synthetic Minor,2019,Enforcement,0.117203311867525
+Synthetic Minor,2020,Enforcement,0.0996656727207012
+Synthetic Minor,2021,Enforcement,0.109917651271035
+Synthetic Minor,2022,Enforcement,0.133336281620379
+Synthetic Minor,2023,Enforcement,0.149927475715353
+Synthetic Minor,2024,Enforcement,0.141737767717221
+Synthetic Minor,2025,Enforcement,0.138254043974153
+Major,2015,Certifications,4.74511061237576
+Major,2016,Certifications,7.39352106047533
+Major,2017,Certifications,9.16620738524526
+Major,2018,Certifications,10.0427811608726
+Major,2019,Certifications,8.07600400832498
+Major,2020,Certifications,5.00767990169726
+Major,2021,Certifications,4.87426945555214
+Major,2022,Certifications,4.44873461273798
+Major,2023,Certifications,4.2918766223851
+Major,2024,Certifications,4.38026013771997
+Major,2025,Certifications,4.36750691669228
+Synthetic Minor,2015,Certifications,0.400492584462173
+Synthetic Minor,2016,Certifications,0.559141826466679
+Synthetic Minor,2017,Certifications,0.538102717882812
+Synthetic Minor,2018,Certifications,0.582566697332107
+Synthetic Minor,2019,Certifications,0.467111315547378
+Synthetic Minor,2020,Certifications,0.339071112315894
+Synthetic Minor,2021,Certifications,0.293367346938776
+Synthetic Minor,2022,Certifications,0.273748452149301
+Synthetic Minor,2023,Certifications,0.259768801371368
+Synthetic Minor,2024,Certifications,0.266193627024203
+Synthetic Minor,2025,Certifications,0.252612862656663
+Major,2015,Stack tests,1.44244950304585
+Major,2016,Stack tests,1.69558396736999
+Major,2017,Stack tests,1.71860483426502
+Major,2018,Stack tests,1.5020427040777
+Major,2019,Stack tests,1.48893856471132
+Major,2020,Stack tests,2.03317717533216
+Major,2021,Stack tests,2.19370962780683
+Major,2022,Stack tests,1.6028748375258
+Major,2023,Stack tests,1.43014200641319
+Major,2024,Stack tests,2.29563886763581
+Major,2025,Stack tests,1.26398708884107
+Synthetic Minor,2015,Stack tests,0.209455480002142
+Synthetic Minor,2016,Stack tests,0.188912094171255
+Synthetic Minor,2017,Stack tests,0.196296825170165
+Synthetic Minor,2018,Stack tests,0.190892364305428
+Synthetic Minor,2019,Stack tests,0.209107635694572
+Synthetic Minor,2020,Stack tests,0.221785488388904
+Synthetic Minor,2021,Stack tests,0.237244897959184
+Synthetic Minor,2022,Stack tests,0.233813904121705
+Synthetic Minor,2023,Stack tests,0.207155729418487
+Synthetic Minor,2024,Stack tests,0.263538220442278
+Synthetic Minor,2025,Stack tests,0.240860401578559

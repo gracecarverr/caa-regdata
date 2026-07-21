@@ -68,15 +68,24 @@ agg_violations <- function(ids) {
 
 # Enforcement: formal + informal pooled. n_enforcement counts ALL rows; n_enforcement_dup / _dup_exact (and the
 #   formal/informal splits) report the duplicate load. action-type buckets are EXACT ENF_TYPE_DESC matches
-#   (unmapped types dropped -> need not sum); agency partition.
+#   (unmapped types dropped -> need not sum); agency partition. n_penalties = count of formal rows carrying a
+#   positive $ penalty (the count companion to penalty_amount's dollar sum -- see attach_penalty); PENALTY_AMOUNT
+#   is read for formal only (informal has no such column). NB unlike penalty_amount (NA when none), n_penalties
+#   is a COUNT_COL: observed facility-year with no penalty -> 0, unobserved -> NA (zero-vs-missing invariant).
 agg_enforcement <- function(ids) {
-  one <- function(name, kind) rd(name, c("PGM_SYS_ID","year","dup","dup_exact","STATE_EPA_FLAG","ENF_TYPE_DESC")) |>
+  one <- function(name, kind, cols) rd(name, cols) |>
     filter(PGM_SYS_ID %in% ids, year %in% YEARS) |> mutate(kind = kind)
-  all <- bind_rows(one("formal_actions", "formal"), one("informal_actions", "informal"))
+  base     <- c("PGM_SYS_ID","year","dup","dup_exact","STATE_EPA_FLAG","ENF_TYPE_DESC")
+  formal   <- one("formal_actions",   "formal",   c(base, "PENALTY_AMOUNT")) |>
+                mutate(penalty = parse_number(PENALTY_AMOUNT)) |> select(-PENALTY_AMOUNT)
+  informal <- one("informal_actions", "informal", base) |> mutate(penalty = NA_real_)
+  all <- bind_rows(formal, informal)
   all |> group_by(PGM_SYS_ID, year) |> summarise(
       n_enforcement    = n(),
       n_formal         = sum(kind == "formal"), n_informal = sum(kind == "informal"),
       n_penalty_action = sum(ENF_TYPE_DESC == "CAA 113D1 Action For Penalty"),
+      n_penalties      = sum(penalty > 0, na.rm = TRUE),           # formal rows with a positive $ penalty
+      n_penalties_dup  = sum(penalty > 0 & dup > 0, na.rm = TRUE), # of those, event-key duplicates (dup>0)
       n_warning_letter = sum(ENF_TYPE_DESC == "Warning Letter"),
       n_admin_np       = sum(ENF_TYPE_DESC == "CAA 113A Admin Compliance Order (Non-Penalty)"),
       n_civil_judicial = sum(ENF_TYPE_DESC == "Civil Judicial Action"),
@@ -222,12 +231,14 @@ ATTR_COLS  <- c("REGISTRY_ID","FACILITY_NAME","STREET_ADDRESS","CITY","COUNTY_NA
                 "facility_type","AIR_POLLUTANT_CLASS_DESC","op_status_current_desc",
                 "entered_year","exited_year","exit_source","left_censored","right_censored",
                 "emits_voc","emits_pm","emits_co","emits_nox","emits_so2","emits_hap",
-                "prog_sip","prog_titlev","prog_nsps","prog_mact","prog_neshap","prog_fesop","prog_nsr","prog_psd",
+                "prog_sip","prog_titlev","prog_nsps","prog_mact","prog_gact","prog_neshap","prog_fesop",
+                "prog_nsr","prog_psd","prog_cfc",
                 "n_programs","program_begin_year")
 # year-varying wayback status block (2015-2025; NA elsewhere)
 WAYBACK_COLS <- c("op_status_code","operating",
                   "prog_sip_active","prog_titlev_active","prog_nsps_active","prog_mact_active",
-                  "prog_neshap_active","prog_fesop_active","prog_nsr_active","prog_psd_active")
+                  "prog_gact_active","prog_neshap_active","prog_fesop_active","prog_nsr_active",
+                  "prog_psd_active","prog_cfc_active")
 # base panel columns (universe / major_synmin); electric appends TREATMENT_COLS
 PANEL_COLS <- c("PGM_SYS_ID","year",
                 "n_inspections","n_fce","n_pce","n_insp_epa","n_insp_state","n_insp_local",
@@ -237,13 +248,14 @@ PANEL_COLS <- c("PGM_SYS_ID","year",
                 "n_enforcement","n_formal","n_informal","n_penalty_action","n_warning_letter",
                 "n_admin_np","n_civil_judicial","n_nov","n_admin_order","n_enf_epa","n_enf_state","n_enf_local",
                 "n_enforcement_dup","n_enforcement_dup_exact","n_formal_dup","n_formal_dup_exact",
-                "n_informal_dup","n_informal_dup_exact",
+                "n_informal_dup","n_informal_dup_exact","n_penalties","n_penalties_dup",
                 "n_certs","n_certs_deviation","n_certs_dup","n_certs_dup_exact","n_stack_tests","n_stack_pass","n_stack_fail",
                 "any_inspections","any_violations","any_enforcement","any_certs","obs_source",
                 ATTR_COLS, WAYBACK_COLS, "hpv_active","hpv_active_1mo","penalty_amount","penalty_amount_dup")
 TREATMENT_COLS <- c("pm25_status","pm25_area","naa_pm25_2012","any_naa")
 
-# count/flag block that gets known-zero coding (all EVENT-derived measures + interval HPV flags; NOT penalty)
+# count/flag block that gets known-zero coding (all EVENT-derived measures incl. n_penalties/_dup + interval HPV
+#   flags; NOT penalty_amount/_dup -- those dollar sums stay NA-when-none, coded in attach_penalty)
 COUNT_COLS <- c("n_inspections","n_fce","n_pce","n_insp_epa","n_insp_state","n_insp_local",
                 "n_inspections_dup","n_inspections_dup_exact",
                 "n_violations","n_hpv","n_frv","n_viol_sip","n_viol_titlev","n_viol_nsps","n_viol_mact",
@@ -251,7 +263,7 @@ COUNT_COLS <- c("n_inspections","n_fce","n_pce","n_insp_epa","n_insp_state","n_i
                 "n_enforcement","n_formal","n_informal","n_penalty_action","n_warning_letter",
                 "n_admin_np","n_civil_judicial","n_nov","n_admin_order","n_enf_epa","n_enf_state","n_enf_local",
                 "n_enforcement_dup","n_enforcement_dup_exact","n_formal_dup","n_formal_dup_exact",
-                "n_informal_dup","n_informal_dup_exact",
+                "n_informal_dup","n_informal_dup_exact","n_penalties","n_penalties_dup",
                 "n_certs","n_certs_deviation","n_certs_dup","n_certs_dup_exact","n_stack_tests","n_stack_pass","n_stack_fail",
                 "any_inspections","any_violations","any_enforcement","any_certs","hpv_active","hpv_active_1mo")
 
