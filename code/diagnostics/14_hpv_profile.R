@@ -6,18 +6,24 @@
 #
 #   in : data/datasets/{hpv_spells,hpv_active,regulatory}.csv.gz
 #   out: output/hpv_profile/*.csv
+#        output/figures/datasets/hpv/hpv_{active_rate_over_time,spell_duration,program_frequency}.png
 #
 #   DISCIPLINE: hpv_spells is spell-level, UNcollapsed (H2) -- a facility can have 0..N rows, so any
 #   "per-facility" summary here is explicit about whether it's per-spell or per-facility. hpv_active mirrors
 #   ds0's zero-vs-NA gate (H6): NA is unknown, never a false 0; every rate below reports the NA share.
 #   No numbers are hand-entered; every cell is computed here. Hand-run (not part of RUN_ALL.R). No stochastic step.
+#
+#   FIGURE DESIGN: same print-ready convention as 13_regulatory_profile.R (dataviz skill, validated
+#   categorical palette, direct end-of-line labels in place of a legend, 300dpi).
 # =========================================================================================================
-suppressPackageStartupMessages({library(data.table)})
+suppressPackageStartupMessages({library(data.table); library(ggplot2); library(scales)})
 options(scipen = 999)
 
 DATASETS <- here::here("data/datasets")
 OUT      <- here::here("output/hpv_profile")
+OUT_FIG  <- here::here("output/figures/datasets/hpv")
 dir.create(OUT, showWarnings = FALSE, recursive = TRUE)
+dir.create(OUT_FIG, showWarnings = FALSE, recursive = TRUE)
 
 sp <- fread(file.path(DATASETS, "hpv_spells.csv.gz"))
 ha <- fread(file.path(DATASETS, "hpv_active.csv.gz"))
@@ -106,6 +112,57 @@ spell_wins_summary <- data.table(
   n_active_icis_unobserved = spell_wins[ICIS_OBSERVED == 0, .N],
   pct_active_icis_unobserved = round(spell_wins[ICIS_OBSERVED == 0, .N] / nrow(spell_wins), 4))
 fwrite(spell_wins_summary, file.path(OUT, "spell_wins_cases.csv"))
+
+# =========================================================================================================
+# FIGURES -- print-ready (300dpi), validated categorical palette, direct end-of-line labels
+# =========================================================================================================
+PAL <- c(blue = "#2a78d6", aqua = "#1baf7a", yellow = "#eda100", green = "#008300", violet = "#4a3aa7", red = "#e34948")
+INK <- "#0b0b0b"; INK_SECONDARY <- "#52514e"; GRID <- "#e1e0d9"; AXIS <- "#c3c2b7"
+theme_journal <- theme_minimal(base_size = 11) +
+  theme(panel.grid.minor = element_blank(), panel.grid.major = element_line(color = GRID, linewidth = 0.3),
+        axis.line = element_line(color = AXIS, linewidth = 0.3), axis.ticks = element_line(color = AXIS, linewidth = 0.3),
+        text = element_text(color = INK), axis.text = element_text(color = INK_SECONDARY),
+        plot.title = element_text(face = "bold", size = 12), plot.subtitle = element_text(color = INK_SECONDARY, size = 9.5),
+        plot.caption = element_text(color = INK_SECONDARY, size = 8, hjust = 0), legend.position = "none")
+save_fig <- function(name, plot, w = 7.5, h = 4.5) ggsave(file.path(OUT_FIG, name), plot, width = w, height = h, dpi = 300)
+
+# ---- FIGURE 1: HPV-active rate over time, 2005-2025 ------------------------------------------------------
+fig1 <- ggplot(by_year_active, aes(YEAR, pct_active)) +
+  geom_line(color = PAL[["blue"]], linewidth = 0.9) + geom_point(color = PAL[["blue"]], size = 1.6) +
+  scale_x_continuous(breaks = seq(min(by_year_active$YEAR), max(by_year_active$YEAR), 5)) +
+  scale_y_continuous(labels = label_percent(), limits = c(0, NA)) +
+  labs(title = "Share of facilities in HPV-active status, 2005-2025",
+       subtitle = "Of facility-years with known status (HPV_ACTIVE non-NA); a steady ~4.5x decline, mechanism not\nfully explained by coverage-ramp or right-truncation caveats alone (see hpv_profile.md)",
+       x = NULL, y = "Share HPV-active", caption = "Source: data/datasets/hpv_active.csv.gz (dataset 2b).") +
+  theme_journal + theme(plot.subtitle = element_text(color = INK_SECONDARY, size = 8.7, lineheight = 1.1))
+save_fig("hpv_active_rate_over_time.png", fig1)
+
+# ---- FIGURE 2: closed-spell duration distribution (truncated at p99 for readability; long tail noted) -----
+dur <- data.table(days = closed_days)
+p99 <- quantile(closed_days, .99)
+fig2 <- ggplot(dur, aes(days)) +
+  geom_histogram(binwidth = 30, fill = PAL[["blue"]], color = "white", linewidth = 0.15, boundary = 0) +
+  coord_cartesian(xlim = c(0, p99)) +
+  scale_x_continuous(labels = label_comma()) + scale_y_continuous(labels = label_comma()) +
+  labs(title = "HPV spell duration (closed spells)",
+       subtitle = sprintf("n = %s closed spells; x-axis truncated at the 99th percentile (%s days); %.1f%% last over a year",
+                          format(nrow(dur), big.mark = ","), format(round(p99), big.mark = ","), 100 * spell_duration$pct_over_1yr),
+       x = "Days from day-zero to resolved (inclusive)", y = "Spells",
+       caption = "Source: data/datasets/hpv_spells.csv.gz (dataset 2).") +
+  theme_journal
+save_fig("hpv_spell_duration.png", fig2)
+
+# ---- FIGURE 3: program codes implicated (top 8, share of spells) -------------------------------------------
+prog_top <- head(prog_freq[order(-N)], 8)
+prog_top[, program_code := factor(program_code, levels = program_code)]
+fig3 <- ggplot(prog_top, aes(program_code, pct_of_spells)) +
+  geom_col(fill = PAL[["blue"]], width = 0.7) +
+  scale_y_continuous(labels = label_percent()) +
+  labs(title = "Programs implicated in HPV spells (top 8)",
+       subtitle = "Share of spells whose PROGRAM_CODES includes this program (multi-value per spell; shares don't sum to 100%)",
+       x = NULL, y = "Share of spells", caption = "Source: data/datasets/hpv_spells.csv.gz (dataset 2).") +
+  theme_journal
+save_fig("hpv_program_frequency.png", fig3)
 
 # ---- console summary ---------------------------------------------------------------------------------------
 cat("data/datasets/hpv_spells.csv.gz + hpv_active.csv.gz -- profile summary\n")
