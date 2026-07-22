@@ -11,7 +11,7 @@
 #   in : data/datasets/operating.csv.gz
 #   out: output/begin_year_proxy/{coverage,agreement,lag,post_exit_false_positive}.csv + console summary
 # =========================================================================================================
-library(readr); library(dplyr); library(tidyr)
+library(readr); library(dplyr); library(tidyr); library(lubridate)
 
 OUT <- here::here("output/begin_year_proxy"); dir.create(OUT, showWarnings = FALSE, recursive = TRUE)
 
@@ -134,6 +134,39 @@ group_b_gap <- pre2015 |> filter(!is.na(ENTERED_YEAR), ENTERED_YEAR > 2015) |>
   summarise(n_facilities = n(), median_gap_years = median(gap_years), mean_gap_years = round(mean(gap_years), 1), .groups = "drop")
 write_csv(group_b_gap, file.path(OUT, "pre2015_group_b_gap_by_begin_year.csv"))
 
+# ---- 7. WHICH PROGRAM TYPES tend to precede actual operation? EARLIEST_PROGRAM_BEGIN_YEAR is a facility-level
+#   MIN across every program a facility carries -- it doesn't say which program set that date. Institutional
+#   prior (N11, code/02_cleaning/wayback/19_wayback_program_status.R): NSR & PSD are PRECONSTRUCTION permits
+#   that attach BEFORE a source operates (that's exactly why 19_ treats PLN/CNS as "active" only for those two
+#   groups). Test this directly at the PROGRAM level (not the facility-level min used above) against wayback
+#   ENTERED_YEAR: for each program group, take EACH facility's own earliest BEGIN_DATE within that group, and
+#   compare it to when wayback actually observed the facility operating.
+GROUPS <- list(sip = "CAASIP", titlev = "CAATVP", nsps = c("CAANSPS", "CAANSPSM"), mact = "CAAMACT",
+              gact = "CAAGACTM", neshap = "CAANESH", fesop = "CAAFESOP", nsr = "CAANSR", psd = "CAAPSD",
+              cfc = "CAACFC")
+code2group <- stack(GROUPS) |> transmute(PROGRAM_CODE = as.character(values), grp = as.character(ind))
+
+progs <- read_csv(here::here("data/processed/programs.csv.gz"),
+                  col_types = cols(.default = col_character()), show_col_types = FALSE) |>
+  inner_join(code2group, by = "PROGRAM_CODE") |>
+  mutate(begin_year = year(mdy(BEGIN_DATE, quiet = TRUE))) |>
+  filter(!is.na(begin_year), begin_year >= 1970, begin_year <= 2025) |>            # same screen as O5
+  group_by(PGM_SYS_ID, grp) |> summarise(prog_begin_year = min(begin_year), .groups = "drop")
+
+entered <- op |> distinct(PGM_SYS_ID, ENTERED_YEAR) |> filter(!is.na(ENTERED_YEAR))
+
+prog_lag <- progs |> inner_join(entered, by = "PGM_SYS_ID") |>
+  mutate(lag_years = ENTERED_YEAR - prog_begin_year)
+
+prog_lag_by_group <- prog_lag |> group_by(grp) |>
+  summarise(n_facilities = n(), median_lag = median(lag_years), mean_lag = round(mean(lag_years), 2),
+            pct_begin_before_entry = round(100 * mean(lag_years > 0), 1),   # program begins strictly before entry
+            pct_begin_same_year    = round(100 * mean(lag_years == 0), 1),
+            pct_begin_after_entry  = round(100 * mean(lag_years < 0), 1), .groups = "drop") |>
+  arrange(desc(median_lag))
+write_csv(prog_lag_by_group, file.path(OUT, "program_type_lag_by_group.csv"))
+write_csv(prog_lag, file.path(OUT, "program_type_lag_by_facility.csv"))
+
 # ---- console summary ---------------------------------------------------------------------------------------
 cat("EARLIEST_PROGRAM_BEGIN_YEAR as an operating-status proxy -- diagnostic summary\n")
 cat("================================================================================\n\n")
@@ -159,3 +192,6 @@ cat(sprintf("\n6. SINGLE-YEAR ANCHOR CHECK: facilities with begin-year < 2015, n
 print(as.data.frame(pre2015_corroboration), row.names = FALSE)
 cat("\n6b. GROUP B GAP (entered_year - begin_year) BY BEGIN-YEAR BUCKET\n")
 print(as.data.frame(group_b_gap), row.names = FALSE)
+cat(sprintf("\n7. LAG BY PROGRAM TYPE (entered_year - program's own begin_year), n=%s facility-program pairs\n",
+            format(nrow(prog_lag), big.mark=",")))
+print(as.data.frame(prog_lag_by_group), row.names = FALSE)

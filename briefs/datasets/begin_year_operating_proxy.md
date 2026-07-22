@@ -85,6 +85,57 @@ fairly tightly. Full histogram: `output/begin_year_proxy/lag_histogram.csv` (not
 at exactly lag=45, likely the same population as the ~2.3% implausible `BEGIN_DATE` years flagged in decision
 O5).
 
+## 4. Do specific permit/program types tend to precede actual operation?
+
+**Institutional prior, already baked into the pipeline**: `code/02_cleaning/wayback/19_wayback_program_status.R`
+(decision N11) treats NSR and PSD as *preconstruction* programs — those permits attach before a source
+operates, which is exactly why that script codes `PLN`/`CNS` (planned / under-construction) as "active" for
+NSR/PSD but not for the other program groups. The natural hypothesis: if NSR/PSD permits are issued
+pre-construction, their `BEGIN_DATE` should lead `ENTERED_YEAR` (wayback-observed first operation) more than
+other program types do.
+
+**Tested directly at the program level** (not the facility-level min used in §1/§3) — `data/processed/programs.csv.gz`
+carries `BEGIN_DATE` per individual program enrollment row, so each facility's *own* earliest `BEGIN_DATE`
+within each of the 10 program groups was compared to that facility's wayback `ENTERED_YEAR`, screened to
+`[1970, 2025]` (same screen as O5). n = 354,743 facility-program pairs with both dates observed:
+
+| program | n facilities | mean lag (years) | % begins before entry | % same year | % begins after entry |
+|---|--:|--:|--:|--:|--:|
+| **CFC** | 7,862 | **0.67** | **90.7%** | 0.7% | 8.6% |
+| SIP | 180,704 | 0.02 | 62.4% | 16.3% | 21.3% |
+| NSR | 11,124 | −0.29 | 68.1% | 7.6% | 24.3% |
+| MACT | 50,399 | −0.29 | 60.4% | 15.8% | 23.8% |
+| NESHAP | 2,880 | −0.23 | 66.5% | 4.9% | 28.6% |
+| PSD | 6,510 | −0.45 | 62.2% | 11.3% | 26.5% |
+| Title V | 19,805 | −0.50 | 63.0% | 6.8% | 30.2% |
+| FESOP | 10,217 | −0.65 | 59.9% | 8.6% | 31.5% |
+| NSPS | 50,191 | −0.67 | 51.9% | 17.6% | 30.5% |
+| **GACT** | 15,051 | **−1.00** | **38.5%** | 10.8% | **50.7%** |
+
+**This does not confirm the naive version of the prior.** NSR (68.1% begin-before-entry) and PSD (62.2%) are
+*not* dramatically ahead of ordinary operating programs — NESHAP (66.5%) and SIP (62.4%) look similar or
+higher. The standout pattern runs in a different direction entirely:
+
+- **CFC is the strongest lead-time signal in the data** (90.7% begin before entry, the only group with a
+  positive mean lag) — despite CFC (Title VI stratospheric ozone / refrigerant handling) not being
+  architecturally a preconstruction program the way NSR/PSD are. A plausible institutional read: CFC
+  obligations attach to equipment/technician certification requirements that can be registered independent of
+  a facility's operational status, but this is a plausible explanation for a measured pattern, not something
+  confirmed by this analysis — treat it as a hypothesis, not a finding.
+- **GACT is the clear outlier in the other direction** — the only group where a majority (50.7%) begin *after*
+  observed entry, and the only negative median lag. Plausible institutional read: Area Source MACT (GACT)
+  standards were, as a regulatory matter, generally promulgated later than major-source MACT, so a
+  long-operating facility can get swept into a new GACT category well after it was already running — again, a
+  hypothesis this analysis doesn't independently confirm, not a demonstrated mechanism.
+
+**Practical implication for option (c) below**: if a per-program confidence weighting is ever attached to the
+single-year marker, it should not assume "preconstruction programs = more reliable early marker" — the data
+says CFC and, to a lesser extent, NSR/NESHAP lead entry more consistently than others, while GACT should
+probably be down-weighted or excluded as an early-existence signal, not treated the same as the rest.
+
+Full tables: `output/begin_year_proxy/program_type_lag_by_group.csv` (summary) and
+`program_type_lag_by_facility.csv` (every facility × program-group pair).
+
 ## Summary
 
 - **As a same-year "is this facility operating" signal, no** — structurally broken by construction (§2).
@@ -93,6 +144,9 @@ O5).
   evidence (§1, groups A+C), and the discrepant group (B) is small (7.7%) but its reliability itself decays
   the further back the claimed year — solid for begin-years in the early 2010s, speculative for pre-2000
   claims.
+- **Program type matters, but not the way the "preconstruction permit" prior predicts** (§4): CFC leads entry
+  most reliably, GACT lags behind it more often than not, and NSR/PSD sit close to the pack rather than
+  standing out as expected.
 
 ## Options (not a recommendation)
 
@@ -102,4 +156,5 @@ O5).
   wayback evidence doesn't contradict it — and leave group B facilities' begin-year unflagged or flagged with
   lower confidence.
 - (c) Adopt it as a single-year marker everywhere begin-year < 2015, but attach a confidence/distance measure
-  (e.g. bucket by decade, per the §1 gap table) rather than treating a 1990s begin-year the same as a 2014 one.
+  (e.g. bucket by decade, per the §1 gap table) — and per §4, weight by *which* program set the earliest date
+  rather than treating every program type as equally reliable (e.g. down-weight or exclude GACT-only begin-years).
