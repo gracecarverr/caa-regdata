@@ -1,0 +1,5 @@
+SPELL_STATUS,N,pct
+closed,40083,0.9009
+open,3997,0.0898
+bad_order,377,0.0085
+missing_start,33,0.0007
