@@ -16,7 +16,7 @@ purpose-built tables instead of one.
 | `coordinates.csv.gz` | facility | **dataset 4** — FRS lat/lon, derived `COUNTY_FIPS` (point-in-polygon), and coordinate-vs-ICIS-county error diagnostics (`COORD_COUNTY_DIST_KM`, `COORD_GROSS_ERROR`). | `06_coordinates.R` |
 
 Dataset 5 (`attainment`, PM2.5 2012 nonattainment, facility × year) is **not yet built** — see the open item
-in `briefs/dataset_construction_decisions.md`.
+in `briefs/datasets/dataset_construction_decisions.md`.
 
 ## Joining
 
@@ -29,7 +29,7 @@ summing across facilities). `coordinates` is facility-grain and joins onto any o
 ## Where the "why" lives
 
 **Construction rationale, decision codes, and verification results:**
-[`briefs/dataset_construction_decisions.md`](../../briefs/dataset_construction_decisions.md) — organized by
+[`briefs/datasets/dataset_construction_decisions.md`](../../briefs/datasets/dataset_construction_decisions.md) — organized by
 dataset (Parts A–F), each with a coding-decisions table and a verification table from independent audits run
 each build session. **Column/field definitions** for the underlying raw sources:
 [`docs/data_dictionary.md`](../../docs/data_dictionary.md).

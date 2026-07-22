@@ -1,8 +1,8 @@
 # Open decision: `EARLIEST_PROGRAM_BEGIN_YEAR` as a pre-2015 existence marker
 
 > Not yet resolved — this is evidence for a decision you haven't made, not a record of one already made (see
-> `panel_construction_decisions.md` / `dataset_construction_decisions.md` for those). Related to **D-A2** in
-> `panel_open_questions.md`, an earlier open question about interim operating-status proxies, written before
+> `../panel/panel_construction_decisions.md` / `dataset_construction_decisions.md` for those). Related to **D-A2** in
+> `../panel/panel_open_questions.md`, an earlier open question about interim operating-status proxies, written before
 > the wayback reconstruction existed.
 
 ## Question

@@ -5,7 +5,7 @@
 > `00_setup.R:8`, `data/clean/…`) come from an earlier architecture. The current pipeline lives under
 > `code/` with standalone panel scripts in `code/03_panel_building/04_panels/` and cleaned assets in
 > `data/processed/`. Being reconciled during line-by-line verification — confirm exact locations in the
-> current `code/` tree. See `briefs/00_institutional_overview.md` for the institutional hub.
+> current `code/` tree. See `briefs/institutional_overview.md` for the institutional hub.
 
 > 📌 **REVISION 2026-07-17 — panel counts are no longer deduped (supersedes P2 core/raw semantics, and the
 > penalty `dup==0` in E4).** Every panel `n_*` now counts **all rows** (no `dup==0` filter). Duplicate load

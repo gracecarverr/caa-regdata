@@ -13,9 +13,9 @@ this folder. Run these by hand as needed.
 | `site_shell.R` | Shared header/nav/hero/footer chrome + CSS design system for the public `docs/` site (Home, Raw Data, Databases, Panels). No computed numbers — chrome only. Sourced by every `build_*` page script below. | sourced by `build_site.R`, `build_home.R`, `build_databases_page.R`, `build_panels_page.R` |
 | `build_site.R` | Assembles the "Raw Data" page — per-source summary sections built **directly from `data/raw/`** (independent of cleaning/panels). Sources the section builders in `tables/`. This is the "docs generated from data, so they can't drift" step. | `data/raw/*` + `tables/*.R` → `docs/raw_data.html` |
 | `tables/` | One `build_<asset>_section()` per source (16 + `_html.R` primitives); each returns one HTML `<section>` for `build_site.R`. Ported from the old CAA_Project `*_table.xlsx` workbooks (stats + curated content verbatim). | sourced by `build_site.R` |
-| `build_home.R` | Assembles the "Home" page — hero, nav cards, and `briefs/00_institutional_overview.md` rendered via `commonmark` (its "Valuable Links" section and "Data implication" callouts stripped for a public audience; everything else passed through unedited). | `briefs/00_institutional_overview.md` → `docs/index.html` |
+| `build_home.R` | Assembles the "Home" page — hero, nav cards, and `briefs/institutional_overview.md` rendered via `commonmark` (its "Valuable Links" section and "Data implication" callouts stripped for a public audience; everything else passed through unedited). | `briefs/institutional_overview.md` → `docs/index.html` |
 | `build_databases_page.R` | Assembles the "Databases" page — what each database contains, what's missing, and join keys, from `briefs/database_overviews.md` (transcribed verbatim from the project's Google Doc) rendered via `commonmark`. | `briefs/database_overviews.md` → `docs/databases.html` |
-| `build_panels_page.R` | Assembles the "Panels" page — `briefs/panel_findings_summary.md` (used as-is) plus a set of summary-stat tables computed live from `output/panel_profile/*.csv`. **Not run by `RUN_ALL.R`** — depends on `06_panel_profile.R`'s output, so run both by hand after a panel rebuild. | `briefs/panel_findings_summary.md` + `output/panel_profile/*.csv` → `docs/panels.html` |
+| `build_panels_page.R` | Assembles the "Panels" page — `briefs/panel/panel_findings_summary.md` (used as-is) plus a set of summary-stat tables computed live from `output/panel_profile/*.csv`. **Not run by `RUN_ALL.R`** — depends on `06_panel_profile.R`'s output, so run both by hand after a panel rebuild. | `briefs/panel/panel_findings_summary.md` + `output/panel_profile/*.csv` → `docs/panels.html` |
 | `preview_panels.R` | **Local scratch (gitignored).** Dumps the first N rows of each built panel to a plain uncompressed CSV for eyeballing in a viewer. Builds nothing. | `data/panels/*.csv.gz` → `data/panels/_preview/*.csv` (also gitignored) |
 
 > `build_site.R`, `build_home.R`, and `build_databases_page.R` produce **committed deliverables** (GitHub
@@ -42,7 +42,7 @@ diagnostics/
 
 Keep pipeline-critical logic **out** of here — if a finding changes how an asset or panel is built, fold the
 change into `code/02_cleaning/` or `code/03_panel_building/` and record the decision in
-`briefs/panel_construction_decisions.md`. Diagnostics document *why* a choice was investigated; the pipeline
+`briefs/panel/panel_construction_decisions.md`. Diagnostics document *why* a choice was investigated; the pipeline
 implements the choice.
 
 > Note: several investigations referenced in the project notes (NAICS-code reconciliation, LQG mismatches,

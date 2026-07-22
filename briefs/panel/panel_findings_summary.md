@@ -1,7 +1,7 @@
 # CAA Panel — Findings Summary
 
 *Meeting one-pager. Every figure traces to `output/panel_profile/*.csv` (regenerated from the built panels)
-or to the nuance IDs in `briefs/panel_construction_decisions.md`. Panel window 2005–2025; wayback
+or to the nuance IDs in `panel_construction_decisions.md`. Panel window 2005–2025; wayback
 operating/program status exists only 2015–2025.*
 
 ---

@@ -4,14 +4,14 @@
 #   "Valuable Links" section, and every "Data implication" blockquote are dropped (internal-audience /
 #   working-notes framing not meant for a public page) \u2014 everything else is passed through commonmark
 #   unedited, so no institutional fact or number is retyped by hand.
-#   briefs/00_institutional_overview.md -> docs/index.html
+#   briefs/institutional_overview.md -> docs/index.html
 # =========================================================================================================
 library(here)
 library(commonmark)
 source(here("code", "diagnostics", "tables", "_html.R"))
 source(here("code", "diagnostics", "site_shell.R"))
 
-md_path <- here("briefs", "00_institutional_overview.md")
+md_path <- here("briefs", "institutional_overview.md")
 lines   <- enc2utf8(readLines(md_path, warn = FALSE, encoding = "UTF-8"))
 
 # drop the brief's own H1 (the hero supplies the page title)

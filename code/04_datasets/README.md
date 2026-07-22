@@ -10,7 +10,7 @@ The deliverable is **six datasets, not one wide panel** — a departure from the
 three sample panels. Each is built once over the **full** facility universe (no ever-active screen, no
 sample restriction); any subsetting is a filter the user applies downstream. Everything joins on `PGM_SYS_ID`
 (+ `YEAR` where the grain is facility × year). Decisions are documented in depth in
-`briefs/dataset_construction_decisions.md` (find a decision by its code, e.g. `R7`, `O5`, `H6`).
+`briefs/datasets/dataset_construction_decisions.md` (find a decision by its code, e.g. `R7`, `O5`, `H6`).
 
 ## Build order & files
 
@@ -25,7 +25,7 @@ sample restriction); any subsetting is a filter the user applies downstream. Eve
 | `06_coordinates.R` | **dataset 4** `coordinates` | facility | FRS lat/lon, derived county FIPS, coordinate-vs-ICIS-county error diagnostics. Reuses `03_panel_building/coord_county_flag.R` over the full universe. |
 
 Dataset 5 (`attainment`, PM2.5 2012 nonattainment) is **not yet built** — deferred pending a shape decision
-(see the open item in `briefs/dataset_construction_decisions.md`).
+(see the open item in `briefs/datasets/dataset_construction_decisions.md`).
 
 ## Conventions
 
@@ -39,12 +39,12 @@ Dataset 5 (`attainment`, PM2.5 2012 nonattainment) is **not yet built** — defe
   `03_panel_building/` (`00_spine.R`, `01_attainment.R`, `03_build.R` — no "02" file exists there either).
 - **Every build ends with `stopifnot()` invariants** (grain uniqueness, rectangle completeness, zero-vs-NA
   consistency) printed alongside a one-line summary. Independent verification beyond the in-script asserts
-  is run ad hoc each session and logged in `briefs/dataset_construction_decisions.md`, not re-run automatically.
+  is run ad hoc each session and logged in `briefs/datasets/dataset_construction_decisions.md`, not re-run automatically.
 
 ## Where the "why" lives
 
 This README explains *what/how*. For *why* a construction choice was made (universe definition, zero-vs-NA,
 the HPV spell/collapse rules, the settlement broadcast issue, the begin-year screen) see
-**`briefs/dataset_construction_decisions.md`**. The two HPV diagnostics that informed dataset 2/2b
+**`briefs/datasets/dataset_construction_decisions.md`**. The two HPV diagnostics that informed dataset 2/2b
 (`code/diagnostics/08_hpv_spell_diagnostics.R`, `09_hpv_facility_year_rules.R`) are diagnostics, not part of
 this build — see `code/diagnostics/README.md`.

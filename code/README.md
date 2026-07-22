@@ -55,6 +55,6 @@ Package versions are pinned with `renv` — run `renv::restore()` once first.
 ## Where the "why" lives
 
 Code READMEs explain *how*. For *why* a construction choice was made (facility key, date rules, duplicate
-handling, zero semantics, Wayback status, HPV intervals) see **`briefs/panel_construction_decisions.md`**; for
-the institutional setting see **`briefs/00_institutional_overview.md`**; for column-level detail see
+handling, zero semantics, Wayback status, HPV intervals) see **`briefs/panel/panel_construction_decisions.md`**; for
+the institutional setting see **`briefs/institutional_overview.md`**; for column-level detail see
 **`data/processed/*.README.md`** and **`docs/data_dictionary.md`**.

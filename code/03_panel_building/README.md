@@ -5,8 +5,8 @@
 **Run:** `Rscript code/03_panel_building/03_build.R` — or stage 3 of `code/RUN_ALL.R`.
 
 This is where sample selection, aggregation, and treatment happen (the cleaning stage did none of that). The
-decisions here are documented in depth in `briefs/panel_construction_decisions.md` (find a decision by its
-code, e.g. `F7`, `P3`, `W6`); the caveats in `briefs/panel_open_questions.md`.
+decisions here are documented in depth in `briefs/panel/panel_construction_decisions.md` (find a decision by its
+code, e.g. `F7`, `P3`, `W6`); the caveats in `briefs/panel/panel_open_questions.md`.
 
 ## Build order & files
 
@@ -59,7 +59,7 @@ order:
   (time-invariant per facility).
 - **Wayback status** (year-varying) `op_status_code` + `operating` (1 if code ∈ {OPR,TMP,SEA}) and
   `prog_{sip,titlev,nsps,mact,gact,neshap,fesop,nsr,psd,cfc}_active`. **Populated 2015–2025 only; `NA` for 2005–2014**
-  (no snapshot exists — we cannot assert a status). See `briefs/panel_construction_decisions.md` §B.7 / F7.
+  (no snapshot exists — we cannot assert a status). See `briefs/panel/panel_construction_decisions.md` §B.7 / F7.
 - **HPV status** `hpv_active`, `hpv_active_1mo` — interval-based (in HPV status during any part of the year /
   for > 30 days), from the HPV spell, *distinct from* the recorded-year count `n_hpv`.
 - **Penalty** `penalty_amount` — sum of formal-action penalties that facility-year over **all** rows
