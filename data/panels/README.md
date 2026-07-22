@@ -20,8 +20,8 @@ All are the **same recipe** over a different facility filter — column blocks, 
 (all-row counts + `_dup` / `_dup_exact` duplicate-load indicators), and the load-bearing **zero-vs-NA**
 convention (`obs_source ∈ {event, operating, unobserved}`) are documented once in
 [`code/03_panel_building/README.md`](../../code/03_panel_building/README.md). Construction rationale is in
-[`briefs/panel_construction_decisions.md`](../../briefs/panel_construction_decisions.md) (Part C, decisions
-P1–P8); open caveats in [`briefs/panel_open_questions.md`](../../briefs/panel_open_questions.md).
+[`briefs/panel/panel_construction_decisions.md`](../../briefs/panel/panel_construction_decisions.md) (Part C, decisions
+P1–P8); open caveats in [`briefs/panel/panel_open_questions.md`](../../briefs/panel/panel_open_questions.md).
 
 ## Key things to remember when using a panel
 

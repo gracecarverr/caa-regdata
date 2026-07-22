@@ -9,7 +9,7 @@ column and row is kept**; the only additions are `date`/`year`/`dup`/`dup_exact`
 - **Added columns** (`date`, `year`, `dup`, `dup_exact`): defined in
   [`code/02_cleaning/README.md`](../../code/02_cleaning/README.md).
 - **Why duplicates are flagged not dropped, date rules, etc.:**
-  [`briefs/panel_construction_decisions.md`](../../briefs/panel_construction_decisions.md) (decision codes in
+  [`briefs/panel/panel_construction_decisions.md`](../../briefs/panel/panel_construction_decisions.md) (decision codes in
   the caveats below).
 
 > Row/column counts below are from the logged rebuild. Regenerate with `Rscript code/02_cleaning/02_clean.R`

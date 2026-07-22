@@ -22,7 +22,7 @@ results, emissions, and (via archived snapshots) how facilities' operating statu
 change over time. The backbone is **EPA ICIS-Air** (the current compliance/enforcement system), supplemented
 by the legacy **AFS** system, **FRS** for coordinates, and the **Green Book** for attainment status. The
 institutional setting — what each system is and why it matters — is in
-[`briefs/00_institutional_overview.md`](../briefs/00_institutional_overview.md).
+[`briefs/institutional_overview.md`](../briefs/institutional_overview.md).
 
 **What it's useful for.** Building facility × year panels of regulatory activity for empirical work on
 enforcement and compliance: e.g. how inspections/violations/enforcement respond to attainment designation
@@ -43,8 +43,8 @@ reconstructed Wayback spells), or program-specific compliance patterns.
 - **Column/field definitions** (raw sources, from EPA's published dictionaries): [`docs/data_dictionary.md`](../docs/data_dictionary.md).
 - **What each processed asset is, its counts, added columns, and institutional caveats:** the per-asset
   sections in [`processed/README.md`](processed/README.md).
-- **Why construction choices were made (panels):** [`briefs/panel_construction_decisions.md`](../briefs/panel_construction_decisions.md).
-- **Why construction choices were made (the six datasets):** [`briefs/dataset_construction_decisions.md`](../briefs/dataset_construction_decisions.md).
+- **Why construction choices were made (panels):** [`briefs/panel/panel_construction_decisions.md`](../briefs/panel/panel_construction_decisions.md).
+- **Why construction choices were made (the six datasets):** [`briefs/datasets/dataset_construction_decisions.md`](../briefs/datasets/dataset_construction_decisions.md).
 - **Provenance** (source, URL, download date, MD5) for raw files: `raw/MANIFEST.csv`.
 
 > **Reproducibility invariant.** Never edit files under `raw/`. Derived data (`processed/`, `panels/`,

@@ -15,7 +15,7 @@ need to know *when* a facility (and its programs) were actually in service. Thes
 snapshot **presence** and observed status transitions across the 11 Wayback captures. One snapshot = one panel
 year (it reflects the ~Q4 state of that year).
 
-See `briefs/panel_construction_decisions.md` and `briefs/panel_open_questions.md` for the full rationale and
+See `briefs/panel/panel_construction_decisions.md` and `briefs/panel/panel_open_questions.md` for the full rationale and
 the known caveats these choices carry.
 
 ## The three scripts
@@ -40,7 +40,7 @@ the known caveats these choices carry.
   `data/raw/`, 2026-07-21). It is asserted explicit `NA` in `op_status_code`/`op_status_desc`/`operating`
   and all `prog_*_active` columns for that year — **not** LOCF-filled like an ordinary interior gap, since
   there is no real observation for *any* facility to infer from. See W7 in
-  `briefs/panel_construction_decisions.md`.
+  `briefs/panel/panel_construction_decisions.md`.
 
 The program-group code → group mapping in `19_...R` (`GROUPS`) must stay aligned with the `prog_*` flags built
 in `code/03_panel_building/00_spine.R`.

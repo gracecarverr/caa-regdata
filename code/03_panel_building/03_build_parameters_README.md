@@ -29,7 +29,7 @@ Current specs (each narrows the previous — the funnel):
 | `electric` | + `NAICS 2211` **OR** `SIC 4911` (anchored regex) | ✔ PM2.5 |
 
 > The electric NAICS/SIC filter is an **OR**, which admits a few SIC-only / unclassified-NAICS cases — see
-> `briefs/panel_construction_decisions.md` (PR1) and the open question on the electric definition (D-C1).
+> `briefs/panel/panel_construction_decisions.md` (PR1) and the open question on the electric definition (D-C1).
 
 ## Adding / changing a panel
 

@@ -13,7 +13,7 @@
 #   reports the NA share, so a structural NA is never read as a zero. ENTERED_YEAR/EXITED_YEAR/EXIT_SOURCE
 #   are facility-level (one value per facility, broadcast to all years) -- summarised once per facility, not
 #   once per row. EARLIEST_PROGRAM_BEGIN_YEAR is profiled here for coverage only; see
-#   briefs/begin_year_operating_proxy.md for whether it's usable as an operating-status proxy. No numbers are
+#   briefs/datasets/begin_year_operating_proxy.md for whether it's usable as an operating-status proxy. No numbers are
 #   hand-entered; every cell is computed here. Hand-run (not part of RUN_ALL.R). No stochastic step.
 # =========================================================================================================
 suppressPackageStartupMessages({library(data.table)})

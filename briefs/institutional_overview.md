@@ -87,7 +87,7 @@ Preconstruction (New Source Review Permitting). Permitting half of the new sourc
 > unlike the other six program-active flags (SIP, Title V, NSPS, MACT, NESHAP, FESOP), which require the
 > facility to actually be operating. A facility can therefore read `prog_nsr_active = 1` while `operating = 0`
 > in the same year — that's not a contradiction, it reflects that the NSR/PSD obligation attaches before
-> operation begins. (Decision **N11**, `panel_construction_decisions.md`.)
+> operation begins. (Decision **N11**, `panel/panel_construction_decisions.md`.)
 
 ## Title V: Operating Permits (compliance backbone)
 

@@ -23,7 +23,7 @@ The only columns ever **added**:
 
 > **Why label duplicates instead of dropping them?** Whether a repeat is a genuine second event or a data
 > artifact is a *panel-construction* decision, not a cleaning one. Labeling keeps the choice visible and
-> reversible. See `briefs/panel_construction_decisions.md`.
+> reversible. See `briefs/panel/panel_construction_decisions.md`.
 
 ## Files
 

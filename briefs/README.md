@@ -8,13 +8,31 @@ and `docs/data_dictionary.md`; for the "how" (code) see `code/*/README.md`.
 
 ## Contents
 
+Split into two subfolders mirroring the pipeline's own panel-layer (`code/03_panel_building/`) vs.
+dataset-layer (`code/04_datasets/`) distinction. `institutional_overview.md`, `database_overviews.md`, and
+this README stay at the top level as the reference/index docs.
+
 | brief | scope |
 |-------|-------|
-| [`00_institutional_overview.md`](00_institutional_overview.md) | **Start here.** The Clean Air Act enforcement setting: what each data system (ICIS-Air, AFS, FRS, Green Book) is, the key regulatory concepts (Title V, HPV, FCE/PCE, NAAQS/attainment, program types), and — for each — the **implication for the data**. Links out to the in-depth briefs. Rendered (trimmed) as the site's Home page by `code/diagnostics/build_home.R`. |
+| [`institutional_overview.md`](institutional_overview.md) | **Start here.** The Clean Air Act enforcement setting: what each data system (ICIS-Air, AFS, FRS, Green Book) is, the key regulatory concepts (Title V, HPV, FCE/PCE, NAAQS/attainment, program types), and — for each — the **implication for the data**. Links out to the in-depth briefs. Rendered (trimmed) as the site's Home page by `code/diagnostics/build_home.R`. |
 | [`database_overviews.md`](database_overviews.md) | What each database (ICIS-Air, AFS, the combined emissions dataset, the compliance/enforcement pipeline) contains, what's missing, and how the files join — transcribed verbatim from the project's Google Doc. Rendered as the site's Databases page by `code/diagnostics/build_databases_page.R`. |
-| [`panel_construction_decisions.md`](panel_construction_decisions.md) | Every asset- and panel-construction decision, the alternative not taken, and the data issue behind it (facility key, date rules, duplicate handling, universe definition, spine attributes, attainment, Wayback status, zero semantics, HPV intervals). |
-| [`panel_open_questions.md`](panel_open_questions.md) | Choices **not yet settled** — balance vs. unbalanced, operating-indicator / Census merge, violation date rule, the electric definition, covariates, and verification items. |
-| [`panel_findings_summary.md`](panel_findings_summary.md) | Meeting-ready one-pager of panel scale, key measures, duplicate load, and penalties. Rendered as-is on the site's Panels page by `code/diagnostics/build_panels_page.R`, alongside live-computed summary-stat tables. |
+
+### `panel/` — the panel-building layer (`code/03_panel_building/`)
+
+| brief | scope |
+|-------|-------|
+| [`panel/panel_construction_decisions.md`](panel/panel_construction_decisions.md) | Every asset- and panel-construction decision, the alternative not taken, and the data issue behind it (facility key, date rules, duplicate handling, universe definition, spine attributes, attainment, Wayback status, zero semantics, HPV intervals). |
+| [`panel/panel_open_questions.md`](panel/panel_open_questions.md) | Choices **not yet settled** — balance vs. unbalanced, operating-indicator / Census merge, violation date rule, the electric definition, covariates, and verification items. |
+| [`panel/panel_findings_summary.md`](panel/panel_findings_summary.md) | Meeting-ready one-pager of panel scale, key measures, duplicate load, and penalties. Rendered as-is on the site's Panels page by `code/diagnostics/build_panels_page.R`, alongside live-computed summary-stat tables. |
+
+### `datasets/` — the six-dataset layer (`code/04_datasets/`)
+
+| brief | scope |
+|-------|-------|
+| [`datasets/dataset_construction_decisions.md`](datasets/dataset_construction_decisions.md) | Every dataset-construction decision (R/O/P/H-numbered) across all six datasets, the alternative not taken, and the data issue behind it. |
+| [`datasets/regulatory_dataset_profile.md`](datasets/regulatory_dataset_profile.md) | General profile writeup of dataset 0 (`regulatory.csv.gz`) — coverage, event-count distributions, facility characteristics. No open decision attached. |
+| [`datasets/begin_year_operating_proxy.md`](datasets/begin_year_operating_proxy.md) | **Open decision.** Whether `EARLIEST_PROGRAM_BEGIN_YEAR` (dataset 1) is usable as a pre-2015 facility-existence marker. |
+| [`datasets/multi_facility_settlement_decision.md`](datasets/multi_facility_settlement_decision.md) | **Open decision.** How to handle multi-facility settlement penalties in dataset 3 — naive summing overstates the total by 35.2%. |
 
 ## How institutional facts connect to the data
 

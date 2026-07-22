@@ -12,7 +12,7 @@
 #   NO REAL 2018 SNAPSHOT EXISTS. The raw "2018" folder was byte-identical to 2019 across all 10 tables and
 #   the Internet Archive has zero captures of the live ICIS-Air bulk download anywhere in the 2018 window --
 #   it was a mislabeled duplicate, not a real archived snapshot, and was removed from data/raw/ (2026-07-21,
-#   see briefs/panel_construction_decisions.md N18/W7). 2018 is deliberately EXPLICIT NA (op_status_code,
+#   see briefs/panel/panel_construction_decisions.md N18/W7). 2018 is deliberately EXPLICIT NA (op_status_code,
 #   op_status_desc, operating), NOT LOCF-filled like an ordinary interior gap -- an ordinary gap means one
 #   facility happened to be missing from an otherwise-real snapshot; 2018 has no real snapshot for ANY
 #   facility, so there is no evidence to infer from and none is asserted (per-project decision, matches the

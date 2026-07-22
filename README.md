@@ -11,7 +11,7 @@ Building facility × year panels of regulatory activity — inspections, violati
 certifications, stack tests, emissions — for empirical work on enforcement and compliance. The `electric`
 panel pairs regulatory activity with **PM2.5 (2012) nonattainment treatment**; the Wayback reconstruction
 recovers year-varying operating status and facility entry/exit that the current EPA download lacks. See
-[`briefs/00_institutional_overview.md`](briefs/00_institutional_overview.md) for the institutional setting.
+[`briefs/institutional_overview.md`](briefs/institutional_overview.md) for the institutional setting.
 
 ## Reproduce
 
@@ -81,9 +81,9 @@ Every folder has a `README.md`. Start with [`code/README.md`](code/README.md) fo
 | you want… | look in |
 |-----------|---------|
 | to run the pipeline | [`code/README.md`](code/README.md), `code/RUN_ALL.R` |
-| the institutional setting (statute, data systems) | [`briefs/00_institutional_overview.md`](briefs/00_institutional_overview.md) |
-| **why** a construction choice was made | [`briefs/panel_construction_decisions.md`](briefs/panel_construction_decisions.md) |
-| what's still undecided | [`briefs/panel_open_questions.md`](briefs/panel_open_questions.md) |
+| the institutional setting (statute, data systems) | [`briefs/institutional_overview.md`](briefs/institutional_overview.md) |
+| **why** a construction choice was made | [`briefs/panel/panel_construction_decisions.md`](briefs/panel/panel_construction_decisions.md) |
+| what's still undecided | [`briefs/panel/panel_open_questions.md`](briefs/panel/panel_open_questions.md) |
 | column/field definitions | [`docs/data_dictionary.md`](docs/data_dictionary.md) |
 | what each data file is + caveats | the per-layer READMEs under [`data/`](data/README.md) |
 
@@ -106,7 +106,7 @@ Every folder has a `README.md`. Start with [`code/README.md`](code/README.md) fo
 Reorganized into the staged `code/` + `data/` + `briefs/` structure with per-folder and per-stage
 documentation. The pipeline builds end-to-end (ICIS-Air + AFS + emissions cleaners, facility spine, PM2.5
 attainment, and the universe / major_synmin / electric panels). Ozone/SO₂/lead attainment and the AFS↔ICIS
-crosswalk are future work — see [`briefs/panel_open_questions.md`](briefs/panel_open_questions.md).
+crosswalk are future work — see [`briefs/panel/panel_open_questions.md`](briefs/panel/panel_open_questions.md).
 
 ## License
 

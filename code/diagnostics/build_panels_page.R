@@ -1,11 +1,11 @@
 # =========================================================================================================
 # code/diagnostics/build_panels_page.R \u2014 assembles docs/panels.html, the site's "Panels" page: the
-#   findings-summary narrative (briefs/panel_findings_summary.md, used as-is) plus a set of summary-stat
+#   findings-summary narrative (briefs/panel/panel_findings_summary.md, used as-is) plus a set of summary-stat
 #   tables computed live from output/panel_profile/*.csv (produced by the hand-run 06_panel_profile.R \u2014
 #   NOT part of RUN_ALL.R, matching that script's own convention). No number here is retyped; every cell is
 #   read from the CSVs and formatted at render time.
 #   Depends on: output/panel_profile/*.csv existing (run `Rscript code/diagnostics/06_panel_profile.R` first).
-#   briefs/panel_findings_summary.md + output/panel_profile/*.csv -> docs/panels.html
+#   briefs/panel/panel_findings_summary.md + output/panel_profile/*.csv -> docs/panels.html
 # =========================================================================================================
 library(here)
 library(commonmark)
@@ -161,7 +161,7 @@ t7_rows <- vapply(seq_len(n_top), function(i) td_row(c(
 )), character(1))
 table7 <- stat_table("Top 5 states by facility count", c("Rank", PANELS), t7_rows)
 
-# ---- narrative: briefs/panel_findings_summary.md (used as-is; hero supplies the page title) ----------------
+# ---- narrative: briefs/panel/panel_findings_summary.md (used as-is; hero supplies the page title) ----------------
 md_lines <- enc2utf8(readLines(here("briefs", "panel_findings_summary.md"), warn = FALSE, encoding = "UTF-8"))
 while (length(md_lines) && !nzchar(trimws(md_lines[1]))) md_lines <- md_lines[-1]
 if (length(md_lines) && grepl("^# ", md_lines[1])) md_lines <- md_lines[-1]

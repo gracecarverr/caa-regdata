@@ -1,7 +1,7 @@
 # =========================================================================================================
 # code/02_cleaning/wayback/19_wayback_program_status.R -- HISTORICAL program status from the ICIS-AIR WAYBACK
 #   snapshots (2015-2025 EXCEPT 2018 -- no real snapshot exists, see 17_'s header note and
-#   briefs/panel_construction_decisions.md N18/W7; 2018 is explicit NA, NOT LOCF-filled, unlike an ordinary
+#   briefs/panel/panel_construction_decisions.md N18/W7; 2018 is explicit NA, NOT LOCF-filled, unlike an ordinary
 #   interior gap -- no facility has a real 2018 snapshot to infer from).
 #   The raw PROGRAMS table has an unreliable BEGIN_DATE and NO program-close date;
 #   we instead reconstruct a facility x year "is this program active?" series from snapshot PRESENCE +

@@ -3,7 +3,7 @@
 #   Purpose: characterize the penalties dataset for a reader picking the project up cold -- coverage,
 #   penalty-amount distribution, action/enforcement-type composition, and the multi-facility settlement
 #   structure (P5). The settlement-structure deep dive that actually informs the broadcast-rule DECISION
-#   lives in briefs/multi_facility_settlement_decision.md, not here -- this script is descriptive only.
+#   lives in briefs/datasets/multi_facility_settlement_decision.md, not here -- this script is descriptive only.
 #   Companion to 11_operating_profile.R (same discipline, different dataset).
 #
 #   in : data/datasets/penalties.csv.gz
