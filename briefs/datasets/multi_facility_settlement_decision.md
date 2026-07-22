@@ -66,21 +66,58 @@ These are large corporate-wide settlements (e.g. a single enforcement action aga
 operator) recorded once per named facility, each row carrying the *full* settlement amount — a real, expected
 ICIS-Air data pattern, not a data-quality bug.
 
-### 3. The 72 differing-amount settlements are a smaller, separate problem
+### 3. The 72 differing-amount settlements are a smaller, separate problem — and most of them aren't really "different"
+
+> **Correction (this pass):** an earlier draft of this brief reported $93,590,446 naive / $51,262,365
+> distinct-value sum for "the 72." Re-deriving it for the refinement below surfaced that those dollar figures
+> were actually computed over a *different* 52-settlement population (grouping on `DUP==0` rows only, which
+> changes which settlements even qualify as "differing" — 20 settlements are only classified as differing at
+> all because a duplicate row, not the canonical record, carries a different amount). Recomputed correctly
+> below, using the same method as §1/§2 throughout: settlement structure (which 72) identified from **all**
+> rows, matching the dataset's own shipped `IS_MULTI_FACILITY`/`N_SETTLEMENT_FACILITIES` columns; dollar and
+> spread figures computed from `DUP==0` rows *within* those 72, consistent with §2's rationale for stripping
+> row-level duplicate inflation before looking at the cross-facility question.
 
 | pattern | n settlements | naive sum | distinct-value sum |
 |---|---|---|---|
 | fully distinct (every facility has its own unique amount) | 23 | — | — |
 | partial (some facilities repeat a value, some differ) | 29 | — | — |
-| **combined** | **72** | **$93,590,446** | **$51,262,365** |
+| **combined** | **72** | **$97,459,223** | **$52,943,681** |
 
 For the 23 "fully distinct" settlements, every co-defendant's amount is genuinely different — summing across
 facilities is very plausibly *correct* here (each facility may really owe a different share), so the
 "de-duplicate by distinct value" rule from §2 is the wrong instinct for this subset specifically. The 29
-"partial repeat" settlements are the genuinely ambiguous middle case: some facilities share a value (probably
-broadcast) while others differ (probably a real distinct penalty) within the *same* settlement. No purely
-mechanical rule resolves this subset without either occasionally under- or over-counting — it would need
-case-level judgment or an explicit approximation, not something this brief can settle on its own.
+"partial repeat" settlements looked like the genuinely ambiguous middle case: some facilities share a value
+while others differ within the same settlement.
+
+**But "distinct amounts" doesn't mean "meaningfully different" — checking the actual size of the difference
+(max − min per settlement) splits the 72 very unevenly:**
+
+| spread (max − min penalty within the settlement) | n settlements | naive sum | distinct-value sum |
+|---|--:|--:|--:|
+| **trivial ($5 or less)** | **53 (73.6%)** | $16,696,321 | $6,444,097 |
+| genuinely large (>$5, mostly \\$1,000s–\\$100,000s) | 19 (26.4%) | $80,762,902 | $46,499,584 |
+
+That 53 splits into two distinct, unrelated patterns — not one:
+
+- **43 are Texas settlements (`ENF_IDENTIFIER` starting `TX000A...`) differing by exactly $1–3.** Of the 19
+  genuinely-large-spread settlements, only 1 is Texas — this is close to a clean state-specific signature.
+  Almost certainly an even split of one total penalty across co-defendants with a leftover $1–3 from integer
+  division landing on one or two facilities, not a real per-facility penalty determination.
+- **10 settlements have `DUP==0` spread of exactly $0** (all facilities show the *same* canonical amount,
+  often $0) **but still get flagged "differing" because a separate duplicate row carries a different amount**
+  for one of the facilities — e.g. settlement `04-2000-0101`: both co-defendant facilities show `$0` on their
+  `DUP==0` row, but one of them also has a `DUP==1` row carrying `$3,500,000`. This is a duplicate-*record*
+  inconsistency, not a cross-facility difference at all — a completely separate issue from the Texas pattern,
+  and arguably a reason to reconsider whether `DUP>0` rows should ever be allowed to influence the
+  differing/uniform classification in the first place (right now they can, via `N_DISTINCT_AMOUNTS` computed
+  on all rows).
+
+**Net effect: only 19 of the 72 (26.4%) — not 72 — are settlements where the amounts genuinely differ in a way
+that plausibly reflects real per-facility penalty determinations.** The other 53 are artifacts: 43 trivial
+rounding differences (Texas) and 10 duplicate-record inconsistencies. No purely mechanical rule resolves the
+remaining 19 without either occasionally under- or over-counting — those need case-level judgment or an
+explicit approximation; the other 53 do not.
 
 ### 4. Facility-level attribution — a related but distinct question
 
@@ -91,7 +128,7 @@ much penalty should *this one facility* be credited/charged with? Two candidate 
 | rule | total | reading |
 |---|---|---|
 | **as-recorded** (current `PENALTY_AMOUNT`, full settlement amount per facility) | $5,499,334,296 | Every co-defendant "owns" the full settlement — correct for "was this facility named in a $X action," wrong for "how much did this facility pay" summed across facilities. |
-| **split-even** (settlement total ÷ n co-defendants, broadcast to each) | $3,561,288,705 | Every co-defendant gets an equal share — avoids the aggregate inflation in §2 by construction, but assumes co-defendants split evenly, which decision §3 shows is not always true (72 settlements have genuinely unequal per-facility amounts already recorded). |
+| **split-even** (settlement total ÷ n co-defendants, broadcast to each) | $3,561,288,705 | Every co-defendant gets an equal share — avoids the aggregate inflation in §2 by construction, but assumes co-defendants split evenly, which decision §3 shows is not always true (19 settlements have genuinely unequal per-facility amounts; the other 53 formerly-"differing" settlements split evenly enough that even splits would barely move the number). |
 
 ## Summary
 
@@ -99,9 +136,12 @@ much penalty should *this one facility* be credited/charged with? Two candidate 
   dataset's naive total.
 - **The uniform-amount case (516 of 588, 87.8% of multi-facility settlements) has a clean, mechanical fix**:
   de-duplicating to the distinct settlement amount recovers the correct total (§2) with no ambiguity.
-- **The differing-amount case (72 settlements) does not have a clean mechanical fix** — 23 look like genuine
-  per-facility amounts (sum is probably right), 29 are a mixed pattern that needs a judgment call, not a
-  formula.
+- **The differing-amount case is smaller than it first looked.** Of the 72 settlements flagged "differing,"
+  only **19 (26.4%)** have amounts that plausibly reflect real per-facility penalty determinations — the other
+  **53 (73.6%)** are artifacts (43 trivial $1–3 Texas rounding differences, 10 duplicate-record
+  inconsistencies where the canonical `DUP==0` amount is actually uniform). Effectively, **569 of 588
+  multi-facility settlements (96.8%)** — not 516 — can be handled with the same clean de-duplication rule as
+  §2; only 19 (3.2%) genuinely need case-level judgment.
 - **Aggregate-total handling and facility-level attribution are two different decisions** — fixing the
   former (don't overcount the total) doesn't by itself answer the latter (what does *this* facility owe).
 
@@ -113,8 +153,10 @@ much penalty should *this one facility* be credited/charged with? Two candidate 
   `sum()` away from a badly wrong headline number.
 - (b) **Add a settlement-level de-duplicated total as a new column** (e.g. `penalty_amount_settlement_dedup`),
   computed as the sum of distinct amounts per `ENF_IDENTIFIER`, same value broadcast to every co-defendant row
-  — correct for the 516 uniform settlements, an approximation (not exactly right, not exactly wrong) for the
-  72 differing ones. Would need a documented caveat for those 72, not a silent fix.
+  — correct for the 516 uniform settlements and, per §3, a good approximation for 53 more of the 72
+  "differing" ones (off by only $1–3 for the 43 Texas cases, and arguably *more* correct than the status quo
+  for the 10 duplicate-record cases). A genuine approximation only remains for 19 settlements. Would still
+  need a documented caveat for those 19, not a silent fix.
 - (c) **Add a `is_settlement_primary_row` flag** (one row per `ENF_IDENTIFIER` designated primary, arbitrarily
   or by some rule e.g. first `PGM_SYS_ID`) so `sum(PENALTY_AMOUNT[is_settlement_primary_row])` gives a
   correct-for-uniform-settlements aggregate without adding a new dollar column — cheaper than (b), same

@@ -96,6 +96,42 @@ fwrite(settlement_structure, file.path(OUT, "settlement_structure.csv"))
 co_defendant_dist <- settlements[n_facilities > 1, .N, by = n_facilities][order(n_facilities)]
 fwrite(co_defendant_dist, file.path(OUT, "co_defendant_distribution.csv"))
 
+# =========================================================================================================
+# CSV 6 -- settlement-broadcast deep dive backing briefs/datasets/multi_facility_settlement_decision.md.
+#   METHOD (must stay consistent throughout, per that brief's correction note): settlement structure --
+#   which ENF_IDENTIFIERs are multi-facility / uniform / differing -- is identified from ALL rows, matching
+#   the dataset's own shipped IS_MULTI_FACILITY/N_SETTLEMENT_FACILITIES columns (built in 05_penalties.R from
+#   unfiltered data). Dollar and spread figures are then computed from DUP==0 rows WITHIN those identified
+#   settlements only -- consistent with stripping row-level duplicate inflation before the cross-facility
+#   comparison (same rationale as summary_penalty/by_year above). Mixing the two (e.g. identifying via
+#   DUP==0-first grouping) changes which settlements even qualify as "differing" -- a real bug caught while
+#   extending this analysis, corrected in the brief.
+# =========================================================================================================
+multi_ids  <- settlements[n_facilities > 1, ENF_IDENTIFIER]
+differ_ids <- settlements[n_facilities > 1 & n_distinct_amounts > 1, ENF_IDENTIFIER]
+
+dollars_for <- function(ids) {
+  x <- d0[ENF_IDENTIFIER %in% ids, .(naive = sum(PENALTY_AMOUNT), distinct = sum(unique(PENALTY_AMOUNT))), by = ENF_IDENTIFIER]
+  data.table(n_settlements = length(ids), naive_sum = sum(x$naive), distinct_sum = sum(x$distinct))
+}
+settlement_dollars <- rbindlist(list(
+  cbind(population = "all 588 multi-facility", dollars_for(multi_ids)),
+  cbind(population = "72 differing-amount",     dollars_for(differ_ids))))
+fwrite(settlement_dollars, file.path(OUT, "settlement_dollars_by_population.csv"))
+
+# per-settlement spread (max-min) for the 72 differing ones, DUP==0 basis
+differ_detail <- d0[ENF_IDENTIFIER %in% differ_ids,
+                    .(min_amt = min(PENALTY_AMOUNT), max_amt = max(PENALTY_AMOUNT),
+                      naive = sum(PENALTY_AMOUNT), distinct = sum(unique(PENALTY_AMOUNT))), by = ENF_IDENTIFIER]
+differ_detail[, spread := max_amt - min_amt]
+differ_detail[, trivial := spread <= 5]
+differ_detail[, is_texas := grepl("^TX", ENF_IDENTIFIER)]
+fwrite(differ_detail, file.path(OUT, "differing_settlements_detail.csv"))
+
+differ_summary <- differ_detail[, .(n_settlements = .N, naive_sum = sum(naive), distinct_sum = sum(distinct),
+                                    n_texas = sum(is_texas)), by = trivial][order(-trivial)]
+fwrite(differ_summary, file.path(OUT, "differing_settlements_trivial_vs_large.csv"))
+
 # ---- console summary ---------------------------------------------------------------------------------------
 cat("data/datasets/penalties.csv.gz -- profile summary\n")
 cat("=====================================================\n\n")
@@ -111,3 +147,6 @@ cat("\nCATEGORICAL FREQUENCIES (dup==0)\n"); print(as.data.frame(freq_categorica
 cat("\nSETTLEMENT STRUCTURE\n"); print(as.data.frame(settlement_structure), row.names = FALSE)
 cat("\nCO-DEFENDANT COUNT DISTRIBUTION (multi-facility settlements)\n")
 print(as.data.frame(co_defendant_dist), row.names = FALSE)
+cat("\nSETTLEMENT DOLLARS BY POPULATION (DUP==0 basis)\n"); print(as.data.frame(settlement_dollars), row.names = FALSE)
+cat("\nDIFFERING SETTLEMENTS: TRIVIAL (spread<=$5) VS GENUINELY LARGE\n")
+print(as.data.frame(differ_summary), row.names = FALSE)
