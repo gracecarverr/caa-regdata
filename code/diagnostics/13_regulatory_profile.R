@@ -6,8 +6,8 @@
 #
 #   in : data/datasets/regulatory.csv.gz
 #   out: output/regulatory_profile/*.csv
-#        output/figures/datasets/reg_{coverage_over_time,activity_over_time,inspections_distribution,
-#                                     activity_by_classification,coverage_by_classification_over_time}.png
+#        output/figures/datasets/regulatory/reg_{coverage_over_time,activity_over_time,inspections_distribution,
+#                                                activity_by_classification,coverage_by_classification_over_time}.png
 #
 #   DISCIPLINE: ICIS_OBSERVED is the zero-vs-NA gate -- a facility-year is icis_observed==1 iff ICIS holds
 #   any record that year (n_inspections non-NA); every N_* count is a real 0/positive when observed, NA when
@@ -26,7 +26,7 @@ options(scipen = 999)
 
 DATASETS <- here::here("data/datasets")
 OUT_CSV  <- here::here("output/regulatory_profile")
-OUT_FIG  <- here::here("output/figures/datasets")
+OUT_FIG  <- here::here("output/figures/datasets/regulatory")
 dir.create(OUT_CSV, showWarnings = FALSE, recursive = TRUE)
 dir.create(OUT_FIG, showWarnings = FALSE, recursive = TRUE)
 
