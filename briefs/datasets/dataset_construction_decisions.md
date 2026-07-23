@@ -293,6 +293,10 @@ category breakdowns beyond self-disclosure; any dedup reconciliation of `EA_PENA
 | placeholder rows (7,193) structurally absent from every facility-year (no `VIOL_START_DATE` → no year) | ✓ |
 | independent Python re-derivation: HPV 17,130 + FRV 40,708 = 57,838 (matches a hand count from raw `VIOL_START_DATE` year distribution, 2005–2025 window) | ✓ |
 
+**Profile**: `briefs/datasets/pipeline_profile.md` (built by `code/diagnostics/16_pipeline_profile.R`) —
+linkage rates, `EVAL_TYPE_DESC`/`EA_TYPE` breakdowns, lag-day distributions, and the eval-linkage coverage
+cliff before 2015.
+
 ---
 
 ## Dataset 5 · planned (not yet built)
