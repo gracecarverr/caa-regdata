@@ -130,6 +130,32 @@ much penalty should *this one facility* be credited/charged with? Two candidate 
 | **as-recorded** (current `PENALTY_AMOUNT`, full settlement amount per facility) | $5,499,334,296 | Every co-defendant "owns" the full settlement — correct for "was this facility named in a $X action," wrong for "how much did this facility pay" summed across facilities. |
 | **split-even** (settlement total ÷ n co-defendants, broadcast to each) | $3,561,288,705 | Every co-defendant gets an equal share — avoids the aggregate inflation in §2 by construction, but assumes co-defendants split evenly, which decision §3 shows is not always true (19 settlements have genuinely unequal per-facility amounts; the other 53 formerly-"differing" settlements split evenly enough that even splits would barely move the number). |
 
+### 5. Are co-defendants genuinely different physical facilities, or the same facility under multiple `PGM_SYS_ID`s? (FRS ID check)
+
+A prior question underneath §§1–4: does "multi-facility" mean genuinely distinct sites, or could some of it be one
+physical facility registered under >1 `PGM_SYS_ID` (e.g. separate program-system IDs for the same plant) getting
+mistaken for co-defendants? Checked by joining each co-defendant's `PGM_SYS_ID` to `REGISTRY_ID` (the FRS ID) via
+`data/processed/facilities.csv.gz` and comparing, per `ENF_IDENTIFIER`, `n_distinct(REGISTRY_ID)` against
+`n_distinct(PGM_SYS_ID)`. `REGISTRY_ID` resolved for all 2,642 co-defendant rows (no missing joins).
+
+| | settlements | % of 588 |
+|---|--:|--:|
+| all co-defendants share **one** `REGISTRY_ID` (same physical facility) | 36 | 6.1% |
+| co-defendants span **>1** `REGISTRY_ID` (genuinely different facilities) | 552 | 93.9% |
+| ...of those 552: **every** co-defendant has its own distinct `REGISTRY_ID` (`n_registry_id == n_pgm_sys_id`) | 494 | 84.0% |
+
+**The majority do not share an FRS ID.** Multi-facility settlements are overwhelmingly settlements against
+genuinely separate physical facilities (consistent with the "corporate-wide settlement naming multiple plants"
+reading in §2), not an artifact of one site being registered under several `PGM_SYS_ID`s.
+
+The 36 same-`REGISTRY_ID` settlements are a small, distinct pattern, not a scaled-down version of the main
+finding: 35 of 36 have exactly 2 co-defendant rows (one has 3), naive-sum dollars across all 36 total only
+$29,032,173 (1.3% of the $2.29B naive multi-facility total in §2), and 33 of 36 already carry a uniform amount
+across their rows. These look like one physical facility appearing twice under different program-system IDs
+within the same enforcement action, rather than a true co-defendant broadcast — worth excluding from, or
+flagging separately in, any co-defendant-counting logic, but too small to matter for the aggregate-dollar
+decision in §2.
+
 ## Summary
 
 - **This is not a marginal edge case in dollar terms.** 0.57% of settlements drive over a third of the
@@ -144,6 +170,11 @@ much penalty should *this one facility* be credited/charged with? Two candidate 
   §2; only 19 (3.2%) genuinely need case-level judgment.
 - **Aggregate-total handling and facility-level attribution are two different decisions** — fixing the
   former (don't overcount the total) doesn't by itself answer the latter (what does *this* facility owe).
+- **Co-defendants are genuinely different facilities, not an ID artifact** (§5): only 36 of 588 (6.1%)
+  multi-facility settlements have all co-defendants resolving to the same FRS `REGISTRY_ID`; 552 (93.9%) span
+  genuinely distinct physical facilities, 494 of those with every co-defendant on its own unique `REGISTRY_ID`.
+  The 36 same-facility cases are small in count and dollars ($29M, 1.3% of the naive multi-facility total) and
+  look like one site double-registered under two `PGM_SYS_ID`s, not true co-defendant broadcasting.
 
 ## Options (not a recommendation)
 

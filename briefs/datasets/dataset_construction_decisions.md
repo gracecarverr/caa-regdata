@@ -1,9 +1,10 @@
 # Dataset Construction Decisions
 
 > Scope: the **`code/04_datasets/` layer** — the six deliverable datasets that supersede the single wide
-> panel. For the *asset* and *panel* layer decisions (facility spine, `dup` flagging, event windowing, HPV
-> spell logic upstream of here) see `../panel/panel_construction_decisions.md`. That doc's CC/F/… decisions
-> about the cleaned `data/processed/` assets still hold — this layer consumes those assets unchanged.
+> panel, now this repo's main product. Facility-spine/panel-building code and its construction-decisions
+> doc (formerly `../panel/panel_construction_decisions.md`) moved to the CAA_Project repo (2026-07-23); this
+> layer still consumes the `data/processed/` cleaned assets unchanged, just without a local copy of the
+> spine-layer decision log.
 
 **The deliverable is six datasets, not one panel.** Each is built once over the FULL facility universe;
 any sample restriction is a downstream filter, not a pre-built panel. All join on `PGM_SYS_ID` (+ `YEAR`
@@ -28,6 +29,7 @@ where the grain is facility × year).
 | **G1** | **Window `YEARS = 2005:2025`** applied at dataset build, not in the assets. | Bake the window into `data/processed/`. | Assets stay reusable for any window; the window is one line here. Inherited from panel-layer CC2. |
 | **G2** | **Every column in the dataset layer is `UPPER_SNAKE_CASE`.** Builders assemble internally in lowercase, then uppercase **once on write** via `write_dataset()`. | Hand-name every output column uppercase in each aggregator; or leave mixed case as sources deliver it. | One convention across all six files so join keys (`PGM_SYS_ID`, `YEAR`) and every derived column line up on merge with no per-file casing fixups. Single transform point = no typo drift across ~60 column literals. `toupper()` is idempotent on the already-uppercase ICIS attributes. |
 | **G3** | **Full universe, no sample panels.** Datasets 1–5 built over all facilities; restrictions are downstream filters. | Ship pre-filtered contiguous-US / major-source panels as in the old panel layer. | The six-dataset design pushes sample definition to the analysis, not the build — one canonical set of files, many samples. |
+| **G4** | **Every dataset carries `REGISTRY_ID` (FRS cross-program facility id) alongside `PGM_SYS_ID`**, joined in from `facilities.csv.gz`; `NA` where a facility has no FRS match (same convention as `coordinates`' `HAS_COORDINATE==0`). | Leave `REGISTRY_ID` only on `regulatory`/`coordinates` (the prior state) and require a manual join elsewhere. | `regulatory` and `coordinates` already carried it, but `operating`, `hpv_spells`, `hpv_active`, `penalties` didn't — surfaced when checking whether multi-facility settlement co-defendants share an FRS id (`multi_facility_settlement_decision.md` §5) required a manual join to `facilities.csv.gz` that shouldn't be necessary for a question this basic (facility identity across ICIS program systems, not just within one). |
 
 ---
 
@@ -198,7 +200,7 @@ The action-level record behind ds 0's facility-year `PENALTY_AMOUNT` / `N_PENALT
 | **P2** | **Formal actions only.** | Pool informal too (as ds 0's enforcement does). | Only formal actions carry `PENALTY_AMOUNT`; informal has no penalty column. Penalties are the point of this dataset. |
 | **P3** | **NOT window-restricted — all action years (1972–2026) kept.** | Clip to 2005–2025. | Six-dataset design pushes sample/window filters downstream; `YEAR` is provided so the user clips as needed. 67,082 of 105,656 actions fall in 2005–2025. |
 | **P4** | **`PENALTY_AMOUNT` kept AS RECORDED per row (0 or positive, never `NA`); no zero-vs-NA discipline.** | Apply ds 0's observed/`NA` coding. | Every row is an observed action with a recorded amount — the observability question doesn't arise at action grain. `HAS_PENALTY` = amount>0 companion flag. |
-| **P5** | **Multi-facility settlement structure EXPOSED, not resolved** — `ENF_IDENTIFIER` (settlement key), `N_SETTLEMENT_FACILITIES`, `IS_MULTI_FACILITY`; per-row penalty left faithful. | Deduplicate broadcast penalties, or split them across co-defendants. | ⚠ **588 settlements (0.6%) span >1 facility** (up to **117** co-defendants), each a separate row. The penalty is *usually* one value repeated (516/588) but **72 settlements carry DIFFERING per-facility amounts** — so it is **not** a clean broadcast, and neither "take one value" nor "sum" is universally right. Exposing the structure lets the user pick per analysis. **Do NOT sum `PENALTY_AMOUNT` across a settlement's facilities without a broadcast rule.** |
+| **P5** | **Multi-facility settlement structure EXPOSED, not resolved** — `ENF_IDENTIFIER` (settlement key), `N_SETTLEMENT_FACILITIES`, `IS_MULTI_FACILITY`; per-row penalty left faithful. | Deduplicate broadcast penalties, or split them across co-defendants. | ⚠ **588 settlements (0.6%) span >1 facility** (up to **117** co-defendants), each a separate row. The penalty is *usually* one value repeated (516/588) but **72 settlements carry DIFFERING per-facility amounts** — so it is **not** a clean broadcast, and neither "take one value" nor "sum" is universally right. Exposing the structure lets the user pick per analysis. **Do NOT sum `PENALTY_AMOUNT` across a settlement's facilities without a broadcast rule.** See `multi_facility_settlement_decision.md` §5: 552 of 588 (93.9%) span genuinely distinct FRS `REGISTRY_ID`s — this is not an ID-duplication artifact, only 36 settlements (6.1%, $29M) have all co-defendants on one `REGISTRY_ID`. |
 
 ### E.2 Verification (this session)
 
@@ -217,7 +219,7 @@ Reuses the panel spine's coordinate block + `coord_county_flag.R` helper, over t
 
 **Shape (built & audited this session):**
 ```
-279,211 facilities | 10 cols | 235,919 with coordinates (84.5%) | 234,524 county_fips | 2,839 gross errors (1.3% of checkable)
+279,211 facilities | 11 cols | 235,919 with coordinates (84.5%) | 234,524 county_fips | 2,839 gross errors (1.3% of checkable)
 ```
 
 ### F.1 Coding decisions
@@ -228,14 +230,16 @@ Reuses the panel spine's coordinate block + `coord_county_flag.R` helper, over t
 | **C2** | **`COUNTY_FIPS` = point-in-polygon** of the coordinate into the county shapefile (EPSG:4326 → shapefile CRS). | Trust ICIS `COUNTY_NAME` text. | The shapefile is **CONUS + DC** — non-CONUS facilities (AK/HI/territories) resolve to `NA` `COUNTY_FIPS` even with a coordinate. Derived FIPS is new here (ds 0 carries only the ICIS county *name*). |
 | **C3** | **Error diagnostics via the shared `flag_coord_county` helper** — `COORD_COUNTY_DIST_KM` (km from coordinate to ICIS-claimed county; 0 = in-county, NA = uncheckable) and `COORD_GROSS_ERROR` (1 iff checkable & >5 km). | Roll a separate check. | Identical logic to the panel spine, so results are comparable. **0 ≠ NA honored** — never asserts 0 for a facility whose county name couldn't be resolved. |
 | **C4** | **Full 279,211 universe** (the spine computed this block for the 136,505 ever-active subset only). | Restrict to ever-active. | Consistent with the layer's full-universe rule; joins on `PGM_SYS_ID` to every facility-year dataset. |
+| **C5** | **`ICIS_COUNTY_FIPS` = GEOID resolved from `(STATE, COUNTY_NAME)` text alone** (added 2026-07-22; same `flag_coord_county` helper as C3, its previously-unreturned `resolved_geoid`). `NA` when the name doesn't resolve to exactly one GEOID in this shapefile vintage. | Rely on `COUNTY_FIPS` (coordinate-derived) alone as the only FIPS field. | Needs no coordinate — pure function of the ICIS name — so coverage is wider than `COUNTY_FIPS`: set for **261,220 (93.6%)** of all 279,211 facilities vs. `COUNTY_FIPS`'s 235,759 (84.5%). Where both are set (224,921 facilities), they agree **97.3%** of the time (218,892/224,921) — matches the C3 match rate exactly, since both sides share the same resolution logic. Gives a lat/long-independent second check on county assignment, and a fallback FIPS where `COUNTY_FIPS` is `NA` for lack of a coordinate. |
 
 ### F.2 Verification (this session)
 
 | check | result |
 |---|---|
-| 279,211 × 10; grain unique; all uppercase; `HAS_COORDINATE` / `COORD_GROSS_ERROR` logic consistent; `COUNTY_FIPS` only where a coordinate exists | ✓ |
+| 279,211 × 11; grain unique; all uppercase; `HAS_COORDINATE` / `COORD_GROSS_ERROR` logic consistent; `COUNTY_FIPS` only where a coordinate exists | ✓ |
 | coordinate plausibility: 0 lat/lon out of range, 0 exact-(0,0); dist median 0 km, p99 7.7 km | ✓ |
 | **consistency vs panel spine** — across all 136,505 shared facilities, **0 `coord_gross_error` disagreements** | ✓ |
+| **`ICIS_COUNTY_FIPS` vs `COUNTY_FIPS` agreement** — 218,892/224,921 (97.3%) where both set; 261,220 (93.6%) of all facilities have `ICIS_COUNTY_FIPS` set (rebuilt 2026-07-22) | ✓ |
 
 ---
 

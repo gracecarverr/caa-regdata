@@ -1,14 +1,13 @@
 # =========================================================================================================
 # code/diagnostics/site_shell.R \u2014 shared header/nav/hero/footer chrome + CSS design system for the public
-#   docs/ site (Home, Raw Data, Databases, Panels). Sourced by each page's build script alongside
+#   docs/ site (Home, Raw Data, Databases). Sourced by each page's build script alongside
 #   tables/_html.R (esc(), comma(), pct1(), dollar()). Contains NO computed numbers \u2014 chrome only.
 # =========================================================================================================
 
 NAV_ITEMS <- list(
   list(id = "home",      href = "index.html",     label = "Home"),
   list(id = "raw_data",  href = "raw_data.html",  label = "Raw Data"),
-  list(id = "databases", href = "databases.html", label = "Databases"),
-  list(id = "panels",    href = "panels.html",    label = "Panels")
+  list(id = "databases", href = "databases.html", label = "Databases")
 )
 
 site_nav <- function(active) {

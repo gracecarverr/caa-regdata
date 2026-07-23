@@ -31,6 +31,12 @@ v <- read_csv(file.path(CLEAN, "violations.csv.gz"), col_select = all_of(COLS),
               show_col_types = FALSE) |>
   filter(ENF_RESPONSE_POLICY_CODE == "HPV")
 
+# FRS id (REGISTRY_ID), joined in alongside PGM_SYS_ID (violations.csv.gz carries no REGISTRY_ID natively).
+frs_ids <- read_csv(file.path(CLEAN, "facilities.csv.gz"),
+                    col_types = cols_only(PGM_SYS_ID = col_character(), REGISTRY_ID = col_character()),
+                    show_col_types = FALSE)
+v <- v |> left_join(frs_ids, by = "PGM_SYS_ID")
+
 nz <- function(x) !is.na(x) & x != ""
 spells <- v |> mutate(
   hpv_dayzero_date        = mdy(HPV_DAYZERO_DATE, quiet = TRUE),
@@ -45,7 +51,7 @@ spells <- v |> mutate(
     TRUE                                                          ~ "closed"),
   spell_days = if_else(spell_status == "closed",
                        as.integer(hpv_resolved_date - hpv_dayzero_date) + 1L, NA_integer_)) |>
-  transmute(PGM_SYS_ID, ACTIVITY_ID, COMP_DETERMINATION_UID,
+  transmute(PGM_SYS_ID, REGISTRY_ID, ACTIVITY_ID, COMP_DETERMINATION_UID,
             hpv_dayzero_date, hpv_resolved_date, dayzero_year, resolved_year,
             spell_status, spell_days, earliest_frv_determ_date,
             PROGRAM_CODES, PROGRAM_DESCS, POLLUTANT_CODES, POLLUTANT_DESCS,
