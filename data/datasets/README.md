@@ -3,8 +3,9 @@
 Built by [`code/04_datasets`](../../code/04_datasets/README.md) from the processed assets. All files are
 gzip-compressed CSV, **gitignored**, rebuilt from code. Every column is `UPPER_SNAKE_CASE`; every dataset is
 built over the **full** facility universe (no ever-active screen, no sample restriction — that's a filter
-the user applies downstream). This layer supersedes the single wide panel in `data/panels/` — six
-purpose-built tables instead of one.
+the user applies downstream). This layer supersedes the old single wide panel approach (facility-spine/panel
+building moved to the CAA_Project repo, 2026-07-23) — six purpose-built tables instead of one, and this
+repo's main product.
 
 | file | grain | what | built by |
 |------|-------|------|----------|
@@ -25,6 +26,11 @@ Every dataset joins on `PGM_SYS_ID`. `regulatory`, `operating`, and `hpv_active`
 `penalties` are event-grain (spell / formal-action) and join **many-to-one** onto the rectangle via
 `PGM_SYS_ID` (+ `YEAR` for facility-year merges — but see `penalties`' settlement-broadcast caveat before
 summing across facilities). `coordinates` is facility-grain and joins onto any of the above via `PGM_SYS_ID`.
+
+Every file also carries `REGISTRY_ID` (the FRS cross-program facility id), joined in from `facilities.csv.gz`
+alongside `PGM_SYS_ID` and `NA` where a facility has no FRS match — useful for checks that need facility
+identity across ICIS program systems (e.g. whether co-defendants in a multi-facility settlement are the same
+physical site, see `briefs/datasets/multi_facility_settlement_decision.md` §5).
 
 ## Where the "why" lives
 

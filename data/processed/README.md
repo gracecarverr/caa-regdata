@@ -9,8 +9,8 @@ column and row is kept**; the only additions are `date`/`year`/`dup`/`dup_exact`
 - **Added columns** (`date`, `year`, `dup`, `dup_exact`): defined in
   [`code/02_cleaning/README.md`](../../code/02_cleaning/README.md).
 - **Why duplicates are flagged not dropped, date rules, etc.:**
-  [`briefs/panel/panel_construction_decisions.md`](../../briefs/panel/panel_construction_decisions.md) (decision codes in
-  the caveats below).
+  [`briefs/datasets/dataset_construction_decisions.md`](../../briefs/datasets/dataset_construction_decisions.md)
+  (facility-spine/panel-layer decisions moved to the CAA_Project repo).
 
 > Row/column counts below are from the logged rebuild. Regenerate with `Rscript code/02_cleaning/02_clean.R`
 > (counts print per asset). `dup==0` gives the event-level (deduplicated) view; `dup_exact==0` drops only
@@ -49,9 +49,10 @@ column and row is kept**; the only additions are `date`/`year`/`dup`/`dup_exact`
 | `program_subparts` | `ICIS-AIR_PROGRAM_SUBPARTS.csv` | 190,570 | 6 |
 
 **Institutional implications**
-- **`facilities`** is the *current snapshot* (class, industry, operating status are time-invariant here); the
-  derived spine (`data/panels/spine.csv.gz`) selects the ever-active universe and adds coordinates/profiles.
-  Year-varying operating status is reconstructed separately from the Wayback tables (F2).
+- **`facilities`** is the *current snapshot* (class, industry, operating status are time-invariant here);
+  `data/datasets/coordinates.csv.gz` adds FRS coordinates + county placement over the full universe. (A
+  derived ever-active spine also exists, now built in the CAA_Project repo.) Year-varying operating status is
+  reconstructed separately from the Wayback tables (dataset 1, `operating`).
 - **`programs`** carries `BEGIN_DATE` + `UPDATED_DATE` but **no end date**, so enrollment start is datable
   from `BEGIN_DATE` (surfaced as facility-level `program_begin_year` = earliest begin year, in the spine +
   panels) but the close is not (drives the "ever-enrolled, static" `prog_*` flags — F6/N7).

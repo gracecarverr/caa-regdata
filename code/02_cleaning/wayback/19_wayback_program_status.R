@@ -1,11 +1,12 @@
 # =========================================================================================================
 # code/02_cleaning/wayback/19_wayback_program_status.R -- HISTORICAL program status from the ICIS-AIR WAYBACK
-#   snapshots (2015-2025 EXCEPT 2018 -- no real snapshot exists, see 17_'s header note and
-#   briefs/panel/panel_construction_decisions.md N18/W7; 2018 is explicit NA, NOT LOCF-filled, unlike an ordinary
-#   interior gap -- no facility has a real 2018 snapshot to infer from).
+#   snapshots (2015-2025 EXCEPT 2018 -- no real snapshot exists, see 17_'s header note and the CAA_Project
+#   repo's briefs/panel/panel_construction_decisions.md N18/W7; 2018 is explicit NA, NOT LOCF-filled, unlike
+#   an ordinary interior gap -- no facility has a real 2018 snapshot to infer from).
 #   The raw PROGRAMS table has an unreliable BEGIN_DATE and NO program-close date;
 #   we instead reconstruct a facility x year "is this program active?" series from snapshot PRESENCE +
-#   operating status. Covers the 10 program groups already flagged in the spine.
+#   operating status. Covers the 10 program groups already flagged downstream (facility spine, now in
+#   CAA_Project).
 #   in : data/raw/ICIS_AIR_WAYBACK/ICIS-AIR_downloads_{2015..2025 except 2018}/{ICIS-AIR_FACILITIES,ICIS-AIR_PROGRAMS}.csv
 #   out: data/processed/wayback_program_status.csv.gz
 #        PGM_SYS_ID, year, prog_{sip,titlev,nsps,mact,gact,neshap,fesop,nsr,psd,cfc}_active
@@ -40,7 +41,8 @@ library(readr); library(dplyr); library(tidyr); library(data.table)
 RAW  <- here::here("data/raw/ICIS_AIR_WAYBACK")
 SNAP_YEARS <- setdiff(2015:2025, 2018)   # no real 2018 snapshot exists -- see 17_'s header note
 
-# program_code -> group (matches the prog_* flags built in code/03_panel_building/00_spine.R)
+# program_code -> group (matches the prog_* flags built downstream, formerly code/03_panel_building/00_spine.R,
+# now in the CAA_Project repo)
 GROUPS <- list(
   sip    = "CAASIP",  titlev = "CAATVP", nsps = c("CAANSPS", "CAANSPSM"), mact = "CAAMACT",
   gact   = "CAAGACTM",                                     # Part 63 AREA sources (counterpart to mact)

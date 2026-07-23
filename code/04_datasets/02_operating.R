@@ -23,8 +23,10 @@ library(readr); library(dplyr); library(tidyr); library(lubridate)
 source(here::here("code/04_datasets/00_parameters.R"))
 
 # ---- universe (identical to dataset 0) ------------------------------------------------------------------
-ids <- read_csv(file.path(CLEAN, "facilities.csv.gz"),
-                col_types = cols_only(PGM_SYS_ID = col_character()), show_col_types = FALSE)$PGM_SYS_ID
+frs_ids <- read_csv(file.path(CLEAN, "facilities.csv.gz"),
+                    col_types = cols_only(PGM_SYS_ID = col_character(), REGISTRY_ID = col_character()),
+                    show_col_types = FALSE)
+ids <- frs_ids$PGM_SYS_ID
 stopifnot("facilities: PGM_SYS_ID is not unique -- the facility grain is broken" = !anyDuplicated(ids))
 
 # ---- year-varying wayback layers (2015-2025) ------------------------------------------------------------
@@ -84,6 +86,7 @@ op <- expand_grid(PGM_SYS_ID = ids, year = YEARS) |>
   left_join(progst, by = c("PGM_SYS_ID", "year")) |>
   left_join(spells, by = "PGM_SYS_ID") |>                              # facility-level, broadcast
   left_join(begin,  by = "PGM_SYS_ID") |>
+  left_join(frs_ids, by = "PGM_SYS_ID") |> relocate(REGISTRY_ID, .after = PGM_SYS_ID) |>
   arrange(PGM_SYS_ID, year)
 
 # ---- invariants -----------------------------------------------------------------------------------------

@@ -8,22 +8,18 @@ and `docs/data_dictionary.md`; for the "how" (code) see `code/*/README.md`.
 
 ## Contents
 
-Split into two subfolders mirroring the pipeline's own panel-layer (`code/03_panel_building/`) vs.
-dataset-layer (`code/04_datasets/`) distinction. `institutional_overview.md`, `database_overviews.md`, and
-this README stay at the top level as the reference/index docs.
+`institutional_overview.md`, `database_overviews.md`, and this README stay at the top level as the
+reference/index docs. `datasets/` holds the construction decisions for `code/04_datasets/` — this repo's
+main product.
 
 | brief | scope |
 |-------|-------|
 | [`institutional_overview.md`](institutional_overview.md) | **Start here.** The Clean Air Act enforcement setting: what each data system (ICIS-Air, AFS, FRS, Green Book) is, the key regulatory concepts (Title V, HPV, FCE/PCE, NAAQS/attainment, program types), and — for each — the **implication for the data**. Links out to the in-depth briefs. Rendered (trimmed) as the site's Home page by `code/diagnostics/build_home.R`. |
 | [`database_overviews.md`](database_overviews.md) | What each database (ICIS-Air, AFS, the combined emissions dataset, the compliance/enforcement pipeline) contains, what's missing, and how the files join — transcribed verbatim from the project's Google Doc. Rendered as the site's Databases page by `code/diagnostics/build_databases_page.R`. |
 
-### `panel/` — the panel-building layer (`code/03_panel_building/`)
-
-| brief | scope |
-|-------|-------|
-| [`panel/panel_construction_decisions.md`](panel/panel_construction_decisions.md) | Every asset- and panel-construction decision, the alternative not taken, and the data issue behind it (facility key, date rules, duplicate handling, universe definition, spine attributes, attainment, Wayback status, zero semantics, HPV intervals). |
-| [`panel/panel_open_questions.md`](panel/panel_open_questions.md) | Choices **not yet settled** — balance vs. unbalanced, operating-indicator / Census merge, violation date rule, the electric definition, covariates, and verification items. |
-| [`panel/panel_findings_summary.md`](panel/panel_findings_summary.md) | Meeting-ready one-pager of panel scale, key measures, duplicate load, and penalties. Rendered as-is on the site's Panels page by `code/diagnostics/build_panels_page.R`, alongside live-computed summary-stat tables. |
+> The former `panel/` subfolder (`panel_construction_decisions.md`, `panel_open_questions.md`,
+> `panel_findings_summary.md`) moved to the CAA_Project repo alongside the facility-spine/panel-building
+> code (2026-07-23), along with its Panels site page.
 
 ### `datasets/` — the six-dataset layer (`code/04_datasets/`)
 
@@ -43,10 +39,3 @@ implication is **also** recorded next to the affected data or code — in the re
 `data/processed/<name>.README.md` and/or the stage README under `code/`. The overview brief is the hub; the
 per-file notes are the spokes. If you change an institutional fact here, grep for it in `data/` and `code/`.
 
-> **⚠ Cross-reference status.** `panel_construction_decisions.md` and `panel_open_questions.md` were written
-> against an earlier code layout (a `build_panel()` function with `presets/`, an `assets/` folder, and a
-> `00_setup.R`). The **decisions and data facts remain valid**, but some code paths/filenames they cite
-> (e.g. `assets/facilities.R`, `presets/…`, `build_panel(years=)`) predate the current `code/` structure and
-> the standalone panel scripts in `code/03_panel_building/04_panels/`. These are being reconciled during the
-> line-by-line verification pass — treat a cited path as "the decision lives *somewhere* in the pipeline,"
-> and confirm the exact location in the current `code/` tree.

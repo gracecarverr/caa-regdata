@@ -27,6 +27,21 @@ Of the 224,921 checkable facilities, **218,892 (97.3%) land exactly in the ICIS-
 — median 0km (driven by the 97.3% exact matches), p90 0km, **p99 ≈ 7.8km**. Only 1.3% of checkable facilities
 exceed 5km, i.e. a genuine geocoding/county-assignment mismatch.
 
+## ICIS_COUNTY_FIPS — name-derived FIPS, independent of the coordinate
+
+`ICIS_COUNTY_FIPS` resolves `(STATE, COUNTY_NAME)` text directly to a county GEOID — no coordinate
+required. It's set for **261,220 (93.6%)** of all 279,211 facilities, well above `COUNTY_FIPS`'s 84.5%
+coordinate-gated coverage: **36,299 facilities** get a name-derived FIPS with no coordinate-derived
+`COUNTY_FIPS` to compare it to (no FRS match). Where both are set (224,921 facilities — the same
+"checkable" set as above), they agree **97.3% of the time (218,892/224,921)** — identical to the
+`COORD_COUNTY_DIST_KM == 0` rate, since both are computed from the same name-resolution logic against the
+same shapefile. Full numbers: `output/coordinates_profile/icis_county_fips_summary.csv`.
+
+Practical use: `ICIS_COUNTY_FIPS` is a second, lat/long-independent read on county assignment. Where a
+coordinate exists and the two FIPS disagree, `COORD_COUNTY_DIST_KM`/`COORD_GROSS_ERROR` already grade
+which one to trust (see above). Where `COUNTY_FIPS` is `NA` for lack of a coordinate, `ICIS_COUNTY_FIPS`
+is the only county-FIPS signal available.
+
 ## Geography
 
 A map of the 234,640 facilities (99.5% of all facilities with a coordinate) falling within a contiguous-US
@@ -65,3 +80,6 @@ table: `output/coordinates_profile/coverage_by_state.csv`.
 - These are the same coordinate-quality diagnostics used by the facility spine (`coord_county_flag.R`,
   shared helper) — this dataset just carries them over the full 279,211-facility universe rather than the
   spine's ever-active subset.
+- `ICIS_COUNTY_FIPS` (name-derived, coordinate-independent) covers 93.6% of facilities vs. `COUNTY_FIPS`'s
+  84.5%, and agrees with it 97.3% of the time where both exist — a useful fallback/cross-check precisely
+  where coordinate coverage is weakest (e.g. Louisiana, above).

@@ -27,7 +27,7 @@ Every successfully extracted file gets a row appended to `data/raw/MANIFEST.csv`
 
 > Five of eight sources are automated (verified against the existing manually-staged files this session — byte-
 > identical for ICIS-Air/AFS/Green Book NAA; US counties was found to differ structurally from the raw Census
-> product and was deliberately updated to the full-US file, see `briefs/panel/panel_construction_decisions.md` N18).
+> product and was deliberately updated to the full-US file, see the CAA_Project repo's `briefs/panel/panel_construction_decisions.md` N18).
 > **FRS** and the **Wayback snapshots** each had a working automation mechanism built and tested, but both
 > were dropped in favor of staying manual:
 > - **FRS**: `ordsext.epa.gov/FLA/www3/state_files/national_combined.zip` (~1.26 GB) is a real, direct URL, but

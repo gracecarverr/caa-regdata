@@ -15,8 +15,9 @@ need to know *when* a facility (and its programs) were actually in service. Thes
 snapshot **presence** and observed status transitions across the 11 Wayback captures. One snapshot = one panel
 year (it reflects the ~Q4 state of that year).
 
-See `briefs/panel/panel_construction_decisions.md` and `briefs/panel/panel_open_questions.md` for the full rationale and
-the known caveats these choices carry.
+Consumed downstream by the facility-spine/panel-building code, which moved to the CAA_Project repo
+(2026-07-23) along with its construction-decisions doc (formerly `briefs/panel/panel_construction_decisions.md`
+and `panel_open_questions.md`) — see that repo for the full rationale and known caveats.
 
 ## The three scripts
 
@@ -39,8 +40,8 @@ the known caveats these choices carry.
 - **2018 has no real snapshot** (the raw folder was a mislabeled duplicate of 2019 and was removed from
   `data/raw/`, 2026-07-21). It is asserted explicit `NA` in `op_status_code`/`op_status_desc`/`operating`
   and all `prog_*_active` columns for that year — **not** LOCF-filled like an ordinary interior gap, since
-  there is no real observation for *any* facility to infer from. See W7 in
-  `briefs/panel/panel_construction_decisions.md`.
+  there is no real observation for *any* facility to infer from. See W7 in the CAA_Project repo's
+  `panel_construction_decisions.md`.
 
-The program-group code → group mapping in `19_...R` (`GROUPS`) must stay aligned with the `prog_*` flags built
-in `code/03_panel_building/00_spine.R`.
+The program-group code → group mapping in `19_...R` (`GROUPS`) must stay aligned with the `prog_*` flags
+built downstream (formerly `code/03_panel_building/00_spine.R`, now in the CAA_Project repo).

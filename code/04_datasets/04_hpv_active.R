@@ -51,8 +51,10 @@ cover <- bind_rows(lapply(YEARS, function(Y) {
 })) |> distinct() |> mutate(covered = 1L)
 
 # ---- rectangle (ds 0 universe) + zero-vs-NA -------------------------------------------------------------
-ids <- read_csv(file.path(CLEAN, "facilities.csv.gz"),
-                col_types = cols_only(PGM_SYS_ID = col_character()), show_col_types = FALSE)$PGM_SYS_ID
+frs_ids <- read_csv(file.path(CLEAN, "facilities.csv.gz"),
+                    col_types = cols_only(PGM_SYS_ID = col_character(), REGISTRY_ID = col_character()),
+                    show_col_types = FALSE)
+ids <- frs_ids$PGM_SYS_ID
 obs <- read_csv(file.path(DATASETS, "regulatory.csv.gz"),
                 col_select = c(PGM_SYS_ID, YEAR, ICIS_OBSERVED),
                 col_types = cols(PGM_SYS_ID = col_character(), YEAR = col_integer(),
@@ -66,6 +68,7 @@ ha <- expand_grid(PGM_SYS_ID = ids, year = YEARS) |>
                                 icis_observed == 1L  ~ 0L,    # observed, no spell -> true zero
                                 TRUE                 ~ NA_integer_)) |>  # unobserved -> unknown
   select(PGM_SYS_ID, year, hpv_active) |>
+  left_join(frs_ids, by = "PGM_SYS_ID") |> relocate(REGISTRY_ID, .after = PGM_SYS_ID) |>
   arrange(PGM_SYS_ID, year)
 
 # ---- invariants -----------------------------------------------------------------------------------------

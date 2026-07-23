@@ -1,8 +1,8 @@
 # =========================================================================================================
 # code/diagnostics/15_coordinates_profile.R -- exploratory profiling of dataset 4 (data/datasets/coordinates.csv.gz).
 #   Purpose: characterize the coordinates dataset for a reader picking the project up cold -- coverage,
-#   coordinate-vs-ICIS-county error, facility geography. Companion to 11_/12_/13_/14_profile.R (same
-#   discipline, different dataset).
+#   coordinate-vs-ICIS-county error, ICIS_COUNTY_FIPS (name-derived FIPS) coverage/agreement, facility
+#   geography. Companion to 11_/12_/13_/14_profile.R (same discipline, different dataset).
 #
 #   in : data/datasets/coordinates.csv.gz
 #   out: output/coordinates_profile/*.csv
@@ -25,7 +25,11 @@ OUT_FIG  <- here::here("output/figures/datasets/coordinates")
 dir.create(OUT, showWarnings = FALSE, recursive = TRUE)
 dir.create(OUT_FIG, showWarnings = FALSE, recursive = TRUE)
 
-co <- fread(file.path(DATASETS, "coordinates.csv.gz"))
+# ID/FIPS-like columns that can carry a leading zero -- fread guesses these as numeric by default and
+# silently drops the leading zero (e.g. "01001" -> 1001) unless forced to character. Confirmed: without
+# this, ICIS_COUNTY_FIPS/COUNTY_FIPS read back as integer (e.g. "01001" -> 1001).
+co <- fread(file.path(DATASETS, "coordinates.csv.gz"),
+           colClasses = list(character = c("REGISTRY_ID", "ICIS_COUNTY_FIPS", "COUNTY_FIPS")))
 
 fwrite_rounded <- function(dt, file, prop_cols = NULL, num_cols = NULL) {
   d <- copy(dt)
@@ -60,6 +64,20 @@ fwrite(dist_summary, file.path(OUT, "coord_county_dist_summary.csv"))
 by_state <- co[STATE != "", .(n_facilities = .N, pct_has_coordinate = round(mean(HAS_COORDINATE), 3),
                               pct_gross_error = round(mean(COORD_GROSS_ERROR, na.rm = TRUE), 3)), by = STATE][order(-n_facilities)]
 fwrite(by_state, file.path(OUT, "coverage_by_state.csv"))
+
+# =========================================================================================================
+# CSV 4 -- ICIS_COUNTY_FIPS coverage + agreement with COUNTY_FIPS (name-derived vs coordinate-derived FIPS)
+# =========================================================================================================
+both <- !is.na(co$ICIS_COUNTY_FIPS) & !is.na(co$COUNTY_FIPS)
+icis_fips_summary <- data.table(
+  n_facilities        = nrow(co),
+  n_icis_fips_set     = sum(!is.na(co$ICIS_COUNTY_FIPS)),
+  n_county_fips_set   = sum(!is.na(co$COUNTY_FIPS)),
+  n_icis_only         = sum(!is.na(co$ICIS_COUNTY_FIPS) & is.na(co$COUNTY_FIPS)),
+  n_both_set          = sum(both),
+  n_agree             = sum(co$ICIS_COUNTY_FIPS[both] == co$COUNTY_FIPS[both]),
+  pct_agree           = round(mean(co$ICIS_COUNTY_FIPS[both] == co$COUNTY_FIPS[both]), 4))
+fwrite(icis_fips_summary, file.path(OUT, "icis_county_fips_summary.csv"))
 
 # =========================================================================================================
 # FIGURES -- print-ready (300dpi), validated categorical palette
@@ -132,5 +150,7 @@ print(as.data.frame(funnel), row.names = FALSE)
 cat(sprintf("\nhas_coordinate: %.1f%% | gross error (of checkable): %.1f%%\n",
             100 * mean(co$HAS_COORDINATE), 100 * dist_summary$pct_gross_error))
 cat("\nCOORD_COUNTY_DIST_KM SUMMARY (checkable)\n"); print(as.data.frame(dist_summary), row.names = FALSE)
+cat("\nICIS_COUNTY_FIPS SUMMARY (name-derived vs coordinate-derived FIPS)\n")
+print(as.data.frame(icis_fips_summary), row.names = FALSE)
 cat("\nTOP 10 STATES BY FACILITY COUNT\n"); print(as.data.frame(head(by_state, 10)), row.names = FALSE)
 cat(sprintf("\n3 figures written to %s\n", OUT_FIG))

@@ -6,10 +6,12 @@ outputs of earlier scripts in this folder (`hpv_active` reads `hpv_spells` and `
 **Run:** each script individually, in file order — `Rscript code/04_datasets/01_regulatory.R`, etc. **Not yet
 wired into `code/RUN_ALL.R`** (the six datasets are still being finalized; `attainment` is not built).
 
-The deliverable is **six datasets, not one wide panel** — a departure from the `03_panel_building` layer's
-three sample panels. Each is built once over the **full** facility universe (no ever-active screen, no
+The deliverable is **six datasets, not one wide panel** — a departure from the old panel layer's three sample
+panels (facility-spine/panel building moved to the CAA_Project repo, 2026-07-23; this is now the repo's main
+product). Each is built once over the **full** facility universe (no ever-active screen, no
 sample restriction); any subsetting is a filter the user applies downstream. Everything joins on `PGM_SYS_ID`
-(+ `YEAR` where the grain is facility × year). Decisions are documented in depth in
+(+ `YEAR` where the grain is facility × year); every file also carries `REGISTRY_ID` (the FRS cross-program
+facility id) alongside `PGM_SYS_ID` (`G4`). Decisions are documented in depth in
 `briefs/datasets/dataset_construction_decisions.md` (find a decision by its code, e.g. `R7`, `O5`, `H6`).
 
 ## Build order & files
@@ -22,7 +24,7 @@ sample restriction); any subsetting is a filter the user applies downstream. Eve
 | `03_hpv_spells.R` | **dataset 2** `hpv_spells` | spell | One row per HPV violation (`ENF_RESPONSE_POLICY_CODE == "HPV"`), UNcollapsed. The source of truth behind `hpv_active`. |
 | `04_hpv_active.R` | **dataset 2b** `hpv_active` | facility × year | Deterministic **R2** (interval-overlap) collapse of `hpv_spells`. Joins 1:1 to `regulatory`/`operating`. |
 | `05_penalties.R` | **dataset 3** `penalties` | formal action | Action-level penalties + the multi-facility settlement key (`ENF_IDENTIFIER`). Reconciles exactly to `regulatory`'s `PENALTY_AMOUNT`. |
-| `06_coordinates.R` | **dataset 4** `coordinates` | facility | FRS lat/lon, derived county FIPS, coordinate-vs-ICIS-county error diagnostics. Reuses `03_panel_building/coord_county_flag.R` over the full universe. |
+| `06_coordinates.R` | **dataset 4** `coordinates` | facility | FRS lat/lon, derived county FIPS, coordinate-vs-ICIS-county error diagnostics. Uses `coord_county_flag.R` (local to this folder) over the full universe. |
 
 Dataset 5 (`attainment`, PM2.5 2012 nonattainment) is **not yet built** — deferred pending a shape decision
 (see the open item in `briefs/datasets/dataset_construction_decisions.md`).
@@ -31,12 +33,13 @@ Dataset 5 (`attainment`, PM2.5 2012 nonattainment) is **not yet built** — defe
 
 - **`UPPER_SNAKE_CASE` columns, always** — every builder assembles internally in lowercase, then uppercases
   once on write via `write_dataset()`. One transform point, no per-file casing drift (G2).
+- **`PGM_SYS_ID` + `REGISTRY_ID` on every file** — the FRS id is joined in from `facilities.csv.gz` alongside
+  the ICIS program-system id, `NA` where a facility has no FRS match (G4).
 - **Full universe, no sample panels** — restrictions are the user's to apply, not baked into the build (G3).
 - **Zero-vs-NA discipline, reused across datasets** — `regulatory`'s `ICIS_OBSERVED` flag is the reference
   implementation; `hpv_active` explicitly reuses it (H6) rather than inventing a separate observability rule.
 - **File numbers are build order, not a dataset index** — `03_hpv_spells.R`/`04_hpv_active.R` are datasets
-  "2" and "2b"; `05_penalties.R` is dataset "3". Matches the numbering convention used in
-  `03_panel_building/` (`00_spine.R`, `01_attainment.R`, `03_build.R` — no "02" file exists there either).
+  "2" and "2b"; `05_penalties.R` is dataset "3".
 - **Every build ends with `stopifnot()` invariants** (grain uniqueness, rectangle completeness, zero-vs-NA
   consistency) printed alongside a one-line summary. Independent verification beyond the in-script asserts
   is run ad hoc each session and logged in `briefs/datasets/dataset_construction_decisions.md`, not re-run automatically.

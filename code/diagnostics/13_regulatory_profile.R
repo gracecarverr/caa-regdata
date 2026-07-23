@@ -30,7 +30,9 @@ OUT_FIG  <- here::here("output/figures/datasets/regulatory")
 dir.create(OUT_CSV, showWarnings = FALSE, recursive = TRUE)
 dir.create(OUT_FIG, showWarnings = FALSE, recursive = TRUE)
 
-reg <- fread(file.path(DATASETS, "regulatory.csv.gz"))
+# ID/FIPS-like columns that can carry a leading zero -- fread guesses these as numeric by default and
+# silently drops the leading zero (e.g. "01001" -> 1001) unless forced to character.
+reg <- fread(file.path(DATASETS, "regulatory.csv.gz"), colClasses = list(character = c("REGISTRY_ID", "ZIP_CODE")))
 YEARS <- sort(unique(reg$YEAR))
 observed <- reg[ICIS_OBSERVED == 1]
 

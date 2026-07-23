@@ -44,9 +44,14 @@ pen <- f |>
     dup, dup_exact) |>
   arrange(PGM_SYS_ID, year, ENF_IDENTIFIER)
 
+# ---- FRS id (REGISTRY_ID) --------------------------------------------------------------------------------
+frs_ids <- read_csv(file.path(CLEAN, "facilities.csv.gz"),
+                    col_types = cols_only(PGM_SYS_ID = col_character(), REGISTRY_ID = col_character()),
+                    show_col_types = FALSE)
+ids <- frs_ids$PGM_SYS_ID
+pen <- pen |> left_join(frs_ids, by = "PGM_SYS_ID") |> relocate(REGISTRY_ID, .after = PGM_SYS_ID)
+
 # ---- invariants -----------------------------------------------------------------------------------------
-ids <- read_csv(file.path(CLEAN, "facilities.csv.gz"),
-                col_types = cols_only(PGM_SYS_ID = col_character()), show_col_types = FALSE)$PGM_SYS_ID
 stopifnot(
   "row count != source formal_actions"          = nrow(pen) == nrow(f),
   "ENF_IDENTIFIER blank"                         = all(!is.na(pen$ENF_IDENTIFIER) & pen$ENF_IDENTIFIER != ""),

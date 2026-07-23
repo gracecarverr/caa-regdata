@@ -8,8 +8,8 @@
 
 Cleaning here is **minimal by design**. Each raw source table becomes one `data/processed/<name>.csv.gz`
 that **keeps every original column and every original row** — nothing is dropped, deduplicated, recoded,
-or type-cast. All facility-selection, collapsing, and treatment logic happens later, in the panel layer
-(`code/03_panel_building/`). Keeping cleaning lossless means the processed assets are a faithful, traceable
+or type-cast. All facility-selection, collapsing, and treatment logic happens later, in the datasets layer
+(`code/04_datasets/`). Keeping cleaning lossless means the processed assets are a faithful, traceable
 image of the raw data, and every downstream decision is auditable against them.
 
 The only columns ever **added**:
@@ -22,8 +22,9 @@ The only columns ever **added**:
 | `dup_exact` | every table     | `1` if the row is byte-identical to an **earlier** row (a true duplicate record) |
 
 > **Why label duplicates instead of dropping them?** Whether a repeat is a genuine second event or a data
-> artifact is a *panel-construction* decision, not a cleaning one. Labeling keeps the choice visible and
-> reversible. See `briefs/panel/panel_construction_decisions.md`.
+> artifact is a *downstream construction* decision, not a cleaning one. Labeling keeps the choice visible
+> and reversible. See `briefs/datasets/dataset_construction_decisions.md` (facility-spine/panel-layer
+> decisions moved to the CAA_Project repo).
 
 ## Files
 

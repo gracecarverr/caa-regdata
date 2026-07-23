@@ -1,4 +1,0 @@
-panel,n_facilities,n_facility_years,year_min,year_max,balanced,share_event,share_operating,share_unobserved
-Electric,3025,63525,2005,2025,TRUE,0.67,0.098,0.232
-Major/SynMin,45423,953883,2005,2025,TRUE,0.477,0.164,0.359
-Universe,135213,2839473,2005,2025,TRUE,0.261,0.275,0.464

@@ -11,15 +11,13 @@
 #     00 setup          code/00_setup/00_setup.R              -- check packages, options, record session
 #     01 download       code/01_data_download/01_download.R  -> data/raw/            (immutable; skippable)
 #     02 clean          code/02_cleaning/02_clean.R           -> data/processed/      (one asset per source)
-#     03 panels         code/03_panel_building/03_build.R     -> data/panels/         (spine, attainment, panels)
 #     (docs) build site code/diagnostics/build_site.R         -> docs/raw_data.html   (generated from data/raw)
 #                        code/diagnostics/build_home.R        -> docs/index.html      (institutional overview)
 #                        code/diagnostics/build_databases_page.R -> docs/databases.html (database overviews)
 #
-#   The Panels page (docs/panels.html, code/diagnostics/build_panels_page.R) is NOT built here -- it reads
-#   output/panel_profile/*.csv, which is itself produced by the hand-run code/diagnostics/06_panel_profile.R.
-#   Run both by hand after a rebuild if the panels changed. Other diagnostics (panel summaries, previews)
-#   are likewise NOT run here -- run them by hand from code/diagnostics/.
+#   The `04_datasets/` layer (the project's main product -- see code/04_datasets/README.md) is NOT wired in
+#   here yet; run its scripts by hand from code/04_datasets/. Facility-spine/panel building moved to the
+#   CAA_Project repo (2026-07-23) and is no longer part of this pipeline.
 #   The pipeline has no stochastic step, so no seed is required (see 00_setup).
 # =========================================================================================================
 step        <- function(msg) cat(sprintf("\n========== %s ==========\n", msg))
@@ -32,8 +30,6 @@ if (do_download) { step("01 download"); source(here::here("code/01_data_download
                    step("01 download -- SKIPPED (DOWNLOAD=false)")
 
 step("02 clean");                source(here::here("code/02_cleaning/02_clean.R"))
-
-step("03 panels");               source(here::here("code/03_panel_building/03_build.R"))
 
 if (!skip_site) {
   step("docs: build site")
