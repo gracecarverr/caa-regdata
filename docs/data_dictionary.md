@@ -575,9 +575,11 @@ Data Element Dictionary, Appendix 1, for the full mapping.
 
 ## CAA Compliance Pipeline
 
-> **Repo note:** no `PIPELINE_CAA` CSV is currently present in `data/raw/` in this repo. This section
-> documents the pipeline download as used by the predecessor project; treat it as reference until/unless the
-> file is added here.
+> **Repo note:** `PIPELINE_CAA_00_COMPLETE.csv` was added to `data/raw/` on 2026-07-23 (66,655 rows, matching
+> the predecessor extract's count below). It is cleaned to `data/processed/pipeline.csv.gz` (spec in
+> `code/02_cleaning/02_cleaning_parameters.R`) and built into the facility × year dataset 6, `pipeline`, by
+> `code/04_datasets/07_pipeline.R` — see `briefs/datasets/dataset_construction_decisions.md` Part G for
+> coding decisions and verification.
 
 ### `PIPELINE_CAA_00_COMPLETE.csv`
 

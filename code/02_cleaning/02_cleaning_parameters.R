@@ -66,5 +66,16 @@ CLEAN_SPECS <- list(
 
   # ---- Emissions ----------------------------------------------------------------------------------------
   # Combined emissions report. REPORTING_YEAR is already present in the source, so no date parse is needed.
-  list(name = "emissions", raw = "POLL_RPT_COMBINED_EMISSIONS.csv")
+  list(name = "emissions", raw = "POLL_RPT_COMBINED_EMISSIONS.csv"),
+
+  # ---- CAA Compliance Pipeline (ECHO) -------------------------------------------------------------------
+  # One row per violation, optionally linked to the evaluation that found it and the enforcement action it
+  # triggered (see docs/data_dictionary.md "CAA Compliance Pipeline"). date = SORT_DATE, EPA's own display-
+  # order date (= EA_DATE if an EA is linked, else VIOL_START_DATE, else EVAL_DATE -- verified exact match on
+  # every non-blank row). SORT_ORDER is a globally-unique row id, so `dup` is trivially 0 everywhere; kept
+  # for convention consistency, and `dup_exact` still catches byte-identical rows. The dataset-layer builder
+  # (code/04_datasets/07_pipeline.R) uses VIOL_START_DATE, not this date, as its facility-year anchor.
+  list(name = "pipeline", raw = "PIPELINE_CAA_00_COMPLETE.csv",
+       date = function(d) mdy(d$SORT_DATE, quiet = TRUE),
+       key  = c("SOURCE_ID", "SORT_ORDER"))
 )
