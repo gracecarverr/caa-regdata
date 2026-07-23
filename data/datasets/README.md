@@ -15,6 +15,7 @@ repo's main product.
 | `hpv_active.csv.gz` | facility × year | **dataset 2b** — `HPV_ACTIVE` flag, a deterministic **R2** (interval-overlap) collapse of `hpv_spells.csv.gz`, screened at collapse to a plausible day-zero year. Joins **1:1** to `regulatory.csv.gz`. | `04_hpv_active.R` |
 | `penalties.csv.gz` | formal action | **dataset 3** — action-level penalties + the multi-facility settlement key (`ENF_IDENTIFIER`, `N_SETTLEMENT_FACILITIES`, `IS_MULTI_FACILITY`). Windowed sum reconciles exactly to `regulatory.csv.gz`'s `PENALTY_AMOUNT`. | `05_penalties.R` |
 | `coordinates.csv.gz` | facility | **dataset 4** — FRS lat/lon, derived `COUNTY_FIPS` (point-in-polygon), and coordinate-vs-ICIS-county error diagnostics (`COORD_COUNTY_DIST_KM`, `COORD_GROSS_ERROR`). | `06_coordinates.R` |
+| `pipeline.csv.gz` | facility × year | **dataset 6** — EPA ECHO CAA Compliance Pipeline: violation counts split HPV/FRV, how many trace to a linked evaluation or enforcement action, self-disclosure count, EA-penalty count/sum, and eval→violation / violation→enforcement lag in days. Joins **1:1** to `regulatory.csv.gz`. | `07_pipeline.R` |
 
 Dataset 5 (`attainment`, PM2.5 2012 nonattainment, facility × year) is **not yet built** — see the open item
 in `briefs/datasets/dataset_construction_decisions.md`.

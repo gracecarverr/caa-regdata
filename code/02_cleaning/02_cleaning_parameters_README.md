@@ -26,6 +26,7 @@ An entry with **no** `date`/`key` is an **attribute** table: it keeps all column
 | `informal_actions` | `ICIS-AIR_downloads/ICIS-AIR_INFORMAL_ACTIONS.csv` | `mdy(ACHIEVED_DATE)` | `PGM_SYS_ID, ENF_IDENTIFIER` |
 | `certs`            | `ICIS-AIR_downloads/ICIS-AIR_TITLEV_CERTS.csv`     | `mdy(ACTUAL_END_DATE)` | `PGM_SYS_ID, ACTIVITY_ID` |
 | `stacktests`       | `ICIS-AIR_downloads/ICIS-AIR_STACK_TESTS.csv`      | `mdy(ACTUAL_END_DATE)` | `PGM_SYS_ID, ACTIVITY_ID` |
+| `pipeline`         | `PIPELINE_CAA_00_COMPLETE.csv`                     | `mdy(SORT_DATE)` (EPA's display-order date; the dataset-layer builder uses `VIOL_START_DATE` instead) | `SOURCE_ID, SORT_ORDER` (`SORT_ORDER` is already globally unique, so `dup` is trivially 0 everywhere) |
 
 ### Attribute tables (add dup_exact only)
 

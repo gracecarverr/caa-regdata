@@ -19,6 +19,7 @@ where the grain is facility × year).
 | 3 | `penalties`   | formal action   | action-level penalties + multi-facility settlement key | ✅ built & audited |
 | 4 | `coordinates` | facility        | FRS lat/lon, county, coordinate-error diagnostics | ✅ built & audited |
 | 5 | `attainment`  | facility × year | PM2.5 (2012) nonattainment | ⬜ not started |
+| 6 | `pipeline`    | facility × year | EPA ECHO "CAA Compliance Pipeline": linked evaluation→violation→enforcement counts, HPV/FRV split, eval/enforcement lag days | ✅ built & audited |
 
 ---
 
@@ -240,6 +241,57 @@ Reuses the panel spine's coordinate block + `coord_county_flag.R` helper, over t
 | coordinate plausibility: 0 lat/lon out of range, 0 exact-(0,0); dist median 0 km, p99 7.7 km | ✓ |
 | **consistency vs panel spine** — across all 136,505 shared facilities, **0 `coord_gross_error` disagreements** | ✓ |
 | **`ICIS_COUNTY_FIPS` vs `COUNTY_FIPS` agreement** — 218,892/224,921 (97.3%) where both set; 261,220 (93.6%) of all facilities have `ICIS_COUNTY_FIPS` set (rebuilt 2026-07-22) | ✓ |
+
+---
+
+## Part G · Dataset 6 — `pipeline` (`07_pipeline.R`)
+
+Facility × year, built from EPA ECHO's **CAA Compliance Pipeline** download
+(`data/raw/PIPELINE_CAA_00_COMPLETE.csv`, added to this repo 2026-07-23; previously documented in
+`docs/data_dictionary.md` as absent). Raw grain is one row per **violation**, optionally linked backward to
+the evaluation (inspection) that found it and forward to the enforcement action it triggered.
+
+**Value-added vs. datasets 0/2/3** (why this is worth a seventh file, not a restatement of what exists):
+
+| Existing dataset | What it has | What `pipeline` adds |
+|---|---|---|
+| `regulatory` (ds 0) | inspection/violation/enforcement **counts**, no linkage between them | which evaluation *found* which violation, which violation *triggered* which enforcement action — a same-row causal chain no ICIS-Air table alone provides |
+| `hpv_spells` (ds 2) | **HPV only** (FRV excluded by H1) | the **FRV population** (40,708 in-window rows, 2.4× the HPV count) — a violation tier invisible elsewhere in this layer |
+| `penalties` (ds 3) | formal-action penalties, action-grain | `EA_PENALTY_AMT` attributable to the *specific violation* that caused it — see the caveat at G4 below |
+| none | — | `MEAN_EVAL_TO_VIOL_LAG_DAYS` / `MEAN_VIOL_TO_EA_LAG_DAYS` — "pipeline speed" measures nothing else in the layer computes |
+
+**Shape (built & audited this session):**
+```
+5,863,431 rows | 14 cols | 279,211 facilities × 21 years | 31,796 observed facility-years (0.5%)
+18,529 ever-observed facilities | 17,130 HPV + 40,708 FRV = 57,838 in-window violations
+```
+
+### G.1 Coding decisions
+
+| # | Decision | Alternative not taken | Why / data fact |
+|---|---|---|---|
+| **PL1** | **7,193 of 66,655 raw rows are EPA-system-generated placeholders, not real violations**, identified by blank `VIOL_START_DATE` + `VIOL_ACTIVITY_ID` prefixed `9906`/`9913` + `VIOL_TYPE` blank or `"Linked to Viol. Below"` — matches the dictionary's note that these IDs "did not have an actual violation activity identification number." | Keep them as zero-duration/degenerate rows. | They have no date to anchor a year, so they are structurally excluded (asserted in-build) rather than filtered by a fragile heuristic. After exclusion, `VIOL_TYPE` partitions **exactly** into {HPV, FRV} — asserted. |
+| **PL2** | **Year anchor = `VIOL_START_DATE`**, not the cleaned asset's own `date` column (`SORT_DATE`). | Use `SORT_DATE`/`date` (already parsed in `data/processed/pipeline.csv.gz`). | `SORT_DATE` is EPA's own "latest stage reached" display date — verified (0 exceptions across 66,602 non-blank rows) to equal `EA_DATE` if an EA is linked, else `VIOL_START_DATE`, else `EVAL_DATE`. Using it would misdate a violation into a later year purely because it was eventually enforced. |
+| **PL3** | **Universe = the same 279,211-facility × 2005–2025 rectangle as ds 0/1/2b** (G3/G4), so `pipeline` joins **1:1** to `regulatory.csv.gz` on `(PGM_SYS_ID, YEAR)` (verified: identical key vectors). | Build only over the 20,251 facilities the raw file actually contains. | Consistent with the layer's full-universe convention; 20,249 of those 20,251 (99.99%) already match the ICIS universe, so the cost of the full rectangle is 2 orphan facilities, not a coverage loss. |
+| **PL4** | **`EA_PENALTY_AMT_SUM` is exposed per facility-year but flagged — do NOT sum alongside `penalties.csv.gz`'s `PENALTY_AMOUNT` without a dedup rule.** | Reconcile the two now. | Same P5 pattern as ds 3: both very likely trace to the same underlying enforcement-action dollars. Reconciling requires matching pipeline's `EA_ACTIVITY_ID`/`EA_FEA_ACTIVITY_ID` against ds 3's `ENF_IDENTIFIER`, which is deliberately left undone here — exposing the structure lets the user pick per analysis, as ds 3 already does for multi-facility settlements. |
+| **PL5** | **`N_VIOL_SELF_DISCLOSED` guarded against `NA` propagation** — `EVAL_TYPE_DESC` is blank (parses to `NA`) on the ~46% of rows with no linked evaluation, and an unguarded `== "Self-Disclosure"` comparison produces `NA`, which then poisons `sum()` for the whole facility-year group under the zero-vs-NA rule. Fixed by gating on `has_eval & !is.na(EVAL_TYPE_DESC)` first. | Trust `sum(x == "...")` directly. | Caught by an independent post-build Python check (not the in-build `stopifnot`s, which didn't originally cover this column) — added two more invariants (`N_VIOL_SELF_DISCLOSED`, `N_VIOL_WITH_EVAL`/`N_VIOL_WITH_EA` never `NA` on an observed row) to guard against the same class of bug recurring. |
+| **PL6** | **`REGISTRY_ID` joined from `facilities.csv.gz`, not read from the raw file's own `REGISTRY_ID` column** (which is present natively, unlike most other sources in this layer). | Trust the pipeline file's own `REGISTRY_ID`. | Matches G4 exactly and avoids a second, possibly stale, FRS snapshot disagreeing with the rest of the layer. |
+
+**Deliberately deferred** (documented as scope, not silently missing): full `EVAL_TYPE_DESC`/`EA_TYPE`
+category breakdowns beyond self-disclosure; any dedup reconciliation of `EA_PENALTY_AMT_SUM` against ds 3
+(PL4).
+
+### G.2 Verification (this session)
+
+| check | result |
+|---|---|
+| 5,863,431 × 14; grain `PGM_SYS_ID × YEAR` unique; rectangle complete (279,211 × 21); all names uppercase | ✓ |
+| **1:1 join to `regulatory.csv.gz`** — identical key vectors | ✓ |
+| zero-vs-NA: `PIPELINE_OBSERVED==1 ⟺` every count column non-`NA`; `==0 ⟺` every count `NA` | ✓ |
+| `N_VIOL_HPV + N_VIOL_FRV == N_VIOL_PIPELINE` on every observed row | ✓ |
+| `N_VIOL_WITH_EA_PENALTY > 0 ⟺ EA_PENALTY_AMT_SUM > 0` on every observed row | ✓ |
+| placeholder rows (7,193) structurally absent from every facility-year (no `VIOL_START_DATE` → no year) | ✓ |
+| independent Python re-derivation: HPV 17,130 + FRV 40,708 = 57,838 (matches a hand count from raw `VIOL_START_DATE` year distribution, 2005–2025 window) | ✓ |
 
 ---
 
