@@ -73,6 +73,34 @@ over-represented among HPV spells relative to their share of the universe).
 
 Nearly all HPV enforcement is state or local — direct EPA action is under 10% of spells.
 
+### A.6 `EARLIEST_FRV_DETERM_DATE` coverage and ordering vs. `HPV_DAYZERO_DATE`
+
+FRV (Federally Reportable Violation) is the enforcement-response tier just below HPV; `EARLIEST_FRV_DETERM_DATE`
+is carried through from the raw extract but plays no role in `spell_status`/`spell_days` construction (03_hpv_spells.R).
+This is a first look at how often it's populated and how it orders relative to HPV day-zero.
+
+**Coverage**: only 15,462 / 44,490 spells (34.8%) have a non-missing FRV date — most HPV spells have none.
+
+**Ordering** (of the 15,462 spells with both dates populated):
+
+| relationship | n | % |
+|---|--:|--:|
+| FRV date = day-zero | 14,394 | 93.1% |
+| FRV date **before** day-zero | 1,057 | 6.8% |
+| FRV date after day-zero | 10 | 0.06% |
+
+The overwhelming pattern, where present, is that the FRV date **coincides exactly** with `HPV_DAYZERO_DATE` —
+consistent with day-zero commonly being set to the earliest FRV determination itself. FRV-before-day-zero is
+a real but minority pattern (6.8%): among those 1,057 spells, the gap (`HPV_DAYZERO_DATE − EARLIEST_FRV_DETERM_DATE`)
+is min 1, p25 25, **median 55**, p75 90, p90 216, mean 786.8 days — mostly a matter of weeks to a few months,
+i.e. an FRV determination that predates the eventual HPV escalation by a modest lag, plausibly the FRV→HPV
+escalation process itself. The max (730,485 days ≈ 2,000 years) is a bad-data outlier in one of the two raw
+dates, same pattern as the `SPELL_DAYS` max in A.2 — not screened out here for the same reason (no plausibility
+screen at this layer, per H4). FRV-after-day-zero (10 spells, 0.06%) is negligible and likely data noise rather
+than a real pattern, since day-zero should not postdate the violation tier that (per program logic) precedes it.
+
+Full detail: `output/hpv_profile/frv_date_coverage.csv`, `frv_vs_dayzero_ordering.csv`, `frv_before_dayzero_gap_days.csv`.
+
 ---
 
 ## Part B — `hpv_active.csv.gz` (dataset 2b, facility × year, 5,863,431 rows)
@@ -128,6 +156,8 @@ year.
 - Closed-spell duration is long-tailed: median 314 days, but 44.2% exceed a year.
 - Title V and SIP dominate HPV program involvement, more concentrated in Title V specifically than their
   share of the general facility population would predict.
+- `EARLIEST_FRV_DETERM_DATE` is populated for only 34.8% of spells; where present, it equals day-zero 93.1%
+  of the time and precedes it (median 55-day gap) 6.8% of the time — FRV-after-day-zero is negligible (0.06%).
 - `hpv_active`'s active rate declines steadily and substantially over the window (8.4% → 1.9%), but the
   mechanism is not fully accounted for by the coverage-ramp / right-truncation caveats already on record —
   worth a closer look if this trend matters to any downstream analysis, not something to take at face value.

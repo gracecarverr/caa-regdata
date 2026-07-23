@@ -85,6 +85,32 @@ spells_per_facility <- sp[, .N, by = PGM_SYS_ID][, .N, by = .(n_spells = N)][ord
 fwrite(spells_per_facility, file.path(OUT, "spells_per_facility_distribution.csv"))
 multi_spell_share <- sp[, .N, by = PGM_SYS_ID][, mean(N > 1)]
 
+# ---- CSV 6b: EARLIEST_FRV_DETERM_DATE coverage + ordering vs. HPV_DAYZERO_DATE ---------------------------
+#   FRV (Federally Reportable Violation) is the tier below HPV; EARLIEST_FRV_DETERM_DATE, where present, is
+#   carried through from the raw violations extract (see 03_hpv_spells.R) but is NOT used in spell_status/
+#   spell_days construction -- this is a first look at how often it's populated and how it orders vs day-zero.
+frv_coverage <- data.table(
+  n_spells = nrow(sp),
+  n_with_frv_date = sp[!is.na(EARLIEST_FRV_DETERM_DATE), .N],
+  pct_with_frv_date = round(sp[!is.na(EARLIEST_FRV_DETERM_DATE), .N] / nrow(sp), 4))
+fwrite(frv_coverage, file.path(OUT, "frv_date_coverage.csv"))
+
+frv_present <- sp[!is.na(EARLIEST_FRV_DETERM_DATE) & !is.na(HPV_DAYZERO_DATE)]
+frv_present[, frv_vs_dayzero := fcase(
+  EARLIEST_FRV_DETERM_DATE <  HPV_DAYZERO_DATE, "frv_before_dayzero",
+  EARLIEST_FRV_DETERM_DATE == HPV_DAYZERO_DATE, "frv_equals_dayzero",
+  EARLIEST_FRV_DETERM_DATE >  HPV_DAYZERO_DATE, "frv_after_dayzero")]
+frv_ordering <- frv_present[, .N, by = frv_vs_dayzero][order(-N)]
+frv_ordering[, pct := round(N / sum(N), 4)]
+fwrite(frv_ordering, file.path(OUT, "frv_vs_dayzero_ordering.csv"))
+
+frv_gap <- frv_present[frv_vs_dayzero == "frv_before_dayzero",
+                        as.integer(HPV_DAYZERO_DATE - EARLIEST_FRV_DETERM_DATE)]
+frv_gap_summary <- data.table(n = length(frv_gap), min = min(frv_gap), p25 = quantile(frv_gap, .25),
+                              median = median(frv_gap), p75 = quantile(frv_gap, .75),
+                              p90 = quantile(frv_gap, .90), max = max(frv_gap), mean = round(mean(frv_gap), 1))
+fwrite(frv_gap_summary, file.path(OUT, "frv_before_dayzero_gap_days.csv"))
+
 # =========================================================================================================
 # PART B -- hpv_active (dataset 2b, facility x year)
 # =========================================================================================================
@@ -174,6 +200,11 @@ cat(sprintf("%s spells | %s facilities | day-zero years %s-%s\n",
 cat("\nSPELL_STATUS BREAKDOWN\n"); print(as.data.frame(status_breakdown), row.names = FALSE)
 cat("\nSPELL DURATION (closed spells, days, inclusive)\n"); print(as.data.frame(spell_duration), row.names = FALSE)
 cat(sprintf("\nSHARE OF FACILITIES WITH >1 SPELL: %.1f%%\n", 100 * multi_spell_share))
+cat(sprintf("\nFRV DATE COVERAGE: %s / %s spells (%.1f%%) have EARLIEST_FRV_DETERM_DATE\n",
+            format(frv_coverage$n_with_frv_date, big.mark=","), format(frv_coverage$n_spells, big.mark=","),
+            100 * frv_coverage$pct_with_frv_date))
+cat("\nFRV DATE vs. HPV_DAYZERO_DATE ORDERING (of spells with both dates)\n"); print(as.data.frame(frv_ordering), row.names = FALSE)
+cat("\nGAP (days) WHERE FRV DATE PRECEDES DAY-ZERO\n"); print(as.data.frame(frv_gap_summary), row.names = FALSE)
 cat("\nTOP PROGRAM CODES IMPLICATED\n"); print(as.data.frame(head(prog_freq, 10)), row.names = FALSE)
 cat("\nAGENCY TYPE FREQUENCY\n"); print(as.data.frame(agency_freq), row.names = FALSE)
 
