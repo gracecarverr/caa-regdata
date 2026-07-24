@@ -1,0 +1,2 @@
+n_distinct_registry_emissions,n_distinct_registry_facilities,n_registry_matched,n_facility_rows_matched,n_facility_rows_total,n_shared_registry_ids,max_multiplicity,n_shared_registry_with_emissions_data,pct_registry_matched,pct_facility_rows_matched
+162383,265489,51246,55112,279211,8632,150,2802,0.3156,0.1974
