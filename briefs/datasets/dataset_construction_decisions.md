@@ -20,6 +20,7 @@ where the grain is facility × year).
 | 4 | `coordinates` | facility        | FRS lat/lon, county, coordinate-error diagnostics | ✅ built & audited |
 | 5 | `attainment`  | facility × year | PM2.5 (2012) nonattainment | ⬜ not started |
 | 6 | `pipeline`    | facility × year | EPA ECHO "CAA Compliance Pipeline": linked evaluation→violation→enforcement counts, HPV/FRV split, eval/enforcement lag days | ✅ built & audited |
+| 7 | `emissions`   | facility × year | annual pollutant quantities (VOC/PM10/PM2.5/NOx/SO2/CO/HAP, lbs; GHG, MTCO2e) from EIS/TRIS/E-GGRT/CAMDBS | ✅ built & audited |
 
 ---
 
@@ -296,6 +297,53 @@ category breakdowns beyond self-disclosure; any dedup reconciliation of `EA_PENA
 **Profile**: `briefs/datasets/pipeline_profile.md` (built by `code/diagnostics/16_pipeline_profile.R`) —
 linkage rates, `EVAL_TYPE_DESC`/`EA_TYPE` breakdowns, lag-day distributions, and the eval-linkage coverage
 cliff before 2015.
+
+---
+
+## Part H · Dataset 7 — `emissions` (`08_emissions.R`)
+
+Facility × year, built from the combined pollutant report (`data/processed/emissions.csv.gz`; raw source
+`POLL_RPT_COMBINED_EMISSIONS.csv`, cross-program: EIS, TRIS, E-GGRT, CAMDBS). Raw grain is `REPORTING_YEAR ×
+REGISTRY_ID × PGM_SYS_ACRNM × PGM_SYS_ID × POLLUTANT_NAME`, 10,411,871 rows.
+
+**Value-added vs. datasets 0–6** — nothing else in this layer carries measured emission *quantities*. Ds 0's
+`EMITS_*` flags are undated booleans from `ICIS-AIR_POLLUTANTS.csv` ("ever permitted to emit"), not
+measurements. This dataset adds annual pounds for VOC/PM10/PM2.5/NOx/SO2/CO, a broader HAP total, and GHG
+(metric tons CO2e, its own column/unit) — and is the only source in the layer that is cross-program (TRI,
+mandatory GHG reporting, Clean Air Markets — not just ICIS-Air).
+
+**Shape (built & audited this session):**
+```
+5,863,431 rows | 15 cols | 279,211 facilities × 21 years | 281,806 observed facility-years (4.81%)
+54,374 ever-observed facilities | 42,902 GHG-observed facility-years | 5,353 ever-GHG-observed facilities
+```
+
+### H.1 Coding decisions
+
+| # | Decision | Alternative not taken | Why / data fact |
+|---|---|---|---|
+| **EM1** | **Join key = `REGISTRY_ID` (FRS), not `PGM_SYS_ID`.** Every other dataset in this layer joins on `PGM_SYS_ID`; this is the first that can't, because the raw rows are cross-program (`PGM_SYS_ACRNM` ∈ {EIS 90.1%, TRIS 7.7%, E-GGRT 1.9%, CAMDBS 0.3%}) and each program has its own facility-id scheme. | Use the raw file's own `PGM_SYS_ID`. | It isn't reliably an ICIS-Air id outside EIS/CAMDBS rows; `REGISTRY_ID` is the only cross-program identifier both sides share. |
+| **EM2** | **`REGISTRY_ID` fan-out exposed, not resolved** — `N_PGM_SYS_ID_SHARING_REGISTRY` / `IS_SHARED_REGISTRY`, same pattern as ds 3's multi-facility settlements (P5). 8,632 REGISTRY_IDs map to >1 `PGM_SYS_ID` in `facilities.csv.gz` (max 150); 22,087 facilities (463,827 facility-years) carry `IS_SHARED_REGISTRY==1`. | Restrict to REGISTRY_IDs matching exactly one facility, or split emissions proportionally across co-mapped facilities. | No principled way to split a reported quantity across co-mapped facilities from this source alone; broadcasting identically and flagging lets the user decide, consistent with how ds 3 handles multi-facility settlements. **Do not sum `emissions` across facilities sharing a `REGISTRY_ID`** — it double-counts the same reported value. |
+| **EM3** | **Only ~19.7% of ICIS facility-rows (55,112 of 279,211) ever have emissions data** — 31.6% of the raw file's 162,383 distinct `REGISTRY_ID`s match `facilities.csv.gz` at all; most emissions reporters (pure TRI/GHG/NEI filers) are outside the ICIS-Air CAA universe entirely. | Build a separate, wider dataset over the full emissions-source universe. | Kept to the ICIS `PGM_SYS_ID` universe (G3/G4) so this joins 1:1 to `regulatory.csv.gz` like every other dataset; the coverage cost is real and documented, not hidden. |
+| **EM4** | **Pollutant columns match a single canonical `POLLUTANT_NAME` string EXACTLY, never by substring/regex.** PM10 and PM2.5 each have a total (`"Primary PM10 (filterables and condensibles)"` / `"...PM2.5..."`) plus several component/speciation variants that are SUBSETS of that total. **Verified the risk is real**: a naive substring match (`grepl("PM10", ...)`) inflates the true PM10 total by **1.7×** ($11.66B vs. the correct $7.04B, raw-file-wide); same 1.7× inflation for PM2.5. VOC/NOx/SO2/CO have exactly one variant each, so exact match costs nothing there. | Sum all rows matching a substring/regex per category. | A silent, easy-to-miss double-count — caught only by deliberately comparing exact-match vs. substring-match totals before committing to the design. |
+| **EM5** | **`HAP_LBS` sums every row with `NEI_TYPE == "HAP"`** (292 distinct pollutant names). Checked for a "Total HAP" aggregate row first (would double-count against the individual HAPs it aggregates) — **none exists**, so the plain sum is safe. | Assume safety without checking. | Same class of risk as EM4; this one happened to be clean. |
+| **EM6** | **`GHG_MTCO2E`/`GHG_OBSERVED` kept fully independent of `EMISSIONS_OBSERVED`/the pounds columns.** `UNIT_OF_MEASURE` is `MTCO2e` for E-GGRT rows only (196,055 of 10.4M), `Pounds` for everything else — never combinable. GHG reporting (E-GGRT) is also its own regulatory requirement, not a subset of EIS/TRI/CAMD air-toxics reporting, so a facility can be `GHG_OBSERVED` without being `EMISSIONS_OBSERVED` or vice versa. | Fold GHG into the same observability flag as the pounds measures. | Conflating the two would assert a false zero-vs-NA relationship between two independent reporting regimes. |
+| **EM7** | **Coverage is structurally uneven, not incidental** — EIS (90% of raw rows) has data ONLY in 2008, 2011, 2014, 2017, 2020 (NEI's real triennial inventory cycle); TRIS/CAMDBS/E-GGRT report annually but only from 2015 on. Raw `REPORTING_YEAR` spans 2008–2024, inside this layer's 2005–2025 window (G1) — 2005–2007 and 2025 are simply never observed. | Interpolate/carry forward between NEI cycles. | Left as raw, undated gaps (same zero-vs-NA discipline as the rest of the layer) — interpolation is an analysis-time choice, not a build-time one. |
+| **EM8** | **Duplicate rows kept, not deduped** (R3 precedent) — 11,774 of 10,397,173 `(year, REGISTRY_ID, PGM_SYS_ACRNM, PGM_SYS_ID, POLLUTANT_NAME)` groups have >1 row (1,984 byte-identical). All rows are summed as-is. | Dedup at aggregation. | Consistent with every other dataset's "count/sum everything, flag don't drop" convention; the duplicate share is small (0.11%). |
+
+### H.2 Verification (this session)
+
+| check | result |
+|---|---|
+| 5,863,431 × 15; grain `PGM_SYS_ID × YEAR` unique; rectangle complete (279,211 × 21); all names uppercase | ✓ |
+| **1:1 join to `regulatory.csv.gz`** — identical key vectors | ✓ |
+| zero-vs-NA: `EMISSIONS_OBSERVED`/`GHG_OBSERVED` each independently gate their own columns (never NA when observed, never non-NA when not) | ✓ |
+| `IS_SHARED_REGISTRY` fan-out count matches the profiled 8,632-`REGISTRY_ID` figure exactly | ✓ |
+| independent re-derivation: naive substring match on `PM10`/`PM2.5` inflates the raw-file-wide total by 1.7× vs. the exact-match design — confirms EM4 is load-bearing, not theoretical | ✓ |
+| built-dataset pollutant totals (e.g. PM10 $6.02B) are smaller than the raw-file-wide total ($7.04B) — expected, since the dataset is restricted to the ~19.7% ICIS-matched universe (EM3), partially offset by EM2's broadcast | ✓ (explained, not an error) |
+
+**Profile**: `briefs/datasets/emissions_profile.md` (built by `code/diagnostics/17_emissions_profile.R`) —
+pollutant-level distributions, the triennial/2015 coverage pattern, and the shared-`REGISTRY_ID` fan-out.
 
 ---
 
