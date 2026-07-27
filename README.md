@@ -61,13 +61,13 @@ caa-regdata/
 │   │                      (functions + parameters + a wayback/ subfolder for the bespoke cleaners)
 │   ├── 03_panel_building/  facility spine + the sample panels -> data/panels/
 │   │                      (build_panel() functions + PANEL_SPECS parameters)
-│   ├── 04_datasets/     the six deliverable datasets (this repo's main product) -> data/datasets/
+│   ├── 04_datasets/     the eight deliverable datasets (this repo's main product) -> data/datasets/
 │   └── diagnostics/     NOT part of the build: panel summaries, dataset profiling, site generation, previews, one-offs
 ├── data/
 │   ├── raw/             immutable downloads (gitignored) + MANIFEST.csv (provenance)
 │   ├── processed/       one clean asset per raw table (gitignored, rebuilt from code)
 │   ├── panels/          spine + sample panels (gitignored, rebuilt from code)
-│   └── datasets/        the six built datasets (gitignored, rebuilt from code)
+│   └── datasets/        the eight built datasets (gitignored, rebuilt from code)
 ├── briefs/              institutional overview + construction-decision & open-question briefs
 ├── docs/                generated static site (index.html) + data_dictionary.md (raw) + data_dictionary_derived.md (built)
 ├── output/             generated tables/figures (e.g. panel-summary LaTeX) + sessionInfo.txt
@@ -97,7 +97,7 @@ Every folder has a `README.md`. Start with [`code/README.md`](code/README.md) fo
 |-----------|---------|
 | to run the pipeline | [`code/README.md`](code/README.md), `code/RUN_ALL.R` |
 | the institutional setting (statute, data systems) | [`briefs/institutional_overview.md`](briefs/institutional_overview.md) |
-| **why** a construction choice was made | [`briefs/datasets/dataset_construction_decisions.md`](briefs/datasets/dataset_construction_decisions.md) (six-dataset layer); [`briefs/panel/panel_construction_decisions.md`](briefs/panel/panel_construction_decisions.md) (panel layer) |
+| **why** a construction choice was made | [`briefs/datasets/dataset_construction_decisions.md`](briefs/datasets/dataset_construction_decisions.md) (eight-dataset layer); [`briefs/panel/panel_construction_decisions.md`](briefs/panel/panel_construction_decisions.md) (panel layer) |
 | what's still undecided (panel layer) | [`briefs/panel/panel_open_questions.md`](briefs/panel/panel_open_questions.md) |
 | column/field definitions (raw sources) | [`docs/data_dictionary.md`](docs/data_dictionary.md) |
 | column/field definitions (built datasets + panels) | [`docs/data_dictionary_derived.md`](docs/data_dictionary_derived.md) |

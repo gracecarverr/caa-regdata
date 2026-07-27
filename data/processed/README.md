@@ -20,19 +20,21 @@ column and row is kept**; the only additions are `date`/`year`/`dup`/`dup_exact`
 
 | asset | source CSV | rows | cols | `date` from |
 |-------|-----------|------|------|-------------|
-| `inspections` | `ICIS-AIR_FCES_PCES.csv` | 1,802,044 | 14 | `ACTUAL_END_DATE` (evaluation end) |
-| `violations` | `ICIS-AIR_VIOLATION_HISTORY.csv` | 101,147 | 20 | `EARLIEST_FRV_DETERM_DATE`, else `HPV_DAYZERO_DATE` |
-| `formal_actions` | `ICIS-AIR_FORMAL_ACTIONS.csv` | 105,656 | 14 | `SETTLEMENT_ENTERED_DATE` |
-| `informal_actions` | `ICIS-AIR_INFORMAL_ACTIONS.csv` | 336,410 | 14 | `ACHIEVED_DATE` |
-| `certs` | `ICIS-AIR_TITLEV_CERTS.csv` | 2,563,435 | 11 | `ACTUAL_END_DATE` |
-| `stacktests` | `ICIS-AIR_STACK_TESTS.csv` | 646,332 | 14 | `ACTUAL_END_DATE` |
+| `inspections` | `ICIS-AIR_FCES_PCES.csv` | 1,777,427 | 14 | `ACTUAL_END_DATE` (evaluation end) |
+| `violations` | `ICIS-AIR_VIOLATION_HISTORY.csv` | 101,920 | 20 | `EARLIEST_FRV_DETERM_DATE`, else `HPV_DAYZERO_DATE` |
+| `formal_actions` | `ICIS-AIR_FORMAL_ACTIONS.csv` | 105,946 | 14 | `SETTLEMENT_ENTERED_DATE` |
+| `informal_actions` | `ICIS-AIR_INFORMAL_ACTIONS.csv` | 338,027 | 14 | `ACHIEVED_DATE` |
+| `certs` | `ICIS-AIR_TITLEV_CERTS.csv` | 2,574,125 | 11 | `ACTUAL_END_DATE` |
+| `stacktests` | `ICIS-AIR_STACK_TESTS.csv` | 619,735 | 14 | `ACTUAL_END_DATE` |
+
+*Row counts as of 2026-07-27 (EPA's live ICIS-AIR bulk download refreshes without an archival checksum, so these drift on re-download — see `briefs/panel/panel_construction_decisions.md` W-series).*
 
 **Institutional implications**
 - **`violations`** — ~9% of rows are undated (both determination dates blank) and get `year = NA`; they drop
   out at panel build (CC4/V1). `hpv` status = has an `HPV_DAYZERO_DATE`. Early-year sparsity is a reporting
   ramp-up artifact, **not** a real decline (V5) — don't read a downward trend into it.
-- **`certs`** — **~81% duplicate rows** (one raw row per program/pollutant). `dup==0` → ~481k certifications;
-  all rows → 2.53M. Use `n_certs` (dup==0), not raw rows, as the certification count (T1). Only ~62%/yr of
+- **`certs`** — **~81% duplicate rows** (one raw row per program/pollutant). `dup==0` → ~489k certifications;
+  all rows → 2.57M. Use `n_certs` (dup==0), not raw rows, as the certification count (T1). Only ~62%/yr of
   "Major" facilities file a cert — class-Major ≠ Title V certifier (T3/F4).
 - **`formal_actions` / `informal_actions`** — pooled into "enforcement" in the panel. **Only formal carry
   penalties.** A settlement can span multiple co-defendant facilities and **repeats one penalty across each**,
@@ -43,10 +45,12 @@ column and row is kept**; the only additions are `date`/`year`/`dup`/`dup_exact`
 
 | asset | source CSV | rows | cols |
 |-------|-----------|------|------|
-| `facilities` | `ICIS-AIR_FACILITIES.csv` | 279,211 | 20 |
-| `pollutants` | `ICIS-AIR_POLLUTANTS.csv` | 976,479 | 8 |
-| `programs` | `ICIS-AIR_PROGRAMS.csv` | 456,601 | 8 |
-| `program_subparts` | `ICIS-AIR_PROGRAM_SUBPARTS.csv` | 190,570 | 6 |
+| `facilities` | `ICIS-AIR_FACILITIES.csv` | 279,665 | 20 |
+| `pollutants` | `ICIS-AIR_POLLUTANTS.csv` | 978,218 | 8 |
+| `programs` | `ICIS-AIR_PROGRAMS.csv` | 457,333 | 8 |
+| `program_subparts` | `ICIS-AIR_PROGRAM_SUBPARTS.csv` | 191,005 | 6 |
+
+*Row counts as of 2026-07-27 (drifts with each live ICIS-AIR refresh, same caveat as above).*
 
 **Institutional implications**
 - **`facilities`** is the *current snapshot* (class, industry, operating status are time-invariant here); the
