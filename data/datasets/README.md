@@ -1,11 +1,12 @@
-# data/datasets — the six deliverable datasets
+# data/datasets — the eight deliverable datasets
 
 Built by [`code/04_datasets`](../../code/04_datasets/README.md) from the processed assets. All files are
 gzip-compressed CSV, **gitignored**, rebuilt from code. Every column is `UPPER_SNAKE_CASE`; every dataset is
 built over the **full** facility universe (no ever-active screen, no sample restriction — that's a filter
 the user applies downstream). This layer is this repo's main product; it coexists with, rather than
 supersedes, the single wide panel approach in [`data/panels/`](../panels/README.md) (`code/03_panel_building`)
-— six purpose-built full-universe tables here vs. three sample facility × year panels there.
+— eight purpose-built full-universe tables here (dataset 5, attainment, is intentionally skipped — see
+below) vs. three sample facility × year panels there.
 
 | file | grain | what | built by |
 |------|-------|------|----------|
@@ -24,7 +25,8 @@ number is skipped intentionally; see decision W10 in `briefs/panel/panel_constru
 ## Joining
 
 Every dataset joins on `PGM_SYS_ID`. `regulatory`, `operating`, and `hpv_active` share the identical
-279,211-facility × 2005–2025 rectangle and join **1:1** on `(PGM_SYS_ID, YEAR)`. `hpv_spells` and
+279,665-facility × 2005–2025 rectangle (as of 2026-07-27; drifts with each live ICIS-AIR refresh) and join
+**1:1** on `(PGM_SYS_ID, YEAR)`. `hpv_spells` and
 `penalties` are event-grain (spell / formal-action) and join **many-to-one** onto the rectangle via
 `PGM_SYS_ID` (+ `YEAR` for facility-year merges — but see `penalties`' settlement-broadcast caveat before
 summing across facilities). `coordinates` is facility-grain and joins onto any of the above via `PGM_SYS_ID`.

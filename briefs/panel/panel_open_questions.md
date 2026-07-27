@@ -36,7 +36,7 @@
 - **Lean:** Keep coalesce(FRV, HPV) as default; show the count sensitivity as a robustness table rather than picking silently.
 
 **D-B2 · Chase the dateless violations?** `[C1, E3]`
-- **Question:** **9,305 of 101,147 violation rows (9.2%)** have neither FRV nor HPV_dayzero → no year → silently dropped. Do we recover them via `DSCV`/`NFTC` fallback?
+- **Question:** **9,305 of 101,920 violation rows (9.1%; as of 2026-07-27, was 101,147/9.2%)** have neither FRV nor HPV_dayzero → no year → silently dropped. Do we recover them via `DSCV`/`NFTC` fallback?
 - **Lean:** Worth a quick count of how many the fallback recovers before deciding; if it's most of the 9.2%, extend the chain (ties to D-B1c).
 
 **D-B4 · Early-year coverage ramp** `[C2]`
@@ -51,11 +51,12 @@
 
 **D-C1 · How do we define "electric"?** `[matrix electric row; planning #1]`
 - **Question:** The electric sub-panel qualifies a facility by NAICS `2211` **or** SIC `4911`. How do we treat the disagreements?
-  - Both NAICS 2211 & SIC 4911: **1,694** (solidly electric)
-  - NAICS 2211 only: **1,119** (solidly electric — NAICS is the authoritative modern code)
-  - **SIC 4911 only: 212** ← the problem cases: **90** have NAICS `999999` (unclassified; SIC is the only signal — defensible to keep) and **122** have a clearly *non-electric* NAICS (hospitals, landfills, sewage, telecom, corrections).
-- **Options:** (a) NAICS-authoritative — drop the 122 non-electric SIC-only; keep the 90 unclassified. (b) Union as-is (keep all 212). (c) Manually adjudicate the 122.
-- **Lean:** (a) — NAICS is the modern authoritative code; the 122 are legacy-SIC false positives. Document the 90 kept-on-SIC as a sensitivity.
+  - Both NAICS 2211 & SIC 4911: **1,695** (solidly electric; was 1,694)
+  - NAICS 2211 only: **1,109** (solidly electric — NAICS is the authoritative modern code; was 1,119)
+  - **SIC 4911 only: 211** (was 212) ← the problem cases: **89** have NAICS `999999` (unclassified; SIC is the only signal — defensible to keep; was 90) and **122** have a clearly *non-electric* NAICS (hospitals, landfills, sewage, telecom, corrections; unchanged).
+- **Options:** (a) NAICS-authoritative — drop the 122 non-electric SIC-only; keep the 89 unclassified. (b) Union as-is (keep all 211). (c) Manually adjudicate the 122.
+- **Lean:** (a) — NAICS is the modern authoritative code; the 122 are legacy-SIC false positives. Document the 89 kept-on-SIC as a sensitivity.
+- *(Figures as of 2026-07-27, within the CONUS + Major/Synthetic-Minor electric filter; drift with each live ICIS-AIR refresh.)*
 
 *How NAICS/SIC matching works — which digit level?* (reference for D-C1 and any industry filter.) The digit count is the granularity dial, not a fixed "2–3 digits," and NAICS vs SIC behave differently in `build_panel`:
 - **NAICS is a prefix match** — `2211` catches every electric child (`22111`, `221112`, `221122`…) but not gas `2212` or hospitals `622110`. Fewer digits = broader:
@@ -95,22 +96,24 @@
 - Keep the four measures (inspections / violations / enforcement / certs) **separate**; `any_activity` = their union `[B2]`. Count **distinct event IDs**?, not raw rows `[B1]` (raw overcounts ~5× certs, ~2× informal). → confirm agreed treatment. Formal actions ~3% have duplicate IDs, different penalty amounts, dates. Deduplication by ID potentially loses multi-facility actions. 
 
 **D-D3 · Penalties as an outcome?** `[F2, B5]`
-- 795 duplicate ENF_IDENTIFIERS. Median: 2 facilities per case (mean 3.6, range 1-117). Median Penalty: the $15,150 including 0s, $50,000 non-0 (627 cases). 
+- Resolved into a full dedicated analysis since this note was written — see `../datasets/multi_facility_settlement_decision.md` and **P5** in `dataset_construction_decisions.md`. As of 2026-07-27: **571** settlements span >1 co-defendant facility (up to 117; 507 uniform amount, 64 differing). Naive per-row summing of `PENALTY_AMOUNT` overstates the aggregate penalty total by ~35% — do not sum across a settlement's facilities without picking a broadcast rule (options laid out in the dedicated brief). *(The figures previously here — "795 duplicate ENF_IDENTIFIERs," "$15,150/$50,000 median penalty" — could not be traced to a current script and are superseded by the analysis above rather than carried forward.)*
 
 **D-D4 · Additional covariates?** `[planning]`
-- Candidates flagged in planning: **State/EPA flag** (who acted), **facility type** (private/govt/corporation), **programs**, **pollutants**, **stack tests**. Which earn a place in the standard panel vs stay optional joins? (Cert coverage caveat: only ~62%/yr of majors show a cert `[F4]`, and certs are 80.6% duplicate rows `[B1]`.)
+- Candidates flagged in planning: **State/EPA flag** (who acted), **facility type** (private/govt/corporation), **programs**, **pollutants**, **stack tests**. Which earn a place in the standard panel vs stay optional joins? (Cert coverage caveat: only ~62%/yr of majors show a cert `[F4]`, and certs are 81% duplicate rows `[B1]`, as of 2026-07-27, was 80.6%.)
 
 ### 1.5 Trust & verification (before we lean on it)
 
-- **D-E1 · Verify the de-duplication.** Planning note: *"Claude de-duplicated event tables, need to investigate."* Walk through the distinct-ID logic (ACTIVITY_ID / COMP_DETERMINATION_UID / ENF_IDENTIFIER) and confirm counts against raw. *(Independently confirmed this session: TITLEV is 80.6% exact-duplicate rows, informal 48%.)* The assets dedupe by **event ID** (one row per event), **not** by entire row — entire-row dedup removes only byte-identical copies, so it over-counts wherever one event spans differing rows:
+- **D-E1 · Verify the de-duplication.** Planning note: *"Claude de-duplicated event tables, need to investigate."* Walk through the distinct-ID logic (ACTIVITY_ID / COMP_DETERMINATION_UID / ENF_IDENTIFIER) and confirm counts against raw. *(Independently confirmed this session: TITLEV is 81% exact-duplicate rows (was 80.6%), informal 48%.)* The assets dedupe by **event ID** (one row per event), **not** by entire row — entire-row dedup removes only byte-identical copies, so it over-counts wherever one event spans differing rows:
 
 | table | raw rows | entire-row distinct | by event ID |
 |---|---|---|---|
-| certs | 2,563,435 | 497,109 | **487,215** |
-| informal | 336,410 | 174,667 | 174,667 |
-| inspections | 1,802,044 | 1,802,044 | **1,801,418** |
+| certs | 2,574,125 | 498,976 | **489,078** |
+| informal | 338,027 | 175,577 | 175,577 |
+| inspections | 1,777,427 | 1,777,427 | **1,776,793** |
 
-*informal:* all duplicates are byte-identical → both dedups agree. *certs:* entire-row leaves **+9,894** over-counted (IDs whose rows differ in a date/flag). *inspections:* no exact dups at all, yet 490 IDs (626 rows) span differing entries → entire-row removes nothing. **ID-dedup is correct for event counts; entire-row over-counts.** The cost is nuance **N1** — ID-dedup keeps the *first* row and drops differing siblings (see `construction_decisions.md` CC6/N1).
+*(Figures as of 2026-07-27, was certs 2,563,435/497,109/487,215, informal 336,410/174,667/174,667, inspections 1,802,044/1,802,044/1,801,418 — same table, verified again in `panel_construction_decisions.md`'s Part B duplication table.)*
+
+*informal:* all duplicates are byte-identical → both dedups agree. *certs:* entire-row leaves **+9,898** over-counted (was +9,894; IDs whose rows differ on a date/flag). *inspections:* no exact dups at all, yet 498 IDs (634 rows) span differing entries → entire-row removes nothing (was 490 IDs/626 rows). **ID-dedup is correct for event counts; entire-row over-counts.** The cost is nuance **N1** — ID-dedup keeps the *first* row and drops differing siblings (see `construction_decisions.md` CC6/N1).
 
 - **D-E2 · Understand `balance=TRUE`.** Live walk-through of what the rectangle + NA-fill actually produces (ties to D-A1).
 - **D-E3 · Per-source cleaning scripts** that clean/prepare each EPA dataset *and flag the decisions made inside each asset* — is this the target structure?
@@ -154,7 +157,7 @@ A raw table lets you dodge questions a panel makes unavoidable. Building facilit
 | `FCES_PCES` (inspections) | **Temporal** (dated) | |
 | `VIOLATION_HISTORY` | **Temporal** (dated) | 5 date fields, sparse early `[C1, C2, E3]` |
 | `FORMAL` / `INFORMAL` actions | **Temporal** (dated) | settlement lag `[C3]`; informal 48% dup rows |
-| `TITLEV_CERTS` | **Temporal** (dated) | 80.6% dup; ~62% major coverage `[B1, F4]` |
+| `TITLEV_CERTS` | **Temporal** (dated) | 81% dup (was 80.6%); ~62% major coverage `[B1, F4]` |
 | `STACK_TESTS` | **Temporal** (dated) | pollutant detail missing `[E2]` |
 | Emissions (NEI/…) | **Temporal** (annual) | mixed units `[F1]` |
 | AFS | **Frozen legacy** (ends Oct 2014) | migrated into pre-2014 ICIS-Air `[D4]` |
