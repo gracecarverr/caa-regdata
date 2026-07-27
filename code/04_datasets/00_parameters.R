@@ -8,7 +8,6 @@
 #       hpv_active  facility x year   R2 collapse of hpv_spells -> HPV-active flag; joins 1:1 to ds 0/1
 #     3 penalties   formal action     action-level penalties + multi-facility settlement key
 #     4 coordinates facility          FRS lat/lon, county, coordinate-error diagnostics
-#     5 attainment  facility x year   PM2.5 (2012) nonattainment
 #
 #   Everything joins on PGM_SYS_ID (+ year where the grain is facility x year). Datasets 1-5 are built once
 #   over the FULL facility universe, so any sample restriction is a filter the user applies downstream --

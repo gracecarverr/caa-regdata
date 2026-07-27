@@ -1,14 +1,15 @@
-# 04_datasets — the six deliverable datasets
+# 04_datasets — the eight deliverable datasets
 
 **Stage inputs:** `data/processed/*.csv.gz` (cleaned assets) + `data/raw/{frs,us_counties}` + `data/datasets/`
 outputs of earlier scripts in this folder (`hpv_active` reads `hpv_spells` and `regulatory`).
-**Stage outputs:** `data/datasets/{regulatory,operating,hpv_spells,hpv_active,penalties,coordinates}.csv.gz`
-**Run:** each script individually, in file order — `Rscript code/04_datasets/01_regulatory.R`, etc. **Not yet
-wired into `code/RUN_ALL.R`** (the six datasets are still being finalized; `attainment` is not built).
+**Stage outputs:** `data/datasets/{regulatory,operating,hpv_spells,hpv_active,penalties,coordinates,pipeline,emissions}.csv.gz`
+**Run:** as stage `04` of `code/RUN_ALL.R` (sources `01_regulatory.R` through `08_emissions.R` in file order).
+Each script also runs standalone — `Rscript code/04_datasets/01_regulatory.R`, etc. — assuming
+`data/processed/` is already built.
 
-The deliverable is **six datasets, not one wide panel** — a departure from the old panel layer's three sample
-panels (facility-spine/panel building moved to the CAA_Project repo, 2026-07-23; this is now the repo's main
-product). Each is built once over the **full** facility universe (no ever-active screen, no
+The deliverable is **eight datasets, not one wide panel** — a departure from the `03_panel_building` layer's
+three sample panels, which this repo also still builds (see `code/03_panel_building/README.md`); this layer
+is the repo's main product. Each is built once over the **full** facility universe (no ever-active screen, no
 sample restriction); any subsetting is a filter the user applies downstream. Everything joins on `PGM_SYS_ID`
 (+ `YEAR` where the grain is facility × year); every file also carries `REGISTRY_ID` (the FRS cross-program
 facility id) alongside `PGM_SYS_ID` (`G4`). Decisions are documented in depth in
@@ -25,9 +26,13 @@ facility id) alongside `PGM_SYS_ID` (`G4`). Decisions are documented in depth in
 | `04_hpv_active.R` | **dataset 2b** `hpv_active` | facility × year | Deterministic **R2** (interval-overlap) collapse of `hpv_spells`. Joins 1:1 to `regulatory`/`operating`. |
 | `05_penalties.R` | **dataset 3** `penalties` | formal action | Action-level penalties + the multi-facility settlement key (`ENF_IDENTIFIER`). Reconciles exactly to `regulatory`'s `PENALTY_AMOUNT`. |
 | `06_coordinates.R` | **dataset 4** `coordinates` | facility | FRS lat/lon, derived county FIPS, coordinate-vs-ICIS-county error diagnostics. Uses `coord_county_flag.R` (local to this folder) over the full universe. |
+| `07_pipeline.R` | **dataset 6** `pipeline` | facility × year | EPA ECHO's "CAA Compliance Pipeline": links, in a single record, the evaluation (inspection) that found a violation to the enforcement action it triggered — a same-row chain no ICIS-Air table alone carries. Also includes FRV violations, not just HPV (`hpv_spells` is HPV-only). |
+| `08_emissions.R` | **dataset 7** `emissions` | facility × year | Combined pollutant report (EIS/TRIS/E-GGRT/CAMDBS). Adds a real magnitude axis — annual pounds for VOC/PM10/PM2.5/NOx/SO2/CO, a broader HAP total, and GHG (metric tons CO2e) — where `regulatory`'s `EMITS_*` flags are booleans only ("ever permitted to emit"), not measured quantities. |
 
-Dataset 5 (`attainment`, PM2.5 2012 nonattainment) is **not yet built** — deferred pending a shape decision
-(see the open item in `briefs/datasets/dataset_construction_decisions.md`).
+Dataset 5 (`attainment`, PM2.5 2012 nonattainment) does not exist in this layer — the number is skipped
+intentionally, matching the panel layer, where the equivalent attainment code was removed from this repo
+entirely on 2026-07-27 (already synced to the sibling `CAA_Project` repo; see decision W10 in
+`briefs/panel/panel_construction_decisions.md`).
 
 ## Conventions
 
@@ -39,7 +44,8 @@ Dataset 5 (`attainment`, PM2.5 2012 nonattainment) is **not yet built** — defe
 - **Zero-vs-NA discipline, reused across datasets** — `regulatory`'s `ICIS_OBSERVED` flag is the reference
   implementation; `hpv_active` explicitly reuses it (H6) rather than inventing a separate observability rule.
 - **File numbers are build order, not a dataset index** — `03_hpv_spells.R`/`04_hpv_active.R` are datasets
-  "2" and "2b"; `05_penalties.R` is dataset "3".
+  "2" and "2b"; `05_penalties.R` is dataset "3". Matches the numbering convention used in
+  `03_panel_building/` (`00_spine.R`, `03_build.R` — no "01"/"02" file exists there).
 - **Every build ends with `stopifnot()` invariants** (grain uniqueness, rectangle completeness, zero-vs-NA
   consistency) printed alongside a one-line summary. Independent verification beyond the in-script asserts
   is run ad hoc each session and logged in `briefs/datasets/dataset_construction_decisions.md`, not re-run automatically.

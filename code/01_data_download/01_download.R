@@ -2,26 +2,39 @@
 # code/01_data_download/01_download.R -- acquire raw data into data/raw/ (immutable) + record provenance.
 #   Skipped when code/RUN_ALL.R is called with DOWNLOAD=false. Standalone: no shared helpers, no config.
 #
-#   Fetches ICIS-Air, AFS, combined emissions (all from the same EPA ECHO bulk directory), US county
-#   boundaries, and the Green Book PM2.5 (2012) nonattainment-area polygons. Idempotent throughout: if a
-#   source's files are already present it does nothing (raw is immutable). Records a provenance row per
-#   extracted file in data/raw/MANIFEST.csv (source, file, url, downloaded_at, md5).
+#   Fetches ICIS-Air, AFS, combined emissions, FRS facility/program-link data (all from the same EPA ECHO
+#   bulk directory), US county boundaries, and the ICIS-Air Wayback annual snapshots (pinned to specific
+#   confirmed captures -- see below). Idempotent throughout: if a source's files are already present it
+#   does nothing (raw is immutable). Records a provenance row per extracted file in data/raw/MANIFEST.csv
+#   (source, file, url, downloaded_at, md5).
 #
-#   NOT automated here (stay manually staged; see this stage's README):
-#   - data/raw/frs/FRS_FACILITIES.csv -- a direct URL exists (ordsext.epa.gov/FLA/www3/state_files/
-#     national_combined.zip, ~1.26 GB) but that EPA endpoint proved unreliable across 4 real attempts
-#     (truncated connections at various points, never a clean complete transfer). Rather than ship an
-#     automation path that regularly fails, this stays manually staged.
-#   - data/raw/ICIS_AIR_WAYBACK/ICIS-AIR_downloads_<year>/ (11 years, 2015-2025) -- an Internet Archive
-#     Wayback Machine mechanism was built and verified for SOME years (2015, 2017, 2019, 2020, 2025 matched
-#     the existing staged files byte-for-byte) but NOT all: 2016 did not match even after correcting the
-#     capture-selection rule, and 2018 has ZERO captures of this URL in the Archive at any status code -- the
-#     staged 2018 data did not come from this mechanism. Given the reliability gap and no confirmed selection
-#     rule that works for every year, this stays manually staged rather than risk silently reproducing the
-#     wrong archived snapshot for a subset of years.
-#   - data/raw/greenbook/pm25_2012_status/<year>.dbf (11 yearly Green Book STATUS snapshots, distinct from
-#     the NAA boundary polygons below) -- no automatable source was found at all (a Wayback Machine query on
-#     the obvious URL returned zero captures).
+#   Wayback snapshots (data/raw/ICIS_AIR_WAYBACK/ICIS-AIR_downloads_<year>/, 2015-2017/2019-2025) are
+#   fetched from PINNED per-year capture timestamps, not a live "latest capture" search -- a live search is
+#   exactly what previously produced a false "2016 doesn't reproduce" conclusion (its true match is a capture
+#   5 days older than the latest one that year; 2022 and 2024 have the same pattern). Every pinned timestamp
+#   was confirmed byte-for-byte against the staged files by code/diagnostics/wayback_verify/wayback_verify.R
+#   (run 2026-07-27; see that stage's README and output/wayback_verify/summary_by_year.csv). 2018 is NOT
+#   automated here -- the Internet Archive has ZERO captures of this URL at any status code for 2018 (the
+#   staged "2018" data was found to be a mislabeled duplicate of 2019 and was deleted from data/raw/, W7);
+#   there is no capture to pin.
+#
+#   NB: the confirmed capture zips always contain all 10 ICIS-Air tables, but the folders currently staged
+#   on disk for 2022 (9 files) and 2023-2025 (8 files each) were trimmed down at some point after staging --
+#   a fresh run of this section will produce the FULL 10-file set for every year, which differs from what's
+#   on disk right now for those 4 years. Harmless: the wayback cleaning scripts
+#   (code/02_cleaning/wayback/17-19_*.R) read specific named files only, never list.files()-glob the
+#   directory, so extra tables are simply never read.
+#
+#   FRS note: the URL previously tried here (ordsext.epa.gov/FLA/www3/state_files/national_combined.zip,
+#   ~1.26 GB) is a real, working download (confirmed 2026-07-27 -- the earlier "truncated connections" finding
+#   was a transient issue with that specific transfer, not a dead endpoint) but it is the WRONG product: a
+#   33-column multi-table FRS export, not the 10-column FRS_FACILITIES.csv this pipeline actually uses. The
+#   real source is echo.epa.gov/files/echodownloads/frs_downloads.zip (confirmed schema- and content-identical
+#   to the staged file, same bulk-download pattern as ICIS-Air/AFS above) -- that's what's automated below.
+#
+#   Green Book / PM2.5 attainment data is NOT fetched here: the attainment layer (data/raw/greenbook/,
+#   code/03_panel_building/01_attainment.R, data/panels/attainment.csv.gz) was removed from this repo
+#   2026-07-27 -- that code was already synced to the CAA_Project repo (2026-07-23) and lives there now.
 # =========================================================================================================
 library(readr)
 
@@ -108,6 +121,22 @@ if (file.exists(emissions_csv)) {
   record_provenance("emissions", emissions_csv, EMISSIONS_URL)
 }
 
+# ---- FRS (Facility Registry Service) -- facility coordinates + program linkages -- same ECHO bulk -----
+# directory as ICIS-Air/AFS above. NOT ordsext.epa.gov/.../national_combined.zip (see file header) -- that
+# is a different, larger FRS export with a different schema.
+FRS_URL <- "https://echo.epa.gov/files/echodownloads/frs_downloads.zip"
+frs_dir <- file.path(RAW, "frs")
+dir.create(frs_dir, showWarnings = FALSE, recursive = TRUE)
+if (length(list.files(frs_dir, pattern = "[.]csv$"))) {
+  message("  FRS already present in ", frs_dir, " -- skipping download.")
+} else {
+  zip <- file.path(RAW, "frs_downloads.zip")
+  message("  downloading ", FRS_URL)
+  fetch_zip(FRS_URL, zip)
+  utils::unzip(zip, exdir = frs_dir); unlink(zip)
+  for (f in list.files(frs_dir, full.names = TRUE)) record_provenance("frs", f, FRS_URL)
+}
+
 # ---- US county cartographic boundaries (Census, 2022 vintage) -----------------------------------------
 COUNTIES_URL <- "https://www2.census.gov/geo/tiger/GENZ2022/shp/cb_2022_us_county_500k.zip"
 counties_dir <- file.path(RAW, "us_counties")
@@ -128,19 +157,34 @@ if (file.exists(file.path(counties_dir, "us_counties.shp"))) {
   for (f in list.files(counties_dir, full.names = TRUE)) record_provenance("us_counties", f, COUNTIES_URL)
 }
 
-# ---- Green Book PM2.5 (2012 std) nonattainment-area POLYGONS (current, time-invariant boundary) -------
-# NB: this is only the boundary shapefile. The 11 yearly STATUS snapshots (pm25_2012_status/<year>.dbf)
-#   are a SEPARATE, NOT-yet-automated source -- see the file header and this stage's README.
-GREENBOOK_NAA_URL <- "https://www3.epa.gov/airquality/greenbook/shapefile/pm25_2012std_naa_shapefile.zip"
-naa_dir <- file.path(RAW, "greenbook", "pm25_2012_naa")
-dir.create(naa_dir, showWarnings = FALSE, recursive = TRUE)
-if (file.exists(file.path(naa_dir, "PM25_2012Std_NAA.shp"))) {
-  message("  Green Book NAA shapefile already present in ", naa_dir, " -- skipping download.")
-} else {
-  zip <- file.path(RAW, "pm25_2012std_naa_shapefile.zip")
-  message("  downloading ", GREENBOOK_NAA_URL)
-  fetch_zip(GREENBOOK_NAA_URL, zip, min_bytes = 1e4)
-  utils::unzip(zip, exdir = naa_dir); unlink(zip)
-  for (f in list.files(naa_dir, pattern = "^PM25_2012Std_NAA[.]", full.names = TRUE))
-    record_provenance("greenbook", f, GREENBOOK_NAA_URL)
+# ---- ICIS-Air Wayback annual snapshots (2015-2017, 2019-2025) ------------------------------------------
+# Pinned to the exact capture confirmed byte-for-byte against the staged files by
+# code/diagnostics/wayback_verify/wayback_verify.R (run 2026-07-27 -- see that stage's README and
+# output/wayback_verify/summary_by_year.csv). NOT a live "latest capture" search: a live search is what
+# produced the false "2016 doesn't match" conclusion in the first place (the true match is 5 days older
+# than 2016's latest capture; 2022 and 2024 have the same pattern), and the Archive's index can grow new,
+# non-matching captures over time. 2018 is excluded -- zero captures of this URL exist at any status code
+# (W7); its data/raw folder was deleted as a mislabeled 2019 duplicate and is not reconstructable here.
+WAYBACK_URL <- "https://echo.epa.gov/files/echodownloads/ICIS-AIR_downloads.zip"
+WAYBACK_TIMESTAMPS <- c(
+  "2015" = "20150927111008", "2016" = "20161225101825", "2017" = "20170514071503",
+  "2019" = "20190525005616", "2020" = "20201016201845", "2021" = "20211031083633",
+  "2022" = "20221129221859", "2023" = "20230601011243", "2024" = "20240926180831",
+  "2025" = "20250914052608"
+)
+for (yr in names(WAYBACK_TIMESTAMPS)) {
+  yr_dir <- file.path(RAW, "ICIS_AIR_WAYBACK", paste0("ICIS-AIR_downloads_", yr))
+  dir.create(yr_dir, showWarnings = FALSE, recursive = TRUE)
+  if (length(list.files(yr_dir, pattern = "[.]csv$"))) {
+    message("  Wayback ", yr, " already present in ", yr_dir, " -- skipping download.")
+  } else {
+    ts <- WAYBACK_TIMESTAMPS[[yr]]
+    wb_url <- sprintf("https://web.archive.org/web/%sid_/%s", ts, WAYBACK_URL)
+    zip <- file.path(RAW, paste0("ICIS-AIR_downloads_wayback_", yr, ".zip"))
+    message("  downloading Wayback ", yr, " (capture ", ts, ")")
+    fetch_zip(wb_url, zip, min_bytes = 1e6)
+    utils::unzip(zip, exdir = yr_dir); unlink(zip)
+    for (f in list.files(yr_dir, full.names = TRUE))
+      record_provenance(paste0("icis_air_wayback_", yr), f, wb_url)
+  }
 }
