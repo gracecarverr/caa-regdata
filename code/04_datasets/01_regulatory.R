@@ -1,8 +1,8 @@
 # =========================================================================================================
 # code/04_datasets/01_regulatory.R -- DATASET 0: the regulatory dataset. Facility x year, built from the
 #   raw ICIS-Air download and NOTHING ELSE. Every column here is either an ICIS event count or an ICIS
-#   facility characteristic; no wayback status, no FRS coordinates, no Green Book attainment, no AFS. Those
-#   live in datasets 1-5 and merge on PGM_SYS_ID (+ year).
+#   facility characteristic; no wayback status, no FRS coordinates, no AFS. Those live in other datasets
+#   and merge on PGM_SYS_ID (+ year).
 #
 #   in : data/processed/{inspections,violations,formal_actions,informal_actions,certs,stacktests}.csv.gz
 #        data/processed/{facilities,pollutants,programs}.csv.gz

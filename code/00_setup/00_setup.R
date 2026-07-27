@@ -11,7 +11,7 @@
 # =========================================================================================================
 
 # ---- 1. required packages ------------------------------------------------------------------------------
-# Everything sourced anywhere in code/ (cleaning, spine, attainment, panels, diagnostics).
+# Everything sourced anywhere in code/ (cleaning, spine, panels, diagnostics).
 REQUIRED_PKGS <- c(
   "here",       # project-root-relative paths
   "readr",      # CSV read/write
@@ -19,7 +19,7 @@ REQUIRED_PKGS <- c(
   "tidyr",      # reshaping (pivot/expand_grid)
   "lubridate",  # date parsing
   "data.table", # fast grouped ops (wayback LOCF, panel summaries)
-  "sf",         # spatial join (facility coordinate -> county / attainment area)
+  "sf",         # spatial join (facility coordinate -> county)
   "ggplot2",    # figures (diagnostics/06_panel_profile)
   "scales",     # axis label formatting for figures
   "R.utils"     # lets data.table::fread() read .csv.gz directly (diagnostics/06_, 11_)

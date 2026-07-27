@@ -3,7 +3,8 @@
 > Not yet resolved — this is evidence for a decision you haven't made, not a record of one already made (see
 > `../panel/panel_construction_decisions.md` / `dataset_construction_decisions.md` for those). Related to **D-A2** in
 > `../panel/panel_open_questions.md`, an earlier open question about interim operating-status proxies, written before
-> the wayback reconstruction existed.
+> the wayback reconstruction existed. See also `afs_crosswalk_feasibility.md` — a different candidate pre-2015
+> signal (AFS historical compliance status), gated on a facility-id crosswalk rather than a date field.
 
 ## Question
 
@@ -158,3 +159,6 @@ Full tables: `output/begin_year_proxy/program_type_lag_by_group.csv` (summary) a
 - (c) Adopt it as a single-year marker everywhere begin-year < 2015, but attach a confidence/distance measure
   (e.g. bucket by decade, per the §1 gap table) — and per §4, weight by *which* program set the earliest date
   rather than treating every program type as equally reliable (e.g. down-weight or exclude GACT-only begin-years).
+- (d) Pursue AFS historical compliance status instead of/alongside begin-year — see `afs_crosswalk_feasibility.md`.
+  Different failure mode: not a lag/distance problem like begin-year, but a facility-id crosswalk that works
+  unevenly by state (near-100% in some states, under 2% in others).

@@ -9,9 +9,9 @@
 # =========================================================================================================
 
 esc   <- function(x) { x <- as.character(x); x <- gsub("&", "&amp;", x); x <- gsub("<", "&lt;", x); gsub(">", "&gt;", x) }
-comma  <- function(x) formatC(round(as.numeric(x)), format = "d", big.mark = ",")  # matches numFmt "#,##0"
+comma  <- function(x) format(round(as.numeric(x)), big.mark = ",", scientific = FALSE, trim = TRUE)  # matches numFmt "#,##0"; formatC(format="d") silently returns NA above ~2^31 (int32 overflow), which ANNUAL_EMISSION's max exceeds
 pct1   <- function(fr) sprintf("%.1f%%", 100 * as.numeric(fr))   # matches the old cell_pct numFmt "0.0%"
-dollar <- function(x) paste0("$", formatC(round(as.numeric(x)), format = "d", big.mark = ","))  # numFmt "$#,##0"
+dollar <- function(x) paste0("$", format(round(as.numeric(x)), big.mark = ",", scientific = FALSE, trim = TRUE))  # numFmt "$#,##0"
 
 # ---- section wrapper + header block ---------------------------------------------------------------------
 sec <- function(...) paste0("<section>", paste0(..., collapse = ""), "</section>")

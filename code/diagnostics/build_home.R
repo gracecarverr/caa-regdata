@@ -50,7 +50,11 @@ body <- paste0(
       card("Databases", paste(
         "What each database contains, what's missing, and how the files join \u2014 ICIS-Air, AFS, the",
         "combined emissions dataset, and the compliance-and-enforcement pipeline."),
-        "databases.html")
+        "databases.html"),
+      card("Panels", paste(
+        "Facility \u00d7 year panels built for empirical work: construction decisions, coverage, and",
+        "summary statistics across the Universe, Major/Synthetic Minor, and Electric panels."),
+        "panels.html")
     ),
     "<div class='prose'>", overview_html, "</div>"
   )
@@ -58,7 +62,7 @@ body <- paste0(
 
 html <- site_shell(
   title       = "Home",
-  description = "A reproducible EPA Clean Air Act stationary-source regulatory data pipeline: raw data, database overviews, and six deliverable datasets.",
+  description = "A reproducible EPA Clean Air Act stationary-source regulatory data pipeline: raw data, database overviews, facility-year panels, and six deliverable datasets.",
   active      = "home",
   body_html   = body,
   script      = "code/diagnostics/build_home.R"

@@ -8,18 +8,22 @@ and `docs/data_dictionary.md`; for the "how" (code) see `code/*/README.md`.
 
 ## Contents
 
-`institutional_overview.md`, `database_overviews.md`, and this README stay at the top level as the
-reference/index docs. `datasets/` holds the construction decisions for `code/04_datasets/` — this repo's
-main product.
+Split into two subfolders mirroring the pipeline's own panel-layer (`code/03_panel_building/`) vs.
+dataset-layer (`code/04_datasets/`) distinction. `institutional_overview.md`, `database_overviews.md`, and
+this README stay at the top level as the reference/index docs.
 
 | brief | scope |
 |-------|-------|
-| [`institutional_overview.md`](institutional_overview.md) | **Start here.** The Clean Air Act enforcement setting: what each data system (ICIS-Air, AFS, FRS, Green Book) is, the key regulatory concepts (Title V, HPV, FCE/PCE, NAAQS/attainment, program types), and — for each — the **implication for the data**. Links out to the in-depth briefs. Rendered (trimmed) as the site's Home page by `code/diagnostics/build_home.R`. |
+| [`institutional_overview.md`](institutional_overview.md) | **Start here.** The Clean Air Act enforcement setting: what each data system (ICIS-Air, AFS, FRS) is, the key regulatory concepts (Title V, HPV, FCE/PCE, NAAQS/attainment, program types), and — for each — the **implication for the data**. Links out to the in-depth briefs. Rendered (trimmed) as the site's Home page by `code/diagnostics/build_home.R`. |
 | [`database_overviews.md`](database_overviews.md) | What each database (ICIS-Air, AFS, the combined emissions dataset, the compliance/enforcement pipeline) contains, what's missing, and how the files join — transcribed verbatim from the project's Google Doc. Rendered as the site's Databases page by `code/diagnostics/build_databases_page.R`. |
 
-> The former `panel/` subfolder (`panel_construction_decisions.md`, `panel_open_questions.md`,
-> `panel_findings_summary.md`) moved to the CAA_Project repo alongside the facility-spine/panel-building
-> code (2026-07-23), along with its Panels site page.
+### `panel/` — the panel-building layer (`code/03_panel_building/`)
+
+| brief | scope |
+|-------|-------|
+| [`panel/panel_construction_decisions.md`](panel/panel_construction_decisions.md) | Every asset- and panel-construction decision, the alternative not taken, and the data issue behind it (facility key, date rules, duplicate handling, universe definition, spine attributes, Wayback status, zero semantics, HPV intervals). |
+| [`panel/panel_open_questions.md`](panel/panel_open_questions.md) | Choices **not yet settled** — balance vs. unbalanced, operating-indicator / Census merge, violation date rule, the electric definition, covariates, and verification items. |
+| [`panel/panel_findings_summary.md`](panel/panel_findings_summary.md) | Meeting-ready one-pager of panel scale, key measures, duplicate load, and penalties. Rendered as-is on the site's Panels page by `code/diagnostics/build_panels_page.R`, alongside live-computed summary-stat tables. |
 
 ### `datasets/` — the six-dataset layer (`code/04_datasets/`)
 
@@ -30,6 +34,7 @@ main product.
 | [`datasets/hpv_profile.md`](datasets/hpv_profile.md) | General profile writeup of datasets 2/2b (`hpv_spells.csv.gz` / `hpv_active.csv.gz`) — spell status/duration, program/agency composition, active-rate trend. No open decision attached. |
 | [`datasets/coordinates_profile.md`](datasets/coordinates_profile.md) | General profile writeup of dataset 4 (`coordinates.csv.gz`) — coverage funnel, coordinate-vs-county agreement, facility geography, state-level coverage gaps. No open decision attached. |
 | [`datasets/begin_year_operating_proxy.md`](datasets/begin_year_operating_proxy.md) | **Open decision.** Whether `EARLIEST_PROGRAM_BEGIN_YEAR` (dataset 1) is usable as a pre-2015 facility-existence marker. |
+| [`datasets/afs_crosswalk_feasibility.md`](datasets/afs_crosswalk_feasibility.md) | **Open decision.** Whether the AFS↔ICIS facility-id crosswalk is good enough to use AFS's pre-2015 historical compliance status (incl. an explicit shut-down code) as an operating-status signal — 74.5% coverage for the population that needs it, but with severe state-level variance. |
 | [`datasets/multi_facility_settlement_decision.md`](datasets/multi_facility_settlement_decision.md) | **Open decision.** How to handle multi-facility settlement penalties in dataset 3 — naive summing overstates the total by 35.2%. |
 
 ## How institutional facts connect to the data

@@ -1,27 +1,32 @@
 # =========================================================================================================
 # code/diagnostics/tables/emissions.R — POLL_RPT_COMBINED_EMISSIONS summary section (~10.4M rows).
 # Ported from CAA_Project/data_docs/scripts/tables/table-emissions.R (verbatim stats + content).
+# Uses data.table::fread (not readr/dplyr) — the 880MB source file OOM'd this section under readr/dplyr's
+# higher per-copy memory overhead on an 8GB machine; fread + in-place `:=` keeps peak memory well below that.
+# na.strings = c("NA", "") matches readr::read_csv's default NA rule so missingness counts are unchanged.
 # =========================================================================================================
-library(here); library(readr); library(dplyr)
+library(here); library(data.table)
 
 build_emissions_section <- function() {
-  em <- read_csv(here("data/raw/POLL_RPT_COMBINED_EMISSIONS.csv"), show_col_types = FALSE)
-  n_obs <- nrow(em); n_fac <- n_distinct(em$REGISTRY_ID); n_pgm <- n_distinct(em$PGM_SYS_ID)
+  em <- fread(here("data/raw/POLL_RPT_COMBINED_EMISSIONS.csv"), na.strings = c("NA", ""))
+  n_obs <- nrow(em); n_fac <- uniqueN(em$REGISTRY_ID, na.rm = TRUE); n_pgm <- uniqueN(em$PGM_SYS_ID, na.rm = TRUE)
 
   pct_miss <- function(x) paste0(round(sum(is.na(x)) / length(x) * 100, 1), "%")
-  n_cats   <- function(x) n_distinct(x, na.rm = TRUE)
-  top_vals <- function(df, var, n_top = 4) df |> filter(!is.na({{ var }})) |> count({{ var }}) |>
-    arrange(desc(n)) |> slice_head(n = n_top) |> mutate(pct = n / nrow(df))
+  n_cats   <- function(x) uniqueN(x, na.rm = TRUE)
+  count_col <- function(col, top_n = Inf) {
+    agg <- em[!is.na(get(col)), .N, by = col]
+    setnames(agg, "N", "n")
+    setorderv(agg, "n", order = -1L)
+    if (is.finite(top_n)) agg <- head(agg, top_n)
+    agg[, pct := n / n_obs]
+    agg
+  }
 
-  psa_all <- em |> filter(!is.na(PGM_SYS_ACRNM)) |> count(PGM_SYS_ACRNM) |> arrange(desc(n)) |> mutate(pct = n / n_obs)
-  psa_miss <- pct_miss(em$PGM_SYS_ACRNM); psa_ncat <- n_cats(em$PGM_SYS_ACRNM)
-  pol <- top_vals(em, POLLUTANT_NAME, 6); pol_miss <- pct_miss(em$POLLUTANT_NAME); pol_ncat <- n_cats(em$POLLUTANT_NAME)
-  uom_all <- em |> filter(!is.na(UNIT_OF_MEASURE)) |> count(UNIT_OF_MEASURE) |> arrange(desc(n)) |> mutate(pct = n / n_obs)
-  uom_miss <- pct_miss(em$UNIT_OF_MEASURE); uom_ncat <- n_cats(em$UNIT_OF_MEASURE)
-  nei_all <- em |> filter(!is.na(NEI_TYPE)) |> count(NEI_TYPE) |> arrange(desc(n)) |> mutate(pct = n / n_obs)
-  nei_miss <- pct_miss(em$NEI_TYPE); nei_ncat <- n_cats(em$NEI_TYPE)
-  nhv_all <- em |> filter(!is.na(NEI_HAP_VOC_FLAG)) |> count(NEI_HAP_VOC_FLAG) |> arrange(desc(n)) |> mutate(pct = n / n_obs)
-  nhv_miss <- pct_miss(em$NEI_HAP_VOC_FLAG); nhv_ncat <- n_cats(em$NEI_HAP_VOC_FLAG)
+  psa_all <- count_col("PGM_SYS_ACRNM");  psa_miss <- pct_miss(em$PGM_SYS_ACRNM);  psa_ncat <- n_cats(em$PGM_SYS_ACRNM)
+  pol     <- count_col("POLLUTANT_NAME", top_n = 6); pol_miss <- pct_miss(em$POLLUTANT_NAME); pol_ncat <- n_cats(em$POLLUTANT_NAME)
+  uom_all <- count_col("UNIT_OF_MEASURE"); uom_miss <- pct_miss(em$UNIT_OF_MEASURE); uom_ncat <- n_cats(em$UNIT_OF_MEASURE)
+  nei_all <- count_col("NEI_TYPE");        nei_miss <- pct_miss(em$NEI_TYPE);        nei_ncat <- n_cats(em$NEI_TYPE)
+  nhv_all <- count_col("NEI_HAP_VOC_FLAG"); nhv_miss <- pct_miss(em$NEI_HAP_VOC_FLAG); nhv_ncat <- n_cats(em$NEI_HAP_VOC_FLAG)
 
   ry_n <- sum(!is.na(em$REPORTING_YEAR))
   ry <- list(min = min(em$REPORTING_YEAR, na.rm = TRUE), p5 = as.integer(quantile(em$REPORTING_YEAR, 0.05, na.rm = TRUE)),
@@ -31,11 +36,12 @@ build_emissions_section <- function() {
              med = median(em$ANNUAL_EMISSION, na.rm = TRUE), p95 = quantile(em$ANNUAL_EMISSION, 0.95, na.rm = TRUE), max = max(em$ANNUAL_EMISSION, na.rm = TRUE))
 
   n_exact_dup <- sum(duplicated(em))
-  rpf <- em |> group_by(REGISTRY_ID) |> summarise(n = n(), .groups = "drop")
-  rpf_med <- as.integer(median(rpf$n)); rpf_max <- max(rpf$n); rpf_multi <- sum(rpf$n > 1)
-  fpy_dups <- em |> group_by(REGISTRY_ID, POLLUTANT_NAME, REPORTING_YEAR) |> summarise(n = n(), .groups = "drop") |> filter(n > 1)
-  n_fpy_dup_combos <- nrow(fpy_dups); n_fpy_dup_rows <- sum(fpy_dups$n)
-  pgm_shares <- em |> filter(!is.na(PGM_SYS_ACRNM)) |> count(PGM_SYS_ACRNM) |> arrange(desc(n)) |> mutate(pct = round(n / sum(n) * 100, 1))
+  rpf <- em[, .N, by = REGISTRY_ID]
+  rpf_med <- as.integer(median(rpf$N)); rpf_max <- max(rpf$N); rpf_multi <- sum(rpf$N > 1)
+  fpy <- em[, .N, by = .(REGISTRY_ID, POLLUTANT_NAME, REPORTING_YEAR)]
+  fpy_dups <- fpy[N > 1]
+  n_fpy_dup_combos <- nrow(fpy_dups); n_fpy_dup_rows <- sum(fpy_dups$N)
+  pgm_shares <- count_col("PGM_SYS_ACRNM")[, pct := round(n / sum(n) * 100, 1)]
 
   crows <- c(
     cat_var("PGM_SYS_ACRNM", "Reporting program acronym (e.g., TRIS = TRI, EIS = NEI). Tells you the source system.", psa_miss, psa_ncat, psa_all$PGM_SYS_ACRNM, psa_all$n, psa_all$pct),

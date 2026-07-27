@@ -33,9 +33,8 @@ Foundation of the CAA. Set under section 108, EPA designates a set of "criteria 
    * Official designations are re-evaluated by the EPA whenever the NAAQS are updated. The EPA is legally required to review the NAAQS for all criteria air pollutants at least every 5 years.
 
 > **Data implication.** Attainment status is a **place × time × pollutant** attribute, not a facility
-> attribute — it's the panel's treatment variable, and facilities are placed into an area by coordinate
-> (sub-county), not county FIPS. This project has so far built only **PM2.5 (2012 standard), 2016–2025**;
-> ozone/SO₂/lead attainment history is not yet constructed.
+> attribute, and facilities would be placed into an area by coordinate (sub-county), not county FIPS. This
+> repo does not build an attainment asset — that work lives in the sibling `CAA_Project` repo.
 
 ## State Implementation Plans (SIPs)
 

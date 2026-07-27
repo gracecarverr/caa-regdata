@@ -17,11 +17,14 @@
 #     (the FRS cross-program id) is the only usable join key back to this layer's PGM_SYS_ID universe --
 #     PGM_SYS_ID from the raw file is deliberately NOT used to join here.
 #
-#   REGISTRY_ID FAN-OUT (new to this layer, same shape as ds 3's multi-facility settlements, P5) -- 8,632
-#     REGISTRY_IDs map to more than one PGM_SYS_ID in facilities.csv.gz (max 150); 2,802 of those actually
-#     carry emissions data. A straight join broadcasts one facility's reported emissions onto every co-mapped
-#     PGM_SYS_ID identically -- exposed via IS_SHARED_REGISTRY / N_PGM_SYS_ID_SHARING_REGISTRY, not resolved.
-#     Do NOT sum emissions across facilities that share a REGISTRY_ID without accounting for this.
+#   REGISTRY_ID FAN-OUT (new to this layer, same shape as ds 3's multi-facility settlements, P5) -- some
+#     REGISTRY_IDs map to more than one PGM_SYS_ID in facilities.csv.gz; a real, live count printed at the
+#     end of this build (NOT a fixed number -- ICIS-AIR/FRS are EPA's live current-bulk downloads with no
+#     archival checksum, so the exact fan-out shifts with every refresh; see briefs/datasets/
+#     dataset_construction_decisions.md EM2 for the figure as of its last profiling). A straight join
+#     broadcasts one facility's reported emissions onto every co-mapped PGM_SYS_ID identically -- exposed via
+#     IS_SHARED_REGISTRY / N_PGM_SYS_ID_SHARING_REGISTRY, not resolved. Do NOT sum emissions across facilities
+#     that share a REGISTRY_ID without accounting for this.
 #
 #   POLLUTANT_NAME DOUBLE-COUNTING TRAP -- PM10/PM2.5 each have a canonical TOTAL string plus several
 #     component/speciation variants that are SUBSETS of that total (e.g. "Primary PM10, filterable portion
@@ -139,13 +142,28 @@ stopifnot(
     !any(em$ghg_observed == 1 & is.na(em$ghg_mtco2e)),
   "GHG observability rule violated: unobserved row with non-NA GHG_MTCO2E" =
     !any(em$ghg_observed == 0 & !is.na(em$ghg_mtco2e)),
-  "IS_SHARED_REGISTRY count mismatch vs. profiled fan-out (8,632 REGISTRY_IDs)" = # sanity check on the fan-out
-    n_distinct(crosswalk$REGISTRY_ID[crosswalk$is_shared_registry == 1 & !is.na(crosswalk$is_shared_registry)]) == 8632)
+  # IS_SHARED_REGISTRY / N_PGM_SYS_ID_SHARING_REGISTRY structural checks -- NOT pinned to a snapshot-specific
+  # count (ICIS-AIR/FRS are EPA's live current-bulk downloads; the real fan-out shifts with every refresh, see
+  # the header note above). These instead verify the flag is definitionally correct and survived the
+  # facility-level join into `em` unchanged -- exactly the kind of join-corruption bug (e.g. a silent
+  # REGISTRY_ID/PGM_SYS_ID type coercion) a fixed-number check would not actually catch.
+  "IS_SHARED_REGISTRY disagrees with N_PGM_SYS_ID_SHARING_REGISTRY > 1" =
+    all(em$is_shared_registry == as.integer(em$n_pgm_sys_id_sharing_registry > 1), na.rm = TRUE),
+  "IS_SHARED_REGISTRY / N_PGM_SYS_ID_SHARING_REGISTRY NA-ness disagrees (blank-REGISTRY_ID facilities only)" =
+    identical(is.na(em$is_shared_registry), is.na(em$n_pgm_sys_id_sharing_registry)),
+  "N_PGM_SYS_ID_SHARING_REGISTRY has an implausible non-positive value" =
+    all(em$n_pgm_sys_id_sharing_registry >= 1, na.rm = TRUE),
+  "facility-level REGISTRY_ID fan-out not preserved through the crosswalk -> em join" =
+    identical(
+      crosswalk |> distinct(PGM_SYS_ID, is_shared_registry, n_pgm_sys_id_sharing_registry) |> arrange(PGM_SYS_ID),
+      em |> distinct(PGM_SYS_ID, is_shared_registry, n_pgm_sys_id_sharing_registry) |> arrange(PGM_SYS_ID)))
 
 # ---- write and summarize ------------------------------------------------------------------------------------
 write_dataset(em, "emissions")                            # uppercases all columns on write (see 00_parameters.R)
+n_shared_registry <- n_distinct(crosswalk$REGISTRY_ID[crosswalk$is_shared_registry == 1 &
+                                                       !is.na(crosswalk$is_shared_registry)])
 cat(sprintf(                                               # one-line build summary, printed to the console
-  "emissions: %s rows | %d cols | %s facilities | %s observed facility-years (%.2f%%) | %s GHG-observed facility-years\n",
+  "emissions: %s rows | %d cols | %s facilities | %s observed facility-years (%.2f%%) | %s GHG-observed facility-years | %s shared-REGISTRY_ID fan-out\n",
   format(nrow(em), big.mark = ","), ncol(em), format(length(ids), big.mark = ","),
   format(sum(em$emissions_observed), big.mark = ","), 100 * mean(em$emissions_observed),
-  format(sum(em$ghg_observed), big.mark = ",")))
+  format(sum(em$ghg_observed), big.mark = ","), format(n_shared_registry, big.mark = ",")))

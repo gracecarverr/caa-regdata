@@ -48,6 +48,8 @@ code/diagnostics/preview_panels.R
 data/panels/_preview/
 code/diagnostics/preview_datasets.R
 data/datasets/_preview/
+# Wayback-capture candidate zips fetched for byte-for-byte verification -- disposable, re-fetched on demand.
+code/diagnostics/wayback_verify/_cache/
 
 # ---- OS ---------------------------------------------------------------------
 .DS_Store

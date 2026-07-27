@@ -3,9 +3,9 @@
 Built by [`code/04_datasets`](../../code/04_datasets/README.md) from the processed assets. All files are
 gzip-compressed CSV, **gitignored**, rebuilt from code. Every column is `UPPER_SNAKE_CASE`; every dataset is
 built over the **full** facility universe (no ever-active screen, no sample restriction — that's a filter
-the user applies downstream). This layer supersedes the old single wide panel approach (facility-spine/panel
-building moved to the CAA_Project repo, 2026-07-23) — six purpose-built tables instead of one, and this
-repo's main product.
+the user applies downstream). This layer is this repo's main product; it coexists with, rather than
+supersedes, the single wide panel approach in [`data/panels/`](../panels/README.md) (`code/03_panel_building`)
+— six purpose-built full-universe tables here vs. three sample facility × year panels there.
 
 | file | grain | what | built by |
 |------|-------|------|----------|
@@ -18,8 +18,8 @@ repo's main product.
 | `pipeline.csv.gz` | facility × year | **dataset 6** — EPA ECHO CAA Compliance Pipeline: violation counts split HPV/FRV, how many trace to a linked evaluation or enforcement action, self-disclosure count, EA-penalty count/sum, and eval→violation / violation→enforcement lag in days. Joins **1:1** to `regulatory.csv.gz`. | `07_pipeline.R` |
 | `emissions.csv.gz` | facility × year | **dataset 7** — annual pollutant quantities (VOC/PM10/PM2.5/NOx/SO2/CO/HAP in lbs; GHG in MTCO2e) from EIS/TRIS/E-GGRT/CAMDBS, joined via `REGISTRY_ID` (cross-program, not `PGM_SYS_ID`). `IS_SHARED_REGISTRY` flags facilities that share an FRS id with another `PGM_SYS_ID` — don't sum across those without accounting for it. Joins **1:1** to `regulatory.csv.gz`. | `08_emissions.R` |
 
-Dataset 5 (`attainment`, PM2.5 2012 nonattainment, facility × year) is **not yet built** — see the open item
-in `briefs/datasets/dataset_construction_decisions.md`.
+Dataset 5 (`attainment`, PM2.5 2012 nonattainment, facility × year) does not exist in this layer — the
+number is skipped intentionally; see decision W10 in `briefs/panel/panel_construction_decisions.md`.
 
 ## Joining
 
