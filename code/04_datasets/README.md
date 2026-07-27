@@ -54,6 +54,7 @@ entirely on 2026-07-27 (already synced to the sibling `CAA_Project` repo; see de
 
 This README explains *what/how*. For *why* a construction choice was made (universe definition, zero-vs-NA,
 the HPV spell/collapse rules, the settlement broadcast issue, the begin-year screen) see
-**`briefs/datasets/dataset_construction_decisions.md`**. The two HPV diagnostics that informed dataset 2/2b
-(`code/diagnostics/08_hpv_spell_diagnostics.R`, `09_hpv_facility_year_rules.R`) are diagnostics, not part of
-this build — see `code/diagnostics/README.md`.
+**`briefs/datasets/dataset_construction_decisions.md`**. For **column-by-column definitions of every derived
+field** in these eight files, see **`docs/data_dictionary_derived.md`**. The two HPV diagnostics that informed
+dataset 2/2b (`code/diagnostics/08_hpv_spell_diagnostics.R`, `09_hpv_facility_year_rules.R`) are diagnostics,
+not part of this build — see `code/diagnostics/README.md`.

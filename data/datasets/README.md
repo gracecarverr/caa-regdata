@@ -40,4 +40,5 @@ physical site, see `briefs/datasets/multi_facility_settlement_decision.md` §5).
 [`briefs/datasets/dataset_construction_decisions.md`](../../briefs/datasets/dataset_construction_decisions.md) — organized by
 dataset (Parts A–F), each with a coding-decisions table and a verification table from independent audits run
 each build session. **Column/field definitions** for the underlying raw sources:
-[`docs/data_dictionary.md`](../../docs/data_dictionary.md).
+[`docs/data_dictionary.md`](../../docs/data_dictionary.md); for the **built/derived columns in these eight
+files** (every `N_*` count, flag, and derived field, column by column): [`docs/data_dictionary_derived.md`](../../docs/data_dictionary_derived.md).
