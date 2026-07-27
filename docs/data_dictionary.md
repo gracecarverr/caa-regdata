@@ -14,6 +14,10 @@ with its type/length (where EPA publishes them) and definition.
 
 Web summaries retrieved 2026-07-17. See the download index at <https://echo.epa.gov/tools/data-downloads/>.
 
+> **Scope note.** This file covers **raw source fields only**. For the created/derived variables in
+> `data/datasets/` and `data/panels/` (event counts, zero-vs-NA flags, wayback status, HPV interval status,
+> coordinates, etc.), see [`data_dictionary_derived.md`](data_dictionary_derived.md).
+
 > **Conventions.** Text in "quotation marks" is quoted **verbatim** from EPA's published dictionary for
 > that field. A **data:** note marks a fact verified directly against the file as downloaded in this repo
 > (`data/raw/…`). Field names, order, types, and lengths were checked against the actual CSV headers in

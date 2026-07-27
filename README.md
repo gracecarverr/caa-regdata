@@ -69,7 +69,7 @@ caa-regdata/
 │   ├── panels/          spine + sample panels (gitignored, rebuilt from code)
 │   └── datasets/        the six built datasets (gitignored, rebuilt from code)
 ├── briefs/              institutional overview + construction-decision & open-question briefs
-├── docs/                generated static site (index.html) + data_dictionary.md
+├── docs/                generated static site (index.html) + data_dictionary.md (raw) + data_dictionary_derived.md (built)
 ├── output/             generated tables/figures (e.g. panel-summary LaTeX) + sessionInfo.txt
 └── tests/              invariant checks on the built assets
 ```
@@ -99,7 +99,8 @@ Every folder has a `README.md`. Start with [`code/README.md`](code/README.md) fo
 | the institutional setting (statute, data systems) | [`briefs/institutional_overview.md`](briefs/institutional_overview.md) |
 | **why** a construction choice was made | [`briefs/datasets/dataset_construction_decisions.md`](briefs/datasets/dataset_construction_decisions.md) (six-dataset layer); [`briefs/panel/panel_construction_decisions.md`](briefs/panel/panel_construction_decisions.md) (panel layer) |
 | what's still undecided (panel layer) | [`briefs/panel/panel_open_questions.md`](briefs/panel/panel_open_questions.md) |
-| column/field definitions | [`docs/data_dictionary.md`](docs/data_dictionary.md) |
+| column/field definitions (raw sources) | [`docs/data_dictionary.md`](docs/data_dictionary.md) |
+| column/field definitions (built datasets + panels) | [`docs/data_dictionary_derived.md`](docs/data_dictionary_derived.md) |
 | what each data file is + caveats | the per-layer READMEs under [`data/`](data/README.md) |
 
 ## Data sources

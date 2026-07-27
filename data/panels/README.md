@@ -25,6 +25,8 @@ convention (`obs_source ∈ {event, operating, unobserved}`) are documented once
 [`code/03_panel_building/README.md`](../../code/03_panel_building/README.md). Construction rationale is in
 [`briefs/panel/panel_construction_decisions.md`](../../briefs/panel/panel_construction_decisions.md) (Part C, decisions
 P1–P8); open caveats in [`briefs/panel/panel_open_questions.md`](../../briefs/panel/panel_open_questions.md).
+**Column-by-column definitions** for every built field in the spine and the three sample panels:
+[`docs/data_dictionary_derived.md`](../../docs/data_dictionary_derived.md).
 
 ## Key things to remember when using a panel
 

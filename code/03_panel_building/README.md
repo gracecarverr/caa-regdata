@@ -6,7 +6,8 @@
 
 This is where sample selection, aggregation, and treatment happen (the cleaning stage did none of that). The
 decisions here are documented in depth in `briefs/panel/panel_construction_decisions.md` (find a decision by its
-code, e.g. `F7`, `P3`, `W6`); the caveats in `briefs/panel/panel_open_questions.md`.
+code, e.g. `F7`, `P3`, `W6`); the caveats in `briefs/panel/panel_open_questions.md`. For column-by-column
+definitions of every derived field in the spine and the three sample panels, see `docs/data_dictionary_derived.md`.
 
 ## Build order & files
 
