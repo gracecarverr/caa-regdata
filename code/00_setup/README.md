@@ -17,6 +17,9 @@
 
 ## Notes
 
+- **`sf` needs system libraries (GDAL/GEOS/PROJ).** `renv::restore()` installing `sf` from source (typical on
+  Linux) will fail before it ever gets to R's package check if those aren't present on the machine — see the
+  Computational requirements section of the top-level [`README.md`](../../README.md) for install commands.
 - **No seed is set.** The pipeline has no stochastic step (point-in-polygon placement and `dup`/`dup_exact`
   flagging are deterministic, driven by file row order). If you add sampling or bootstrapping, set a seed
   explicitly in that script — this is a project rule.

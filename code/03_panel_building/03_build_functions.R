@@ -28,22 +28,25 @@ rd <- function(name, cols)                                    # read one clean a
   read_csv(file.path(CLEAN, paste0(name, ".csv.gz")), col_select = all_of(cols),
            col_types = cols(PGM_SYS_ID = col_character(), year = col_integer(),
                             dup = col_integer(), .default = col_character()), show_col_types = FALSE)
+           # dup_exact is NOT listed explicitly, so it falls under .default = col_character() -- it's compared
+           # against the string "1" (not the integer 1) everywhere below; consistent, but easy to break if a
+           # future edit adds dup_exact to the explicit col_types list as an integer without updating the comparisons
 
 # ---- per-source facility-year aggregators (event-level unless noted) -------------------------------------
 # Inspections: FCE/PCE monitor-type split (overlap; need not sum) + conducting-agency split (partition).
 #   All rows counted; n_inspections_dup / _dup_exact report the duplicate load.
 agg_inspections <- function(ids) {
   rd("inspections", c("PGM_SYS_ID","year","dup","dup_exact","COMP_MONITOR_TYPE_DESC","STATE_EPA_FLAG")) |>
-    filter(PGM_SYS_ID %in% ids, year %in% YEARS) |>
+    filter(PGM_SYS_ID %in% ids, year %in% YEARS) |>    # restrict to this panel's facilities and the panel window
     group_by(PGM_SYS_ID, year) |> summarise(
-      n_inspections = n(),
-      n_fce         = sum(grepl("^FCE", COMP_MONITOR_TYPE_DESC)),
-      n_pce         = sum(grepl("^PCE", COMP_MONITOR_TYPE_DESC)),
-      n_insp_epa    = sum(STATE_EPA_FLAG == "E"),
-      n_insp_state  = sum(STATE_EPA_FLAG == "S"),
-      n_insp_local  = sum(STATE_EPA_FLAG == "L"),
-      n_inspections_dup       = sum(dup > 0),
-      n_inspections_dup_exact = sum(dup_exact == "1"), .groups = "drop")
+      n_inspections = n(),                             # every row counted, dups included
+      n_fce         = sum(grepl("^FCE", COMP_MONITOR_TYPE_DESC)),   # Full Compliance Evaluations
+      n_pce         = sum(grepl("^PCE", COMP_MONITOR_TYPE_DESC)),   # Partial Compliance Evaluations (FCE/PCE overlap possible)
+      n_insp_epa    = sum(STATE_EPA_FLAG == "E"),       # conducting-agency partition: EPA
+      n_insp_state  = sum(STATE_EPA_FLAG == "S"),       # ...state
+      n_insp_local  = sum(STATE_EPA_FLAG == "L"),       # ...local
+      n_inspections_dup       = sum(dup > 0),           # event-key repeats (2nd+ occurrence within a key)
+      n_inspections_dup_exact = sum(dup_exact == "1"), .groups = "drop")  # byte-identical repeats (string compare, see rd() above)
 }
 
 # Violations: HPV/FRV (high-priority = has an HPV day-zero date), program split (overlap), agency (partition).
@@ -51,16 +54,19 @@ agg_violations <- function(ids) {
   v <- rd("violations", c("PGM_SYS_ID","year","dup","HPV_DAYZERO_DATE","PROGRAM_DESCS","AGENCY_TYPE_DESC")) |>
     filter(PGM_SYS_ID %in% ids, year %in% YEARS)
   stopifnot("violations: unexpected dup>0 rows -- counts would silently inflate; add a dup indicator (see build plan)" = all(v$dup == 0))
-  v |> mutate(hpv = !is.na(HPV_DAYZERO_DATE) & HPV_DAYZERO_DATE != "") |>
+    # hard assertion, not a silent check -- if a future data refresh introduces event-key duplicates in
+    # violations (which this aggregator does NOT report a dup count for, unlike inspections/enforcement/certs),
+    # the whole panel build halts here rather than quietly under-reporting the duplicate load
+  v |> mutate(hpv = !is.na(HPV_DAYZERO_DATE) & HPV_DAYZERO_DATE != "") |>   # high-priority violation = has a day-zero date
     group_by(PGM_SYS_ID, year) |> summarise(
       n_violations  = n(),
-      n_hpv         = sum(hpv), n_frv = sum(!hpv),
-      n_viol_sip    = sum(grepl("State Implementation Plan", PROGRAM_DESCS)),
+      n_hpv         = sum(hpv), n_frv = sum(!hpv),      # HPV vs "regular" (formal reportable violation) split, partitions n_violations
+      n_viol_sip    = sum(grepl("State Implementation Plan", PROGRAM_DESCS)),      # program-type flags, overlap possible
       n_viol_titlev = sum(grepl("Title V Permits", PROGRAM_DESCS)),
       n_viol_nsps   = sum(grepl("New Source Performance Standards", PROGRAM_DESCS)),
       n_viol_mact   = sum(grepl("MACT Standards", PROGRAM_DESCS)),
       n_viol_fesop  = sum(grepl("Federally-Enforceable State Operating Permit", PROGRAM_DESCS)),
-      n_viol_epa    = sum(AGENCY_TYPE_DESC %in% c("U.S. EPA", "Other Federal")),
+      n_viol_epa    = sum(AGENCY_TYPE_DESC %in% c("U.S. EPA", "Other Federal")),    # agency partition
       n_viol_state  = sum(AGENCY_TYPE_DESC %in% c("State", "State Contractor", "Other - State")),
       n_viol_local  = sum(AGENCY_TYPE_DESC %in% c("Local", "County", "Tribal")), .groups = "drop")
 }
@@ -73,14 +79,15 @@ agg_violations <- function(ids) {
 #   is a COUNT_COL: observed facility-year with no penalty -> 0, unobserved -> NA (zero-vs-missing invariant).
 agg_enforcement <- function(ids) {
   one <- function(name, kind, cols) rd(name, cols) |>
-    filter(PGM_SYS_ID %in% ids, year %in% YEARS) |> mutate(kind = kind)
+    filter(PGM_SYS_ID %in% ids, year %in% YEARS) |> mutate(kind = kind)   # tag each row formal/informal before pooling
   base     <- c("PGM_SYS_ID","year","dup","dup_exact","STATE_EPA_FLAG","ENF_TYPE_DESC")
   formal   <- one("formal_actions",   "formal",   c(base, "PENALTY_AMOUNT")) |>
                 mutate(penalty = parse_number(PENALTY_AMOUNT)) |> select(-PENALTY_AMOUNT)
-  informal <- one("informal_actions", "informal", base) |> mutate(penalty = NA_real_)
-  all <- bind_rows(formal, informal)
+                # parse_number() strips $ and , from a formatted currency string; malformed/blank -> NA
+  informal <- one("informal_actions", "informal", base) |> mutate(penalty = NA_real_)   # informal actions carry no penalty field
+  all <- bind_rows(formal, informal)                    # pooled formal+informal rows, one `kind` column distinguishes them
   all |> group_by(PGM_SYS_ID, year) |> summarise(
-      n_enforcement    = n(),
+      n_enforcement    = n(),                            # every formal+informal row, dups included
       n_formal         = sum(kind == "formal"), n_informal = sum(kind == "informal"),
       n_penalty_action = sum(ENF_TYPE_DESC == "CAA 113D1 Action For Penalty"),
       n_penalties      = sum(penalty > 0, na.rm = TRUE),           # formal rows with a positive $ penalty
@@ -118,6 +125,7 @@ agg_stacktests <- function(ids) {
   s <- rd("stacktests", c("PGM_SYS_ID","year","dup","AIR_STACK_TEST_STATUS_DESC")) |>
     filter(PGM_SYS_ID %in% ids, year %in% YEARS)
   stopifnot("stacktests: unexpected dup>0 rows -- counts would silently inflate; add a dup indicator (see build plan)" = all(s$dup == 0))
+    # same defensive assertion pattern as agg_violations above
   s |> group_by(PGM_SYS_ID, year) |> summarise(
       n_stack_tests = n(),
       n_stack_pass  = sum(AIR_STACK_TEST_STATUS_DESC == "Pass", na.rm = TRUE),
@@ -133,39 +141,53 @@ agg_stacktests <- function(ids) {
 attach_hpv_status <- function(panel, ids) {
   v <- rd("violations", c("PGM_SYS_ID","dup","HPV_DAYZERO_DATE","HPV_RESOLVED_DATE")) |>
     filter(dup == 0, PGM_SYS_ID %in% ids, !is.na(HPV_DAYZERO_DATE), HPV_DAYZERO_DATE != "") |>
+    # dup == 0 filter here (unlike the count aggregators above) -- see file header EXCEPTION note: duplicate
+    # spell rows would just describe the same interval twice, so dedup avoids double-counting overlap segments
     mutate(dayzero = mdy(HPV_DAYZERO_DATE, quiet = TRUE), resolved = mdy(HPV_RESOLVED_DATE, quiet = TRUE)) |>
-    filter(!is.na(dayzero)) |>
+    filter(!is.na(dayzero)) |>                          # a spell needs a valid start; unparseable day-zero dates are dropped
     mutate(spell_end = if_else(!is.na(resolved) & resolved >= dayzero, resolved,
                                make_date(year(dayzero), 12L, 31L)))
-  seg <- lapply(YEARS, function(Y) {
+    # resolved date used ONLY if present and chronologically sane (>= dayzero); otherwise treat the spell as
+    # open through the end of its day-zero year (a conservative single-year placeholder, not a claim the
+    # violation actually resolved by Dec 31)
+  seg <- lapply(YEARS, function(Y) {                    # for each panel year, find which spells overlap it
     ys <- make_date(Y, 1L, 1L); ye <- make_date(Y, 12L, 31L)
-    hit <- v$dayzero <= ye & v$spell_end >= ys
+    hit <- v$dayzero <= ye & v$spell_end >= ys           # standard interval-overlap test
     if (!any(hit)) return(NULL)
     tibble(PGM_SYS_ID = v$PGM_SYS_ID[hit], year = Y,
-           ov_start = pmax(v$dayzero[hit], ys), ov_end = pmin(v$spell_end[hit], ye))
+           ov_start = pmax(v$dayzero[hit], ys), ov_end = pmin(v$spell_end[hit], ye))   # clip the spell to this year's bounds
   }) |> bind_rows()
   if (nrow(seg)) {
     hpv_year <- seg |> arrange(PGM_SYS_ID, year, ov_start) |> group_by(PGM_SYS_ID, year) |>
+      # sorted by ov_start WITHIN each (facility, year) group -- required for the sequential merge below to be correct
       summarise(union_days = {                          # merge sorted intervals, sum inclusive day-lengths
         s <- as.integer(ov_start); e <- as.integer(ov_end); cur_s <- s[1]; cur_e <- e[1]; tot <- 0L
         if (length(s) > 1) for (i in 2:length(s)) {
-          if (s[i] <= cur_e + 1L) cur_e <- max(cur_e, e[i])
-          else { tot <- tot + (cur_e - cur_s + 1L); cur_s <- s[i]; cur_e <- e[i] }
+          if (s[i] <= cur_e + 1L) cur_e <- max(cur_e, e[i])   # overlapping or adjacent (1-day gap) -- extend current run
+          else { tot <- tot + (cur_e - cur_s + 1L); cur_s <- s[i]; cur_e <- e[i] }   # gap -- close current run, start a new one
         }
-        tot + (cur_e - cur_s + 1L)
+        tot + (cur_e - cur_s + 1L)                       # add the final (still-open) run's length
       }, .groups = "drop") |>
       transmute(PGM_SYS_ID, year, hpv_active = 1L, hpv_active_1mo = as.integer(union_days > 30))
-    panel <- left_join(panel, hpv_year, by = c("PGM_SYS_ID", "year"))
-  } else { panel$hpv_active <- NA_integer_; panel$hpv_active_1mo <- NA_integer_ }
+    panel <- left_join(panel, hpv_year, by = c("PGM_SYS_ID", "year"))   # rows with no overlapping spell get NA here
+  } else { panel$hpv_active <- NA_integer_; panel$hpv_active_1mo <- NA_integer_ }   # degenerate case: zero spells anywhere
   in_spell <- !is.na(panel$hpv_active)                  # year overlapped by a spell -> status KNOWN (=1)
-  panel$hpv_active[!in_spell] <- 0L; panel$hpv_active_1mo[!in_spell] <- 0L
+  panel$hpv_active[!in_spell] <- 0L; panel$hpv_active_1mo[!in_spell] <- 0L   # provisionally: no known spell -> 0
   un <- is.na(panel$any_violations) & !in_spell         # unobserved facility-year & no spell -> unknown
-  panel$hpv_active[un] <- NA_integer_; panel$hpv_active_1mo[un] <- NA_integer_
+  panel$hpv_active[un] <- NA_integer_; panel$hpv_active_1mo[un] <- NA_integer_   # ...override those specific rows back to NA
   panel
 }
 
 # ---- penalty: sum of FORMAL-action penalties per facility-year over ALL rows (no dedup) --------------------
-#   penalty_amount     = sum over every formal row; 0 / none / unobserved -> NA (unchanged coding).
+#   penalty_amount     = sum over every formal row; 0 iff the facility-year is OBSERVED (by any event, or by
+#                        known-operating status per code_known_zeros) but had no formal-action dollars; NA iff
+#                        genuinely unobserved. FIXED 2026-07-27 (see briefs/panel/panel_construction_decisions.md):
+#                        previously recoded EVERY 0 to NA, collapsing "no formal action" and "formal action with
+#                        a real $0 penalty" together, and disagreeing with 04_datasets/01_regulatory.R's
+#                        penalty_amount (which never special-cased 0 out of its own zero-vs-NA rule). Brought in
+#                        line with that layer's convention, and with how every OTHER count column in this panel
+#                        already behaves (see code_known_zeros() below -- penalty_amount/_dup are now in
+#                        COUNT_COLS, so they get the identical known-operating-zero fill as n_formal etc.).
 #   penalty_amount_dup = dollars contributed by event-key duplicate rows (dup>0) -- the inflation from not
 #                        deduping. (dup_exact dollars are 0: formal_actions has no byte-identical rows.)
 #   NB per-facility amounts include broadcast multi-facility settlements -- do NOT sum across facilities.
@@ -178,10 +200,17 @@ attach_penalty <- function(panel, ids) {
     filter(PGM_SYS_ID %in% ids, year %in% YEARS) |>
     mutate(penalty = parse_number(PENALTY_AMOUNT)) |>
     group_by(PGM_SYS_ID, year) |> summarise(
-      penalty_amount     = sum(penalty, na.rm = TRUE),
-      penalty_amount_dup = sum(penalty[dup > 0], na.rm = TRUE), .groups = "drop")
+      penalty_amount     = sum(penalty, na.rm = TRUE),   # total $ across ALL formal rows (dups included)
+      penalty_amount_dup = sum(penalty[dup > 0], na.rm = TRUE), .groups = "drop")  # portion from event-key dup rows only
   panel <- left_join(panel, pen, by = c("PGM_SYS_ID", "year"))
-  panel$penalty_amount[is.na(panel$penalty_amount) | panel$penalty_amount == 0] <- NA_real_
+  had_event <- !is.na(panel$n_inspections)   # same "observed via >=1 event of some measure" signal used by
+                                              # code_known_zeros below -- n_inspections is already coalesced to
+                                              # 0 (not NA) for any row that had ANY event, by the full_join +
+                                              # coalesce step earlier in build_panel(), so this correctly covers
+                                              # "had e.g. an inspection or violation but no formal action" too,
+                                              # not just "had a formal action worth exactly $0"
+  panel$penalty_amount[had_event]     <- coalesce(panel$penalty_amount[had_event], 0)
+  panel$penalty_amount_dup[had_event] <- coalesce(panel$penalty_amount_dup[had_event], 0)
   panel
 }
 
@@ -198,6 +227,8 @@ attach_wayback <- function(panel, ids) {
                  col_types = cols(PGM_SYS_ID = col_character(), year = col_integer(), .default = col_integer()),
                  show_col_types = FALSE) |> filter(PGM_SYS_ID %in% ids, year %in% YEARS)
   panel |> left_join(fs, by = c("PGM_SYS_ID","year")) |> left_join(ps, by = c("PGM_SYS_ID","year"))
+    # both left_joins: facility-years with no wayback snapshot (pre-2015, or the facility just isn't in that
+    # year's captured snapshot) simply get NA in every wayback-derived column, per the file's own contract
 }
 
 # ---- column inventory ----------------------------------------------------------------------------------
@@ -231,7 +262,8 @@ PANEL_COLS <- c("PGM_SYS_ID","year",
                 ATTR_COLS, WAYBACK_COLS, "hpv_active","hpv_active_1mo","penalty_amount","penalty_amount_dup")
 
 # count/flag block that gets known-zero coding (all EVENT-derived measures incl. n_penalties/_dup + interval HPV
-#   flags; NOT penalty_amount/_dup -- those dollar sums stay NA-when-none, coded in attach_penalty)
+#   flags + penalty_amount/_dup as of 2026-07-27 -- see attach_penalty() above; coalesce(x, 0L) below safely
+#   upcasts to double for the two dollar columns, same as every other numeric type here)
 COUNT_COLS <- c("n_inspections","n_fce","n_pce","n_insp_epa","n_insp_state","n_insp_local",
                 "n_inspections_dup","n_inspections_dup_exact",
                 "n_violations","n_hpv","n_frv","n_viol_sip","n_viol_titlev","n_viol_nsps","n_viol_mact",
@@ -241,7 +273,8 @@ COUNT_COLS <- c("n_inspections","n_fce","n_pce","n_insp_epa","n_insp_state","n_i
                 "n_enforcement_dup","n_enforcement_dup_exact","n_formal_dup","n_formal_dup_exact",
                 "n_informal_dup","n_informal_dup_exact","n_penalties","n_penalties_dup",
                 "n_certs","n_certs_deviation","n_certs_dup","n_certs_dup_exact","n_stack_tests","n_stack_pass","n_stack_fail",
-                "any_inspections","any_violations","any_enforcement","any_certs","hpv_active","hpv_active_1mo")
+                "any_inspections","any_violations","any_enforcement","any_certs","hpv_active","hpv_active_1mo",
+                "penalty_amount","penalty_amount_dup")
 
 # ---- known-zero coding: a facility-year OPERATING in the wayback snapshot (operating==1) but with no events is
 #   a TRUE structural zero, not "unobserved" -> fill NA->0 across COUNT_COLS for those rows. obs_source records
@@ -249,11 +282,17 @@ COUNT_COLS <- c("n_inspections","n_fce","n_pce","n_insp_epa","n_insp_state","n_i
 #   Must run AFTER attach_wayback (needs `operating`) and after attach_hpv_status (so hpv_active exists).
 code_known_zeros <- function(panel) {
   had_event <- !is.na(panel$n_inspections)                 # a count row existed => >=1 event of some measure
+                                                             # (correct even for a facility-year whose only event
+                                                             # was e.g. a violation: the full_join in build_panel
+                                                             # below creates a row with n_inspections coalesced
+                                                             # to 0, not NA, for that facility-year -- see build_panel)
   op        <- !is.na(panel$operating) & panel$operating == 1L
   fill      <- op & !had_event                             # known-operating, zero-event -> structural zeros
   panel |>
     mutate(obs_source = if_else(had_event, "event", if_else(op, "operating", "unobserved")),
            across(all_of(COUNT_COLS), \(x) if_else(fill, coalesce(x, 0L), x)))
+           # only the `fill` rows get NA replaced with 0; rows already 0/positive, or genuinely unobserved
+           # rows outside `fill`, pass through unchanged (unobserved rows correctly STAY NA here)
 }
 
 # ---- build_panel: the full facility x year panel for a facility frame `facs` --------------------------
@@ -264,13 +303,19 @@ build_panel <- function(facs) {
   counts <- Reduce(\(x, y) full_join(x, y, by = c("PGM_SYS_ID", "year")),
                    list(agg_inspections(ids), agg_violations(ids), agg_enforcement(ids),
                         agg_certs(ids), agg_stacktests(ids)))
+                   # full_join (not left/inner): a facility-year is kept if ANY of the 5 event families has a
+                   # row for it, even if the others don't -- this is what makes had_event above correct
   cnt <- setdiff(names(counts), c("PGM_SYS_ID", "year"))
   counts[cnt] <- lapply(counts[cnt], \(x) as.integer(coalesce(x, 0L)))     # observed year, no event -> 0
-  panel <- expand_grid(PGM_SYS_ID = ids, year = YEARS) |>                  # balanced rectangle
+  panel <- expand_grid(PGM_SYS_ID = ids, year = YEARS) |>                  # balanced rectangle: every facility x every panel year
     left_join(counts, by = c("PGM_SYS_ID", "year"))                        # unobserved facility-years -> NA
   for (m in c("inspections", "violations", "enforcement", "certs"))        # any_* flags (NA-safe)
     panel[[paste0("any_", m)]] <- as.integer(panel[[paste0("n_", m)]] > 0)
-  panel <- panel |> left_join(facs, by = "PGM_SYS_ID") |>
+    # NA > 0 evaluates to NA, and as.integer(NA) is NA -- so any_* correctly stays NA for unobserved rows
+    # rather than silently becoming 0 or FALSE
+  panel <- panel |> left_join(facs, by = "PGM_SYS_ID") |>                  # attach static facility attributes
     attach_hpv_status(ids) |> attach_penalty(ids) |> attach_wayback(ids) |> code_known_zeros()
+    # order is load-bearing per the file header: HPV needs any_violations (set above); wayback must run before
+    # code_known_zeros (needs `operating`); code_known_zeros must run last (needs hpv_active + operating both present)
   panel |> select(all_of(PANEL_COLS)) |> arrange(PGM_SYS_ID, year)
 }

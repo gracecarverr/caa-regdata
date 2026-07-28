@@ -8,81 +8,92 @@
 #   fully reproducible (rebuild the panels, re-run this). No TeX engine is required to GENERATE the .tex;
 #   compile the wrapper with pdflatex/xelatex on a machine that has the `booktabs` package.
 # =========================================================================================================
-suppressPackageStartupMessages({library(data.table)})
+suppressPackageStartupMessages({library(data.table)})               # data.table only; quietly (suppress the load-time banner)
 
-PANELS <- here::here("data/panels")
-OUT    <- here::here("output/tables")
-dir.create(OUT, showWarnings = FALSE, recursive = TRUE)
-YEARS  <- 2005:2025
-NAMES  <- c(electric = "Electric", major_synmin = "Major/SynMin", universe = "Universe")
+PANELS <- here::here("data/panels")                                  # source dir for the three built panels
+OUT    <- here::here("output/tables")                                 # destination dir for .tex fragments + wrapper
+dir.create(OUT, showWarnings = FALSE, recursive = TRUE)               # create OUT if missing; no warning if it already exists
+YEARS  <- 2005:2025                                                   # the panel's nominal year range, used below to check "balanced"
+NAMES  <- c(electric = "Electric", major_synmin = "Major/SynMin", universe = "Universe")  # panel key -> display label, also fixes column order everywhere below
 
-read_panel <- function(nm) fread(file.path(PANELS, paste0(nm, ".csv.gz")))
-P <- lapply(names(NAMES), read_panel); names(P) <- names(NAMES)
+read_panel <- function(nm) fread(file.path(PANELS, paste0(nm, ".csv.gz")))  # read one panel by its short name (electric/major_synmin/universe)
+P <- lapply(names(NAMES), read_panel); names(P) <- names(NAMES)       # P is a named list of the 3 panels, keyed the same as NAMES so downstream code can index by name
 
 # ---- formatting + LaTeX helpers ------------------------------------------------------------------------
-comma <- function(x) formatC(round(as.numeric(x)), format = "d", big.mark = ",")
-pct   <- function(x, d = 1) paste0(formatC(100 * x, format = "f", digits = d), "\\%")
-usd   <- function(x) paste0("\\$", comma(x))
+comma <- function(x) formatC(round(as.numeric(x)), format = "d", big.mark = ",")  # integer-format with thousands separator; round() first so e.g. 999.6 -> "1,000" not truncated to 999
+pct   <- function(x, d = 1) paste0(formatC(100 * x, format = "f", digits = d), "\\%")  # proportion -> "NN.N\%" LaTeX string; caller must pass a 0-1 share, not already *100
+usd   <- function(x) paste0("\\$", comma(x))                          # dollar-format via comma(); inherits comma()'s rounding to whole dollars
 esc   <- function(s) {                                    # escape literal text for LaTeX
-  s <- gsub("\\", "\\textbackslash{}", s, fixed = TRUE)
-  for (ch in c("&", "%", "$", "#", "_", "{", "}"))
-    s <- gsub(ch, paste0("\\", ch), s, fixed = TRUE)
+  s <- gsub("\\", "\\textbackslash{}", s, fixed = TRUE)               # backslash must be escaped FIRST, before the loop below introduces new backslashes
+  for (ch in c("&", "%", "$", "#", "_", "{", "}"))                    # LaTeX special characters that need a preceding backslash
+    s <- gsub(ch, paste0("\\", ch), s, fixed = TRUE)                  # fixed=TRUE: literal string match, not regex (ch itself may be a regex metachar like "$")
   s
 }
+# FLAG: esc() is defined but never called anywhere below in this file -- every hand-written LaTeX string in
+# the table captions/headers/notes below (e.g. "\\emph{...}", "\\%") is typed in directly rather than passed
+# through esc(). That's fine as long as those strings are all author-controlled literals (they are, here),
+# but esc() offers no protection if a raw data value (e.g. a facility name or state abbreviation) is ever
+# interpolated into a caption/label/cell without going through it -- worth checking before adding new cells
+# that pull from the data rather than being hand-typed.
 
 # write one booktabs table float. `df` is a character matrix (cells already formatted/escaped);
 # `header` is the column-header row; `groups` optionally adds a spanned header row above it as a named
 # integer vector c("Label"=ncols, ""=1, ...); `notes` is an optional footnotesize note under the table.
 write_table <- function(file, df, align, header, caption, label, groups = NULL, notes = NULL) {
-  L <- c("\\begin{table}[htbp]", "\\centering", "\\small",
-         sprintf("\\caption{%s}", caption), sprintf("\\label{%s}", label),
+  L <- c("\\begin{table}[htbp]", "\\centering", "\\small",            # LaTeX table float preamble
+         sprintf("\\caption{%s}", caption), sprintf("\\label{%s}", label),  # caption/label are passed through verbatim -- not escaped (see FLAG above)
          sprintf("\\begin{tabular}{%s}", align), "\\toprule")
-  if (!is.null(groups)) {
+  if (!is.null(groups)) {                                             # optional spanned group-header row (e.g. "2005-2014" over 2 columns)
     cells <- mapply(function(lab, n) if (trimws(lab) == "") " " else sprintf("\\multicolumn{%d}{c}{%s}", n, lab),
-                    names(groups), groups)
-    L <- c(L, paste0(paste(cells, collapse = " & "), " \\\\"))
-    pos <- cumsum(groups); start <- c(1L, head(pos, -1) + 1L)
+                    names(groups), groups)                            # build one \multicolumn cell per group; blank-label groups render as a bare space (no spanning rule)
+    L <- c(L, paste0(paste(cells, collapse = " & "), " \\\\"))        # join the group cells into one LaTeX row
+    pos <- cumsum(groups); start <- c(1L, head(pos, -1) + 1L)         # column index ranges each group spans, from the group widths in `groups`
     rules <- character()
-    for (i in seq_along(groups)) if (trimws(names(groups)[i]) != "")
+    for (i in seq_along(groups)) if (trimws(names(groups)[i]) != "")  # only draw a \cmidrule under groups that have a visible label
       rules <- c(rules, sprintf("\\cmidrule(lr){%d-%d}", start[i], pos[i]))
-    L <- c(L, paste(rules, collapse = " "))
+    L <- c(L, paste(rules, collapse = " "))                           # append the cmidrule row (may be empty string if no labeled groups)
   }
-  L <- c(L, paste0(paste(header, collapse = " & "), " \\\\"), "\\midrule")
-  body <- apply(df, 1, function(r) paste0(paste(r, collapse = " & "), " \\\\"))
+  L <- c(L, paste0(paste(header, collapse = " & "), " \\\\"), "\\midrule")  # column-header row + rule under it
+  body <- apply(df, 1, function(r) paste0(paste(r, collapse = " & "), " \\\\"))  # one LaTeX row per matrix row of `df`
   L <- c(L, body, "\\bottomrule", "\\end{tabular}")
-  if (!is.null(notes)) L <- c(L, "\\\\[2pt]", sprintf("{\\footnotesize %s}", notes))
-  L <- c(L, "\\end{table}", "")
-  writeLines(L, file.path(OUT, file))
-  invisible(file)
+  if (!is.null(notes)) L <- c(L, "\\\\[2pt]", sprintf("{\\footnotesize %s}", notes))  # optional footnote line below the table
+  L <- c(L, "\\end{table}", "")                                       # trailing blank line for readability when \input elsewhere
+  writeLines(L, file.path(OUT, file))                                 # write the .tex fragment to disk
+  invisible(file)                                                     # return the filename invisibly (caller doesn't currently use the return value)
 }
 
 # per-panel convenience accessors
-obs_share <- function(dt, src) mean(dt$obs_source == src)
+obs_share <- function(dt, src) mean(dt$obs_source == src)             # share of facility-year rows with a given obs_source value; NA obs_source would silently drop out of both numerator and denominator via ==, but obs_source is expected to always be non-NA
 cls_share <- function(dt, desc) {                         # share over ALL facilities (NA class -> not a match)
-  fac <- dt[, .SD[1L], by = PGM_SYS_ID]
-  sum(fac$AIR_POLLUTANT_CLASS_DESC == desc, na.rm = TRUE) / nrow(fac)
+  fac <- dt[, .SD[1L], by = PGM_SYS_ID]                                # collapse to one row per facility (first observed row) -- class is treated as time-invariant, using whatever value happens to be on the FIRST row per facility
+  sum(fac$AIR_POLLUTANT_CLASS_DESC == desc, na.rm = TRUE) / nrow(fac)  # FLAG: denominator is nrow(fac) (ALL facilities, including those with NA class), but the numerator's na.rm=TRUE drops NA-class facilities from the sum -- so this correctly treats NA as "not a match" rather than propagating NA, consistent with the comment, but it's easy to misread as an observed-subset share
 }
+# FLAG: cls_share() takes "whatever AIR_POLLUTANT_CLASS_DESC value sits on the first row per PGM_SYS_ID"
+# rather than checking it's actually constant across a facility's years. If a facility's classification
+# ever changes across years in the source panel, this picks the earliest year's value silently -- matches
+# the header note below ("current ICIS-AIR snapshot applied to all years") which implies it SHOULD be
+# constant, but this function doesn't verify that invariant, it just assumes it.
 
 # =========================================================================================================
 # TABLE 1 -- panel overview (panels as columns)
 # =========================================================================================================
 ov_rows <- list(
-  "Facilities"                    = sapply(P, function(d) comma(uniqueN(d$PGM_SYS_ID))),
-  "Facility-years (rows)"         = sapply(P, function(d) comma(nrow(d))),
-  "Years"                         = sapply(P, function(d) sprintf("%d--%d", min(d$year), max(d$year))),
-  "Balanced ($=$ fac.\\ $\\times$ 21)" = sapply(P, function(d) if (nrow(d) == uniqueN(d$PGM_SYS_ID) * length(YEARS)) "yes" else "NO"),
-  "\\ \\ \\emph{obs\\_source}: event"      = sapply(P, function(d) pct(obs_share(d, "event"))),
-  "\\ \\ \\emph{obs\\_source}: operating"  = sapply(P, function(d) pct(obs_share(d, "operating"))),
-  "\\ \\ \\emph{obs\\_source}: unobserved" = sapply(P, function(d) pct(obs_share(d, "unobserved"))),
-  "\\ \\ Class: major"           = sapply(P, function(d) pct(cls_share(d, "Major Emissions"))),
+  "Facilities"                    = sapply(P, function(d) comma(uniqueN(d$PGM_SYS_ID))),  # distinct facility count per panel
+  "Facility-years (rows)"         = sapply(P, function(d) comma(nrow(d))),                # raw row count per panel
+  "Years"                         = sapply(P, function(d) sprintf("%d--%d", min(d$year), max(d$year))),  # observed year range (from the data, not from the YEARS constant)
+  "Balanced ($=$ fac.\\ $\\times$ 21)" = sapply(P, function(d) if (nrow(d) == uniqueN(d$PGM_SYS_ID) * length(YEARS)) "yes" else "NO"),  # sanity check: is the panel a full facility x year rectangle over the 21-year YEARS window (2005-2025)?
+  "\\ \\ \\emph{obs\\_source}: event"      = sapply(P, function(d) pct(obs_share(d, "event"))),       # share of rows where the zero/positive count came from an observed regulatory event
+  "\\ \\ \\emph{obs\\_source}: operating"  = sapply(P, function(d) pct(obs_share(d, "operating"))),   # share of rows where the zero came from a wayback-confirmed "facility was operating, no event" structural zero
+  "\\ \\ \\emph{obs\\_source}: unobserved" = sapply(P, function(d) pct(obs_share(d, "unobserved"))),  # share of rows with no basis for a zero at all -- these carry NA counts, not zeros
+  "\\ \\ Class: major"           = sapply(P, function(d) pct(cls_share(d, "Major Emissions"))),           # facility-level share by pollutant classification (see cls_share FLAG above)
   "\\ \\ Class: synthetic minor" = sapply(P, function(d) pct(cls_share(d, "Synthetic Minor Emissions"))),
   "\\ \\ Class: minor"           = sapply(P, function(d) pct(cls_share(d, "Minor Emissions"))),
   "\\ \\ Class: other / missing" = sapply(P, function(d) {
-    fac <- d[, .SD[1L], by = PGM_SYS_ID]
-    pct(mean(!fac$AIR_POLLUTANT_CLASS_DESC %in% c("Major Emissions","Synthetic Minor Emissions","Minor Emissions")))
+    fac <- d[, .SD[1L], by = PGM_SYS_ID]                              # same first-row-per-facility collapse as cls_share(), duplicated here rather than reusing the helper
+    pct(mean(!fac$AIR_POLLUTANT_CLASS_DESC %in% c("Major Emissions","Synthetic Minor Emissions","Minor Emissions")))  # NA %in% anything is FALSE, so !FALSE is TRUE -- NA class IS counted as "other/missing" here, unlike cls_share() which drops NA via na.rm; the two class-share computations use different NA conventions but they're complementary (this is designed to be the residual bucket) so they still sum to ~100%
   })
 )
-t1 <- cbind(names(ov_rows), do.call(rbind, ov_rows))
+t1 <- cbind(names(ov_rows), do.call(rbind, ov_rows))                  # row-label column + one column per panel, stacked into a character matrix
 write_table("t1_overview.tex", t1, "lrrr",
   header = c("", paste0("\\textbf{", NAMES, "}")),
   caption = "Panel overview. Each panel is a balanced facility $\\times$ year rectangle over 2005--2025; \\emph{obs\\_source} records why a facility-year's counts are $0$ (an event, or wayback-confirmed operating) versus \\texttt{NA} (unobserved). Class shares are per facility (time-invariant).",
@@ -93,13 +104,13 @@ write_table("t1_overview.tex", t1, "lrrr",
 # TABLE 2 -- observation structure: obs_source x era (the "zero vs missing" decomposition)
 # =========================================================================================================
 t2_rows <- lapply(names(P), function(nm) {
-  d <- P[[nm]]; d[, era := fifelse(year < 2015L, "pre", "post")]
-  tot <- nrow(d)
-  g <- function(era, src) sum(d$era == era & d$obs_source == src)
+  d <- P[[nm]]; d[, era := fifelse(year < 2015L, "pre", "post")]      # FLAG: this mutates P[[nm]] IN PLACE (data.table `:=` on a list element modifies by reference) -- `era` is now a permanent column on the panels held in P for the rest of the script's run, even though it's only used inside this loop
+  tot <- nrow(d)                                                      # FLAG: `tot` is computed but never used below -- dead value
+  g <- function(era, src) sum(d$era == era & d$obs_source == src)     # count facility-years matching a given era x obs_source combination
   c(NAMES[nm],
-    comma(g("pre","event")),  comma(g("pre","unobserved")),
-    comma(g("post","event")), comma(g("post","operating")), comma(g("post","unobserved")),
-    pct(1 - obs_share(d, "unobserved")))
+    comma(g("pre","event")),  comma(g("pre","unobserved")),           # pre-2015: only "event" or "unobserved" are possible (no wayback operating channel pre-2015, per the note below)
+    comma(g("post","event")), comma(g("post","operating")), comma(g("post","unobserved")),  # post-2015: all three obs_source values possible
+    pct(1 - obs_share(d, "unobserved")))                               # overall (both eras combined) share observed = 1 - unobserved share
 })
 t2 <- do.call(rbind, t2_rows)
 write_table("t2_obs_structure.tex", t2, "lrr rrr r",
@@ -114,11 +125,11 @@ write_table("t2_obs_structure.tex", t2, "lrr rrr r",
 # =========================================================================================================
 MEAS <- c(n_inspections="Inspections", n_violations="Violations", n_hpv="HPV determinations",
           n_enforcement="Enforcement actions", n_formal="\\ \\ formal", n_informal="\\ \\ informal",
-          n_certs="Title V certifications", n_stack_tests="Stack tests", hpv_active="HPV status (active-year)")
+          n_certs="Title V certifications", n_stack_tests="Stack tests", hpv_active="HPV status (active-year)")  # measure column name -> display label, also fixes row order below
 t3_rows <- lapply(names(MEAS), function(m) {
-  nz  <- sapply(P, function(d) { o <- d[obs_source != "unobserved"]; pct(mean(o[[m]] > 0, na.rm = TRUE)) })
-  mx  <- max(sapply(P, function(d) max(d[[m]], na.rm = TRUE)))
-  tot <- comma(sum(P[["universe"]][[m]], na.rm = TRUE))
+  nz  <- sapply(P, function(d) { o <- d[obs_source != "unobserved"]; pct(mean(o[[m]] > 0, na.rm = TRUE)) })  # restrict to observed rows first, THEN take the nonzero share within that subset -- denominator is observed facility-years, not all facility-years
+  mx  <- max(sapply(P, function(d) max(d[[m]], na.rm = TRUE)))        # largest single facility-year value for this measure, across all 3 panels (not per-panel)
+  tot <- comma(sum(P[["universe"]][[m]], na.rm = TRUE))               # total events, universe panel only (the superset panel, so this is the grand total)
   c(MEAS[m], nz, comma(mx), tot)
 })
 t3 <- do.call(rbind, t3_rows)
@@ -133,37 +144,37 @@ write_table("t3_measures.tex", t3, "l rrr rr",
 # TABLE 4 -- data quality: internal-consistency checks (all pass) + flagged odd values
 # =========================================================================================================
 # consistency checks across all three panels (report worst-case row count; all expected 0)
-chk <- function(fn) max(sapply(P, function(d) sum(fn(d), na.rm = TRUE)))
+chk <- function(fn) max(sapply(P, function(d) sum(fn(d), na.rm = TRUE)))  # apply a row-level TRUE/FALSE check `fn` to each panel, sum the violations, and report the WORST (max) count across the 3 panels -- a passing check anywhere doesn't hide a failing check elsewhere, since max() surfaces the worst panel
 consist <- c(
-  "Agency split $=$ total (inspections, enforcement)" = chk(function(d) (d$n_insp_epa+d$n_insp_state+d$n_insp_local != d$n_inspections) | (d$n_enf_epa+d$n_enf_state+d$n_enf_local != d$n_enforcement)),
-  "formal $+$ informal $=$ enforcement"               = chk(function(d) d$n_formal + d$n_informal != d$n_enforcement),
+  "Agency split $=$ total (inspections, enforcement)" = chk(function(d) (d$n_insp_epa+d$n_insp_state+d$n_insp_local != d$n_inspections) | (d$n_enf_epa+d$n_enf_state+d$n_enf_local != d$n_enforcement)),  # FLAG: if any of the agency-split columns is NA while n_inspections/n_enforcement is non-NA (or vice versa), `!=` yields NA, and na.rm=TRUE in chk() silently drops that row from the violation count rather than counting it as a mismatch -- a genuine data inconsistency involving an NA could go unreported here
+  "formal $+$ informal $=$ enforcement"               = chk(function(d) d$n_formal + d$n_informal != d$n_enforcement),   # same NA-drops-silently caveat as above
   "FCE $+$ PCE $\\leq$ inspections"                   = chk(function(d) d$n_fce + d$n_pce > d$n_inspections),
   "stack pass $+$ fail $\\leq$ tests"                 = chk(function(d) d$n_stack_pass + d$n_stack_fail > d$n_stack_tests),
   "HPV $\\leq$ violations"                            = chk(function(d) d$n_hpv > d$n_violations),
-  "any negative count (any $n\\_$ column)"            = chk(function(d) { nc <- grep("^n_", names(d), value=TRUE); Reduce(`|`, lapply(nc, function(c) d[[c]] < 0)) }),
+  "any negative count (any $n\\_$ column)"            = chk(function(d) { nc <- grep("^n_", names(d), value=TRUE); Reduce(`|`, lapply(nc, function(c) d[[c]] < 0)) }),  # scans EVERY column whose name starts with "n_", so this automatically covers new n_* columns added later without needing an update here
   "penalty $> 0$ with no formal action"              = chk(function(d) d$penalty_amount > 0 & d$n_formal == 0),
-  "operating status present pre-2015"                = chk(function(d) !is.na(d$op_status_code) & d$year < 2015),
+  "operating status present pre-2015"                = chk(function(d) !is.na(d$op_status_code) & d$year < 2015),   # should always be 0 given the wayback-only-post-2015 discipline noted in Table 2 -- a nonzero value here would mean the "no operating status pre-2015" invariant this whole panel design relies on has been violated
   "exited\\_year $<$ entered\\_year"                 = chk(function(d) d$exited_year < d$entered_year)
 )
-t4a <- cbind(names(consist), ifelse(consist == 0, "\\checkmark\\ 0", paste0("\\textbf{", comma(consist), "}")))
+t4a <- cbind(names(consist), ifelse(consist == 0, "\\checkmark\\ 0", paste0("\\textbf{", comma(consist), "}")))  # bold-flag any nonzero (failing) check in the rendered table
 
 # flagged odd/unexpected values (curated), computed live
-u <- P[["universe"]]
+u <- P[["universe"]]                                                  # universe panel is the superset, used as the reference for the "flagged values" block below
 flag <- c(
   "Max stack tests in one facility-year"    = comma(max(sapply(P, function(d) max(d$n_stack_tests, na.rm=TRUE)))),
   "Max inspections in one facility-year"    = comma(max(sapply(P, function(d) max(d$n_inspections, na.rm=TRUE)))),
-  "Min / max nonzero penalty (universe)"    = paste0(usd(min(u$penalty_amount[u$penalty_amount>0], na.rm=TRUE)), " / ", usd(max(u$penalty_amount, na.rm=TRUE))),
-  "\\emph{hpv\\_active}$=1$ with no violation record" = comma(max(sapply(P, function(d) sum(d$hpv_active==1 & is.na(d$n_violations), na.rm=TRUE)))),
-  "Universe facilities: class other/missing" = comma(u[, .SD[1L], by=PGM_SYS_ID][!AIR_POLLUTANT_CLASS_DESC %in% c("Major Emissions","Synthetic Minor Emissions","Minor Emissions"), .N]),
+  "Min / max nonzero penalty (universe)"    = paste0(usd(min(u$penalty_amount[u$penalty_amount>0], na.rm=TRUE)), " / ", usd(max(u$penalty_amount, na.rm=TRUE))),  # min is restricted to STRICTLY positive penalties (excludes 0/NA) so the "min" isn't trivially 0
+  "\\emph{hpv\\_active}$=1$ with no violation record" = comma(max(sapply(P, function(d) sum(d$hpv_active==1 & is.na(d$n_violations), na.rm=TRUE)))),  # counted and explained (not "fixed") in the notes below -- an intentional, documented pattern, not a bug
+  "Universe facilities: class other/missing" = comma(u[, .SD[1L], by=PGM_SYS_ID][!AIR_POLLUTANT_CLASS_DESC %in% c("Major Emissions","Synthetic Minor Emissions","Minor Emissions"), .N]),  # first-row-per-facility collapse again (3rd occurrence of this pattern in the file); NA class is included in "other/missing" here via the same %in%-negation logic as Table 1's residual row
   "Universe facilities: planned / under constr." = comma(u[, .SD[1L], by=PGM_SYS_ID][op_status_current_desc %in% c("Planned Facility","Under Construction"), .N]),
-  "Most-frequent state (Major/SynMin, Universe)" = "OK (oil \\& gas minors)"
+  "Most-frequent state (Major/SynMin, Universe)" = "OK (oil \\& gas minors)"  # FLAG: this row is a HARD-CODED literal, not computed from the data like every other cell in this file -- contradicts the file header's "no numbers are hand-entered" guarantee. If the underlying panels change (e.g. after a re-pull or a build-parameter change), this string will silently go stale since nothing recomputes or checks it.
 )
 t4b <- cbind(names(flag), flag)
 # stack the two blocks with a subheading row
 t4 <- rbind(
-  cbind("\\emph{Internal-consistency checks (rows violating; expect 0)}", ""),
+  cbind("\\emph{Internal-consistency checks (rows violating; expect 0)}", ""),  # subheading row: label in col 1, blank value in col 2
   t4a,
-  cbind("\\emph{Flagged values to be aware of}", ""),
+  cbind("\\emph{Flagged values to be aware of}", ""),                 # second subheading row
   t4b
 )
 write_table("t4_data_quality.tex", t4, "lr",
@@ -175,12 +186,12 @@ write_table("t4_data_quality.tex", t4, "lr",
 # =========================================================================================================
 # TABLE 5 -- operating status & activity by year (wayback window, all three panels)
 # =========================================================================================================
-yr <- 2015:2025
-op_mat  <- sapply(P, function(d) sapply(yr, function(y) mean(d[year==y]$operating, na.rm=TRUE)))
+yr <- 2015:2025                                                       # wayback-only window (see Table 2 discipline: operating status doesn't exist pre-2015)
+op_mat  <- sapply(P, function(d) sapply(yr, function(y) mean(d[year==y]$operating, na.rm=TRUE)))  # panel x year matrix of mean(operating); na.rm=TRUE means years/panels with all-NA operating would silently average over 0 rows -> NaN, not an error
 act_mat <- sapply(P, function(d) sapply(yr, function(y) {
-  dy <- d[year==y]; mean(pmax(dy$any_inspections, dy$any_violations, dy$any_enforcement, dy$any_certs), na.rm=TRUE) }))
+  dy <- d[year==y]; mean(pmax(dy$any_inspections, dy$any_violations, dy$any_enforcement, dy$any_certs), na.rm=TRUE) }))  # "any activity" = elementwise max across the four any_* 0/1 flags, i.e. 1 if ANY of the four is 1 for that facility-year; pmax with na.rm isn't used here (na.rm applies to the outer mean, not pmax) so a row with any NA among the four any_* columns propagates NA into pmax unless all four are non-missing
 t5 <- cbind(as.character(yr),
-            matrix(pct(op_mat), ncol=3), matrix(pct(act_mat), ncol=3))
+            matrix(pct(op_mat), ncol=3), matrix(pct(act_mat), ncol=3))  # pct() is vectorized so this applies to the whole matrix at once, then matrix() reshapes back to panel columns -- relies on column-major fill order matching the original op_mat/act_mat layout
 write_table("t5_operating_by_year.tex", t5, "l rrr rrr",
   header = c("Year", rep(c("Elec.","M/SM","Univ."), 2)),
   groups = c(" " = 1, "Operating share" = 3, "Any-activity share" = 3),
@@ -191,7 +202,7 @@ write_table("t5_operating_by_year.tex", t5, "l rrr rrr",
 # =========================================================================================================
 # WRAPPER -- standalone compilable document that \inputs every fragment
 # =========================================================================================================
-frags <- c("t1_overview","t2_obs_structure","t3_measures","t4_data_quality","t5_operating_by_year")
+frags <- c("t1_overview","t2_obs_structure","t3_measures","t4_data_quality","t5_operating_by_year")  # fragment basenames, in the order they should appear in the wrapper document
 wrap <- c(
   "% Auto-generated by code/diagnostics/05_panel_summaries.R -- do not hand-edit; re-run the script.",
   "\\documentclass[11pt]{article}",
@@ -204,10 +215,46 @@ wrap <- c(
   "\\date{\\today}",
   "\\begin{document}",
   "\\maketitle",
-  sprintf("\\input{%s}", frags),
+  sprintf("\\input{%s}", frags),                                      # vectorized sprintf -> one \input{...} line per fragment
   "\\end{document}"
 )
 writeLines(wrap, file.path(OUT, "panel_summaries.tex"))
 
-cat(sprintf("wrote %d table fragments + wrapper to %s\n", length(frags), OUT))
+cat(sprintf("wrote %d table fragments + wrapper to %s\n", length(frags), OUT))  # console summary of what was written
 cat("  ", paste0(frags, ".tex", collapse = "  "), "\n")
+
+# =========================================================================================================
+# FLAGGED ISSUES
+# =========================================================================================================
+# 1. (line ~35, esc()) Defined but never called; every hand-written LaTeX caption/label/note string bypasses
+#    it. Fine while those strings stay author-typed literals; would need esc() if a raw data value is ever
+#    interpolated into a table caption or cell without pre-formatting.
+# 2. (cls_share(), ~line 61) Takes the FIRST row per facility as that facility's classification without
+#    verifying it's actually constant across years for that facility. Assumes the "current snapshot applied
+#    to all years" invariant documented in Table 1's notes; doesn't check it.
+# 3. (Table 1, "Class: other / missing" row, ~line 80) Treats NA classification as "other/missing" (via
+#    `!x %in% c(...)`, where NA %in% anything is FALSE), which is a DIFFERENT NA convention than cls_share()
+#    (which drops NA via na.rm=TRUE). The two are complementary by design (they're meant to sum to ~100%)
+#    but use opposite NA semantics -- worth knowing if either is reused elsewhere expecting the other's rule.
+# 4. (Table 2 loop, ~line 96) `d[, era := ...]` mutates each panel in P **by reference** (data.table
+#    semantics) -- P's panels permanently gain an `era` column for the rest of the script's run, as a
+#    side effect of a table-formatting loop. Not itself wrong (era isn't reused elsewhere) but a latent trap
+#    if a later table added to this file assumes P's panels have their original column set.
+# 5. (Table 2 loop, ~line 97) `tot <- nrow(d)` is computed but never used -- dead code, not a correctness
+#    issue.
+# 6. (Table 3, `nz`, ~line 119) Nonzero share is computed on the observed-only subset (obs_source !=
+#    "unobserved"), consistent with the file's stated discipline -- flagged here only because it's the kind
+#    of denominator choice that materially changes the reported percentage if a future edit swaps in the
+#    full panel by mistake.
+# 7. (Table 4 consistency checks, ~lines 138-139) `!=` and `>` comparisons against columns that could contain
+#    NA yield NA, and `chk()`'s na.rm=TRUE in the outer sum() silently drops those rows from the violation
+#    count rather than flagging them. A genuine inconsistency co-occurring with an NA in one of the compared
+#    columns would not be caught by this audit.
+# 8. (Table 4 "Most-frequent state" row, ~line 159) Hard-coded literal string ("OK (oil & gas minors)"), not
+#    computed from the data -- the only cell in the file that isn't. Contradicts the header's "no numbers are
+#    hand-entered" guarantee and will go silently stale if the underlying panels change.
+# 9. (Table 5, `act_mat`, ~line 181) `pmax(..., na.rm=TRUE)` -- na.rm applies to the outer mean(), not to
+#    pmax() itself, so a facility-year with NA in any of the four any_* flags propagates NA through pmax
+#    before the mean's na.rm can drop it. If any of those flags can be NA (vs. always 0/1) in the wayback
+#    window, "any-activity share" would undercount rows with a partial NA rather than resolving them via the
+#    other three flags.

@@ -1,6 +1,6 @@
 # =========================================================================================================
 # code/04_datasets/06_coordinates.R -- DATASET 4: coordinates. One row per facility. FRS lat/lon, the derived
-#   county FIPS (point-in-polygon), and coordinate-vs-ICIS-county error diagnostics. Over the FULL 279,211
+# county FIPS (point-in-polygon), and coordinate-vs-ICIS-county error diagnostics. Over the FULL 279,211
 #   universe.
 #
 #   in : data/processed/facilities.csv.gz  +  data/raw/frs/FRS_FACILITIES.csv  +  data/raw/us_counties/us_counties.shp
@@ -9,7 +9,18 @@
 #   COORDINATE SOURCE -- FRS (Facility Registry Service), joined via REGISTRY_ID (deduped to one row/REGISTRY_ID).
 #     A facility with no REGISTRY_ID or no FRS match has HAS_COORDINATE == 0 and NA lat/lon/county.
 #   COUNTY_FIPS -- point-in-polygon of the coordinate into the county shapefile (EPSG:4326 -> shapefile CRS).
-#     The shapefile is CONUS + DC (+AK/HI in the state crosswalk only); non-CONUS facilities resolve to NA.
+#     The shapefile itself is NOT CONUS-only -- it's the full Census county file (56 STATEFP values: all 50
+#     states + DC + 5 territories) -- and this point-in-polygon join doesn't consult any state crosswalk at
+#     all, so it was never actually restricted to CONUS. Of facilities with STATE in {AK, HI, PR, GU, MP, VI}
+#     and a valid FRS coordinate, 1,244 of 1,288 (96.6%) get a real COUNTY_FIPS; the remainder fail only
+#     because their specific point doesn't fall inside any polygon (e.g. an offshore or imprecise
+#     coordinate), not because of a CONUS restriction.
+#   ICIS_COUNTY_FIPS below (coord_county_flag.R's name-based resolution) previously WAS restricted, for a
+#     different reason: its .STATE_FIPS lookup had no entry for PR/GU/MP/VI, so those ~800 facilities always
+#     resolved to NA regardless of the shapefile. Fixed 2026-07-27 (see coord_county_flag.R) by adding the 4
+#     territory FIPS codes plus accent-transliteration for Puerto Rico's diacritic municipio names -- raises
+#     resolution for those 800 facilities from 0% to 94.9%; the remaining 5.1% is literally
+#     COUNTY_NAME == "Undetermined", correctly unresolvable. See briefs/datasets/dataset_construction_decisions.md.
 #   ICIS_COUNTY_FIPS -- GEOID resolved from ICIS (STATE, COUNTY_NAME) text alone (flag_coord_county.R, local
 #     to this datasets layer), independent of any coordinate. NA when the name doesn't resolve to exactly one
 #     GEOID in this shapefile vintage. Cross-check it against COUNTY_FIPS to flag lat/long-vs-label disagreements.
@@ -34,7 +45,9 @@ frs <- read_csv(file.path(RAW, "frs", "FRS_FACILITIES.csv"),
                 col_select = c(REGISTRY_ID, LATITUDE_MEASURE, LONGITUDE_MEASURE),
                 col_types = cols(.default = col_character()), show_col_types = FALSE) |>
   mutate(REGISTRY_ID = as.character(REGISTRY_ID)) |>
-  distinct(REGISTRY_ID, .keep_all = TRUE) |>
+  distinct(REGISTRY_ID, .keep_all = TRUE) |>            # first-row-wins on duplicate REGISTRY_ID, same
+                                                          # caveat as 03_panel_building/00_spine.R: no
+                                                          # preference for a row that actually has a coordinate
   transmute(REGISTRY_ID, latitude = suppressWarnings(as.numeric(LATITUDE_MEASURE)),
             longitude = suppressWarnings(as.numeric(LONGITUDE_MEASURE)))
 fac <- attrs |> left_join(frs, by = "REGISTRY_ID")
@@ -45,6 +58,7 @@ pts <- fac |> filter(!is.na(latitude), !is.na(longitude)) |>
   st_as_sf(coords = c("longitude", "latitude"), crs = 4326) |> st_transform(st_crs(co))
 fac_fips <- st_join(pts, co["GEOID"], join = st_within) |> st_drop_geometry() |>
   transmute(PGM_SYS_ID, county_fips = as.character(GEOID)) |> distinct(PGM_SYS_ID, .keep_all = TRUE)
+  # same boundary-point tie-break caveat as 03_panel_building/00_spine.R's identical pattern
 fac <- fac |> left_join(fac_fips, by = "PGM_SYS_ID")
 
 # coordinate-quality diagnostics (standalone copy, local to this datasets layer -- see coord_county_flag.R).

@@ -24,16 +24,20 @@
 #     count - dup. Violations and stack tests carry zero dups (asserted below).
 # =========================================================================================================
 library(readr); library(dplyr); library(tidyr)
-source(here::here("code/04_datasets/00_parameters.R"))
+source(here::here("code/04_datasets/00_parameters.R"))     # YEARS, CLEAN, DATASETS, write_dataset()
 
 rd <- function(name, cols)                                    # read one clean asset, keep needed columns
   read_csv(file.path(CLEAN, paste0(name, ".csv.gz")), col_select = all_of(cols),
            col_types = cols(PGM_SYS_ID = col_character(), year = col_integer(),
                             dup = col_integer(), .default = col_character()), show_col_types = FALSE)
+           # dup_exact stays character (.default) -- compared as the string "1" below, same convention as
+           # code/03_panel_building/03_build_functions.R's identically-named rd() helper (independently
+           # duplicated in each file rather than shared -- see the general architecture note at the end)
 
 FACILITY_TYPE <- c(POF = "Privately owned", COR = "Corporation", CNG = "County government",
                    CTG = "City government", FDF = "Federal facility", STF = "State facility",
                    DIS = "District", NON = "Non-classified")
+                   # same lookup, same "unmapped code -> silent NA" caveat as 03_panel_building/00_spine.R
 
 # ---- facility characteristics (ICIS only) ---------------------------------------------------------------
 # Current-snapshot attributes. ICIS carries no history for these, so they are time-invariant by construction
@@ -44,13 +48,16 @@ attrs <- read_csv(file.path(CLEAN, "facilities.csv.gz"),
          EPA_REGION, NAICS_CODES, SIC_CODES, FACILITY_TYPE_CODE, AIR_POLLUTANT_CLASS_DESC,
          op_status_current_desc = AIR_OPERATING_STATUS_DESC) |>
   mutate(facility_type = unname(FACILITY_TYPE[FACILITY_TYPE_CODE]), .after = FACILITY_TYPE_CODE)
-ids <- attrs$PGM_SYS_ID
+ids <- attrs$PGM_SYS_ID                                # the FULL ICIS-AIR_FACILITIES universe -- no ever-active filter
 stopifnot("facilities: PGM_SYS_ID is not unique -- the facility grain is broken" = !anyDuplicated(ids))
 
 # emitted-pollutant profile: ever-reported, undated (ICIS gives no start/end) -> time-invariant flags.
 emits <- read_csv(file.path(CLEAN, "pollutants.csv.gz"),
                   col_types = cols(.default = col_character()), show_col_types = FALSE) |>
   group_by(PGM_SYS_ID) |> summarise(
+    # note: NOT filtered to `ids` first (unlike attrs/ids above) -- harmless, since the eventual left_join
+    # below is FROM the ids-restricted rectangle, so any pollutant rows for facilities outside `ids` are
+    # simply never matched; just wasted aggregation work on rows that can't affect the output
     emits_voc = as.integer(any(grepl("VOLATILE ORGANIC", POLLUTANT_DESC, ignore.case = TRUE))),
     emits_pm  = as.integer(any(grepl("PARTICULATE MATTER", POLLUTANT_DESC, ignore.case = TRUE))),
     emits_co  = as.integer(any(grepl("carbon monoxide", POLLUTANT_DESC, ignore.case = TRUE))),
@@ -141,6 +148,16 @@ agg_enforcement <- function() {
       # dollars: sum over ALL formal rows; _dup isolates the inflation from event-key duplicates.
       penalty_amount     = sum(penalty, na.rm = TRUE),
       penalty_amount_dup = sum(penalty[dup > 0], na.rm = TRUE), .groups = "drop")
+      # REVIEW(design, cross-file inconsistency): unlike code/03_panel_building/03_build_functions.R's
+      # attach_penalty(), which explicitly re-codes penalty_amount==0 back to NA after the join (so "no
+      # formal action" and "formal action, $0 penalty" both read as NA there), THIS file makes no such
+      # correction -- penalty_amount here goes through the blanket `coalesce(x, 0)` below along with every
+      # other COUNT_COLS measure. The result: in this dataset, an ICIS-observed facility-year with a formal
+      # action but no positive penalty reads as penalty_amount == 0 (a true, distinguishable zero), while
+      # the same conceptual quantity in the 03_panel_building panels reads as NA. That is consistent with
+      # THIS file's own documented zero-vs-NA rule (a more principled convention than the older script), but
+      # the two layers now disagree on what a 0 vs NA means for the identically-named `penalty_amount`
+      # column -- worth confirming that's intended if both layers are still in active use downstream.
 }
 
 agg_certs <- function() {
@@ -172,11 +189,16 @@ counts <- Reduce(\(x, y) full_join(x, y, by = c("PGM_SYS_ID", "year")),
 # A row in `counts` == >=1 ICIS record of SOME type that facility-year == the observability rule.
 COUNT_COLS <- setdiff(names(counts), c("PGM_SYS_ID", "year"))
 counts[COUNT_COLS] <- lapply(counts[COUNT_COLS], \(x) coalesce(x, 0))   # observed, other measure absent -> 0
+  # note: literal `0`, not `0L` -- integer count columns from n()/sum(logical) get silently promoted to
+  # double here (same values, different storage type; invisible once round-tripped through write_csv, but an
+  # inconsistency with 03_panel_building's equivalent step, which explicitly wraps in as.integer())
 
 cat("building the facility x year rectangle...\n")
-reg <- expand_grid(PGM_SYS_ID = ids, year = YEARS) |>
+reg <- expand_grid(PGM_SYS_ID = ids, year = YEARS) |>          # balanced rectangle: every ICIS facility x every panel year
   left_join(counts, by = c("PGM_SYS_ID", "year")) |>                    # no record at all -> all NA
   mutate(icis_observed = as.integer(!is.na(n_inspections)), .after = year) |>
+         # n_inspections used as the observability proxy; equally valid to use any other COUNT_COLS member,
+         # since a `counts` row (if present at all) has EVERY count column non-NA after the coalesce above
   left_join(attrs, by = "PGM_SYS_ID") |>
   left_join(emits, by = "PGM_SYS_ID") |>
   left_join(progs, by = "PGM_SYS_ID")
@@ -192,7 +214,8 @@ reg <- reg |> mutate(across(all_of(PROFILE_COLS), \(x) as.integer(coalesce(x, 0L
   arrange(PGM_SYS_ID, year)
 
 # ---- invariants -----------------------------------------------------------------------------------------
-stopifnot(
+stopifnot(                                              # hard assertions -- any failure halts the build rather
+                                                          # than shipping a dataset that violates its own contract
   "grain broken: PGM_SYS_ID x year is not unique"     = !anyDuplicated(reg[c("PGM_SYS_ID","year")]),
   "rectangle incomplete: rows != facilities x years"  = nrow(reg) == length(ids) * length(YEARS),
   "observability rule violated: observed row with NA count" =

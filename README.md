@@ -40,8 +40,15 @@ hand-run diagnostic — see `code/diagnostics/README.md`.
 ## Computational requirements
 
 - **R 4.4.3**, with package versions pinned in `renv.lock`. Run `renv::restore()` once to install the exact
-  versions used to build this project — no manual package installation needed.
-- No compiled dependencies outside CRAN binaries; no GPU, Stata, Python, or other language runtime required.
+  versions used to build this project.
+- **`sf` needs GDAL/GEOS/PROJ at the system level** (used for the coordinate → county spatial join). On
+  macOS/Windows, `renv::restore()` normally installs `sf` from a CRAN binary that bundles these, so nothing
+  extra is needed. On Linux (or any platform where R falls back to building `sf` from source), install the
+  system libraries first, then run `renv::restore()`:
+  - Debian/Ubuntu: `sudo apt-get install libgdal-dev libgeos-dev libproj-dev`
+  - Fedora/RHEL: `sudo dnf install gdal-devel geos-devel proj-devel`
+  - macOS (if a source build is triggered): `brew install gdal geos proj`
+- No GPU, Stata, Python, or other language runtime required.
 - No pseudo-random number generation is used anywhere in the pipeline (deterministic joins/aggregation only),
   so there is no seed to set.
 - **Runtime and storage:** a full rebuild (`code/RUN_ALL.R` with `DOWNLOAD=true`) downloads several GB of raw

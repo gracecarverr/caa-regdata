@@ -25,6 +25,12 @@ This was investigated once before, in the predecessor project (`CAA_Project`), a
 repo's actual facility universe. Diagnostic: `code/diagnostics/afs_frs_match/afs_icis_crosswalk.R`. Full
 output tables: `output/afs_frs_match/*.csv`.
 
+*Refreshed 2026-07-27 (was 2026-07-26) — re-run against both the current ICIS-AIR roster (279,665
+facilities) and a re-fetched `FRS_PROGRAM_LINKS.csv` (both refreshed 2026-07-26). Everything in §§1–4 and §6
+reproduced **byte-for-byte identical** to the prior run — those stages depend on the frozen AFS population and
+FRS's `AIR`-tagged rows, not on the live ICIS-AIR facility count. Only §5 (which joins to the *current* spine)
+moved, and only trivially. "was X" notes mark the one place anything changed.*
+
 ## 1. Method
 
 Two hops, bridged through the EPA Facility Registry Service (FRS), which assigns one `REGISTRY_ID` per
@@ -110,15 +116,17 @@ actually needs.
 The baseline (69.6%) answers "does AFS crosswalk well in general" — not the question this repo needs
 answered, which is narrower: does it reach the facilities a pre-2015 proxy would actually be used on.
 
-- **Current 279,211-facility ICIS spine** (`data/processed/facilities.csv.gz`): **59.7%** (166,585) trace
-  back to *some* AFS record. Lower than the 69.6% baseline, as expected — a share of the current spine are
-  facilities that entered after AFS was frozen in 2014 and have no AFS history to find, by construction.
-- **The 171,324-facility pre-2015-begin-year population** (`output/begin_year_proxy/`, the exact group
-  `begin_year_operating_proxy.md` §1 identifies as needing a pre-2015 signal): **74.5%** (127,712) are
-  reachable. Higher than both the baseline and the full-spine number — expected, since this population is
-  selected for pre-2015 existence, which is precisely AFS's coverage window. **This is the most favorable
-  number in this brief**, but §4's state skew still applies to it in full: 74.5% is a national average, and a
-  begin-year facility in Illinois or Ohio is reached at nowhere near that rate.
+- **Current 279,665-facility ICIS spine** (`data/processed/facilities.csv.gz`, was 279,211): **59.6%**
+  (166,601, was 59.7%/166,585) trace back to *some* AFS record. Lower than the 69.6% baseline, as expected —
+  a share of the current spine are facilities that entered after AFS was frozen in 2014 and have no AFS
+  history to find, by construction.
+- **The 171,161-facility pre-2015-begin-year population** (was 171,324; `output/begin_year_proxy/`, the exact
+  group `begin_year_operating_proxy.md` §1 identifies as needing a pre-2015 signal): **74.5%** (127,562, was
+  127,712) are reachable — rate unchanged. Higher than both the baseline and the full-spine number —
+  expected, since this population is selected for pre-2015 existence, which is precisely AFS's coverage
+  window. **This is the most favorable number in this brief**, but §4's state skew still applies to it in
+  full: 74.5% is a national average, and a begin-year facility in Illinois or Ohio is reached at nowhere near
+  that rate.
 
 ## 6. Candidate search on the unmatched
 

@@ -6,6 +6,11 @@ decisions (EM1–EM8) are documented in `dataset_construction_decisions.md` Part
 the built asset, it doesn't re-litigate how it was built. Figures:
 `output/figures/datasets/emissions/emissions_{coverage_by_program_year,pollutant_totals,ghg_over_time}.png`.*
 
+*Refreshed 2026-07-27 (was 2026-07-23, predates the 2026-07-26 ICIS-AIR refresh) — "was X" notes give the
+previously-documented value. Part A (the raw emissions source) is untouched by the ICIS-AIR refresh — that
+raw file didn't change — so only Part A.4 (ICIS-match coverage) and Part B (the built facility × year
+dataset) moved.*
+
 ---
 
 ## Part A — row-level source, full cross-program extract, 2005–2025 (10,411,871 rows)
@@ -62,38 +67,42 @@ by substring — for this reason (EM4).
 
 | measure | value |
 |---|--:|
-| Distinct `REGISTRY_ID`s in the emissions source | 162,383 |
-| ...matching `facilities.csv.gz` at all | 51,246 (31.6%) |
-| ICIS facility rows (`PGM_SYS_ID`) with any emissions match | 55,112 of 279,211 (19.7%) |
-| `REGISTRY_ID`s mapping to >1 `PGM_SYS_ID` | 8,632 (max 150!) |
-| ...of which, actually carry emissions data | 2,802 |
+| Distinct `REGISTRY_ID`s in the emissions source | 162,383 (unchanged — raw source untouched) |
+| ...matching `facilities.csv.gz` at all | 51,207 (31.5%, was 51,246/31.6%) |
+| ICIS facility rows (`PGM_SYS_ID`) with any emissions match | 55,067 of 279,665 (19.7%, was 55,112/279,211) |
+| `REGISTRY_ID`s mapping to >1 `PGM_SYS_ID` | 8,658 (max 150, was 8,632) |
+| ...of which, actually carry emissions data | 2,798 (was 2,802) |
 
-Most emissions reporters (68.4% of the source's `REGISTRY_ID`s) are pure TRI/GHG/NEI filers with no CAA
+Most emissions reporters (68.5% of the source's `REGISTRY_ID`s) are pure TRI/GHG/NEI filers with no CAA
 permitting record in ICIS-Air at all — plausible, since NEI/TRI/GHG reporting requirements are broader than,
-and don't require, ICIS-Air enrollment. This is why dataset 7's observed rate (4.81%, Part B) is much lower
-than `regulatory` (12.8%) or `pipeline` (0.54%'s denominator is different, but conceptually this source's
+and don't require, ICIS-Air enrollment. This is why dataset 7's observed rate (4.79%, Part B) is much lower
+than `regulatory` (12.6%) or `pipeline` (0.54%'s denominator is different, but conceptually this source's
 *coverage ceiling* against the full ICIS universe is inherently capped near 19.7%, regardless of any single
 year's activity.
 
 ---
 
-## Part B — `emissions.csv.gz` (dataset 7, facility × year, 5,863,431 rows)
+## Part B — `emissions.csv.gz` (dataset 7, facility × year, 5,872,965 rows, was 5,863,431)
 
 **Zero/NA breakdown** (mirrors dataset 0's discipline, EM6 — two *independent* observability flags):
-`EMISSIONS_OBSERVED` 281,806 facility-years (4.81%), 54,374 ever-observed facilities; `GHG_OBSERVED` 42,902
-facility-years (0.73%), 5,353 ever-GHG-observed facilities. A facility can be one without the other — GHG
-(E-GGRT) reporting is a separate regulatory requirement from EIS/TRI/CAMD air-toxics reporting.
+`EMISSIONS_OBSERVED` 281,413 facility-years (4.79%, was 281,806/4.81%), 54,335 ever-observed facilities (was
+54,374); `GHG_OBSERVED` 42,734 facility-years (0.73%, was 42,902), 5,334 ever-GHG-observed facilities (was
+5,353). A facility can be one without the other — GHG (E-GGRT) reporting is a separate regulatory requirement
+from EIS/TRI/CAMD air-toxics reporting.
 
 ### B.1 By-year pattern (ICIS-matched universe; full table: `output/emissions_profile/by_year_summary.csv`)
 
+*(Figures as of 2026-07-27 — small movements throughout, consistent with the ICIS roster change; "was X"
+gives the prior value.)*
+
 | year | n obs. fac-yrs | VOC (M lbs) | PM10 (M lbs) | NOx (M lbs) | SO2 (M lbs) | GHG (M MTCO2e) |
 |---|--:|--:|--:|--:|--:|--:|
-| 2008 | 31,037 | 1,829 | 1,764 | 8,242 | 16,597 | — |
-| 2014 | 30,551 | 1,632 | 1,184 | 5,444 | 7,421 | — |
-| 2015 | 15,570 | 0 | 0 | 3,196 | 5,157 | 2,905 |
-| 2017 | 33,741 | 1,503 | 942 | 6,583 | 7,132 | 2,800 |
-| 2020 | 32,738 | 1,415 | 829 | 5,001 | 4,399 | 2,418 |
-| 2024 | 13,692 | 0 | 0 | 1,544 | 1,588 | — |
+| 2008 | 31,011 (was 31,037) | 1,827 (1,829) | 1,765 (1,764) | 8,224 (8,242) | 16,709 (16,597) | — |
+| 2014 | 30,517 (was 30,551) | 1,630 (1,632) | 1,178 (1,184) | 5,456 (5,444) | 7,644 (7,421) | — |
+| 2015 | 15,540 (was 15,570) | 0 | 0 | 3,222 (3,196) | 5,354 (5,157) | 2,898 (2,905) |
+| 2017 | 33,702 (was 33,741) | 1,502 (1,503) | 935 (942) | 6,569 (6,583) | 7,143 (7,132) | 2,788 (2,800) |
+| 2020 | 32,701 (was 32,738) | 1,413 (1,415) | 824 (829) | 4,983 (5,001) | 4,408 (4,399) | 2,409 (2,418) |
+| 2024 | 13,669 (was 13,692) | 0 | 0 | 1,541 (1,544) | 1,587 (1,588) | — |
 
 **A second coverage pattern, distinct from A.1's cross-program story, worth flagging on its own**: **VOC,
 PM10, PM2.5, and CO go to exactly zero in every non-EIS year** (2015, 2016, 2018, 2019, 2021–2024) — only
@@ -106,11 +115,12 @@ version of the same caution: coverage differs *by pollutant*, not just by year.
 
 ### B.2 Shared-`REGISTRY_ID` fan-out (EM2)
 
-**463,827 facility-years (22,087 distinct facilities) carry `IS_SHARED_REGISTRY==1`** — a facility whose FRS
-id is also claimed by at least one other `PGM_SYS_ID` (max 150 facilities sharing one `REGISTRY_ID`). Their
-emissions values are broadcast identically from the shared `REGISTRY_ID`, not split or estimated per
-facility. **Never sum `emissions` across a set of facilities sharing a `REGISTRY_ID`** — it double-counts
-the same reported quantity.
+**465,675 facility-years (22,175 distinct facilities) carry `IS_SHARED_REGISTRY==1`** (was 463,827/22,087) —
+a facility whose FRS id is also claimed by at least one other `PGM_SYS_ID` (max 150 facilities sharing one
+`REGISTRY_ID`, unchanged). This count is **not fixed** — it moves with every live ICIS-AIR/FRS refresh (see
+EM2 in `dataset_construction_decisions.md`) — their emissions values are broadcast identically from the
+shared `REGISTRY_ID`, not split or estimated per facility. **Never sum `emissions` across a set of facilities
+sharing a `REGISTRY_ID`** — it double-counts the same reported quantity.
 
 ## Notable things to sanity-check before relying on this dataset for a headline number
 
@@ -122,7 +132,8 @@ the same reported quantity.
   the first group as "not tracked," not "not emitted."
 - **This dataset's coverage ceiling is ~19.7% of the ICIS universe (A.4)** — most facilities never appear
   here at all, regardless of year, because most emissions reporters aren't ICIS-Air/CAA facilities.
-- **`IS_SHARED_REGISTRY` facilities (B.2, 22,087 of them) must not be summed together** — their emissions
-  figures are a broadcast of one shared `REGISTRY_ID`'s reported value, not independent measurements.
+- **`IS_SHARED_REGISTRY` facilities (B.2, 22,175 of them, was 22,087) must not be summed together** — their
+  emissions figures are a broadcast of one shared `REGISTRY_ID`'s reported value, not independent
+  measurements.
 - **GHG (MTCO2e) is never comparable to the pounds-based pollutants** — different unit, different reporting
   population (`GHG_OBSERVED` vs. `EMISSIONS_OBSERVED` are independent flags).

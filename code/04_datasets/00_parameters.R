@@ -15,9 +15,12 @@
 # =========================================================================================================
 
 YEARS <- 2005:2025          # analysis window (the cleaned assets keep every dated event; the window is here)
+                             # REVIEW(design): this is a SEPARATE literal from 03_panel_building's own
+                             # `YEARS <- 2005:2025` (00_spine.R / 03_build_parameters.R) -- same value today,
+                             # not shared code, so the two layers can silently drift apart if one is edited
 
-CLEAN    <- here::here("data/processed")
-DATASETS <- here::here("data/datasets")
+CLEAN    <- here::here("data/processed")   # cleaning-layer output (input to every dataset builder here)
+DATASETS <- here::here("data/datasets")    # this layer's output directory
 
 # The six ICIS-Air EVENT assets. Presence of >=1 row across these defines `icis_observed` (see 01_regulatory.R).
 EVENT_ASSETS <- c("inspections", "violations", "formal_actions", "informal_actions", "certs", "stacktests")
@@ -29,6 +32,9 @@ EVENT_ASSETS <- c("inspections", "violations", "formal_actions", "informal_actio
 #   column on one convention across all six datasets, so cross-dataset merges line up without per-file fixups.
 #   toupper() is idempotent on the already-uppercase ICIS attributes (REGISTRY_ID, STATE, ...).
 write_dataset <- function(df, name) {
-  dir.create(DATASETS, showWarnings = FALSE, recursive = TRUE)
+  dir.create(DATASETS, showWarnings = FALSE, recursive = TRUE)   # ensure data/datasets/ exists
   readr::write_csv(dplyr::rename_with(df, toupper), file.path(DATASETS, paste0(name, ".csv.gz")))
+    # rename_with(df, toupper) renames every column name via toupper() before writing; idempotent for names
+    # already uppercase (e.g. REGISTRY_ID, STATE), so mixed-case internal columns and pre-uppercase ICIS
+    # attribute columns end up on the same convention without any per-file special-casing
 }

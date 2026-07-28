@@ -1,4 +1,4 @@
 EXIT_SOURCE,n_facility_years,n_facilities,pct_proxy_false_positive
-cls,93351,17145,99.5
-other,821,153,94.2
+cls,93264,17119,99.5
+other,818,151,94.1
 dropout,8,1,12.5

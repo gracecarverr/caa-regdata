@@ -16,19 +16,27 @@
 #   per-file READMEs in data/processed/ for column-level and institutional detail.
 # =========================================================================================================
 
-CLEAN_SPECS <- list(
+CLEAN_SPECS <- list(                                 # one list element per raw source; order = documentation
+                                                       # order only (clean_one() is applied to each independently,
+                                                       # so list order has no effect on output)
 
   # ---- ICIS-Air EVENT tables (dated occurrences: date + year + dup + dup_exact) -------------------------
   # Compliance monitoring evaluations (Full/Partial Compliance Evaluations). date = evaluation completion.
   list(name = "inspections", raw = "ICIS-AIR_downloads/ICIS-AIR_FCES_PCES.csv",
-       date = function(d) mdy(d$ACTUAL_END_DATE, quiet = TRUE),
-       key  = c("PGM_SYS_ID", "ACTIVITY_ID")),
+       date = function(d) mdy(d$ACTUAL_END_DATE, quiet = TRUE),   # quiet=TRUE suppresses lubridate's parse-
+                                                                   # failure warnings -- REVIEW(design): rows
+                                                                   # whose ACTUAL_END_DATE doesn't parse become
+                                                                   # NA silently, with no count of how many
+                                                                   # (nothing downstream reports this rate)
+       key  = c("PGM_SYS_ID", "ACTIVITY_ID")),        # within-facility(program-id)/activity dup key
 
   # Violation history. date = first non-blank of the two determination dates (FRV determination, else HPV day-zero).
   list(name = "violations", raw = "ICIS-AIR_downloads/ICIS-AIR_VIOLATION_HISTORY.csv",
-       date = function(d) coalesce(mdy(d$EARLIEST_FRV_DETERM_DATE, quiet = TRUE),
-                                   mdy(d$HPV_DAYZERO_DATE,          quiet = TRUE)),
-       key  = c("PGM_SYS_ID", "COMP_DETERMINATION_UID")),
+       date = function(d) coalesce(mdy(d$EARLIEST_FRV_DETERM_DATE, quiet = TRUE),   # prefer the formal FRV
+                                   mdy(d$HPV_DAYZERO_DATE,          quiet = TRUE)),  # determination date; fall
+                                                                                       # back to HPV day-zero
+       key  = c("PGM_SYS_ID", "COMP_DETERMINATION_UID")),   # UID should already be near-unique per row; key
+                                                              # kept for the same within-facility dup-index shape
 
   # Formal enforcement actions. date = settlement entered date.
   list(name = "formal_actions", raw = "ICIS-AIR_downloads/ICIS-AIR_FORMAL_ACTIONS.csv",
@@ -52,10 +60,10 @@ CLEAN_SPECS <- list(
 
   # ---- ICIS-Air ATTRIBUTE / LOOKUP tables (one row per entity; dup_exact only) --------------------------
   # Facility attributes. The derived facility SPINE (coordinates, county, profiles) is built in the panel layer.
-  list(name = "facilities",       raw = "ICIS-AIR_downloads/ICIS-AIR_FACILITIES.csv"),
-  list(name = "pollutants",       raw = "ICIS-AIR_downloads/ICIS-AIR_POLLUTANTS.csv"),
-  list(name = "programs",         raw = "ICIS-AIR_downloads/ICIS-AIR_PROGRAMS.csv"),
-  list(name = "program_subparts", raw = "ICIS-AIR_downloads/ICIS-AIR_PROGRAM_SUBPARTS.csv"),
+  list(name = "facilities",       raw = "ICIS-AIR_downloads/ICIS-AIR_FACILITIES.csv"),        # no date/key ->
+  list(name = "pollutants",       raw = "ICIS-AIR_downloads/ICIS-AIR_POLLUTANTS.csv"),         # clean_one()
+  list(name = "programs",         raw = "ICIS-AIR_downloads/ICIS-AIR_PROGRAMS.csv"),           # only adds
+  list(name = "program_subparts", raw = "ICIS-AIR_downloads/ICIS-AIR_PROGRAM_SUBPARTS.csv"),   # dup_exact
 
   # ---- AFS (legacy pre-2001 Air Facility System) ATTRIBUTE tables (dup_exact only) ----------------------
   list(name = "afs_actions",         raw = "afs_downloads/AFS_ACTIONS.csv"),
@@ -66,7 +74,7 @@ CLEAN_SPECS <- list(
 
   # ---- Emissions ----------------------------------------------------------------------------------------
   # Combined emissions report. REPORTING_YEAR is already present in the source, so no date parse is needed.
-  list(name = "emissions", raw = "POLL_RPT_COMBINED_EMISSIONS.csv"),
+  list(name = "emissions", raw = "POLL_RPT_COMBINED_EMISSIONS.csv"),   # attribute-shaped: no date fn, no key
 
   # ---- CAA Compliance Pipeline (ECHO) -------------------------------------------------------------------
   # One row per violation, optionally linked to the evaluation that found it and the enforcement action it
@@ -77,5 +85,6 @@ CLEAN_SPECS <- list(
   # (code/04_datasets/07_pipeline.R) uses VIOL_START_DATE, not this date, as its facility-year anchor.
   list(name = "pipeline", raw = "PIPELINE_CAA_00_COMPLETE.csv",
        date = function(d) mdy(d$SORT_DATE, quiet = TRUE),
-       key  = c("SOURCE_ID", "SORT_ORDER"))
+       key  = c("SOURCE_ID", "SORT_ORDER"))            # SORT_ORDER alone is already unique per the comment
+                                                          # above; SOURCE_ID is redundant in the key but harmless
 )

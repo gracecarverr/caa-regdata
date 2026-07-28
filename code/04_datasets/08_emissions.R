@@ -82,7 +82,10 @@ pounds_agg <- pounds |> group_by(REGISTRY_ID, REPORTING_YEAR) |> summarise(  # g
   nox_lbs  = sum(ANNUAL_EMISSION[POLLUTANT_NAME == POLLUTANT_MAP[["NOX"]]],  na.rm = TRUE), # exact-match sum
   so2_lbs  = sum(ANNUAL_EMISSION[POLLUTANT_NAME == POLLUTANT_MAP[["SO2"]]],  na.rm = TRUE), # exact-match sum
   co_lbs   = sum(ANNUAL_EMISSION[POLLUTANT_NAME == POLLUTANT_MAP[["CO"]]],   na.rm = TRUE), # exact-match sum
-  hap_lbs  = sum(ANNUAL_EMISSION[NEI_TYPE == "HAP"], na.rm = TRUE),          # every HAP-tagged row, no aggregate to avoid
+  hap_lbs  = sum(ANNUAL_EMISSION[NEI_TYPE == "HAP"], na.rm = TRUE),          # every HAP-tagged row summed directly --
+                                                                              # no "Total HAP" row exists in the source
+                                                                              # to double-count against (see the
+                                                                              # module docstring's double-counting note)
   emissions_observed = 1L,                                                  # this group exists -> >=1 real row
   .groups = "drop")                                                          # drop the grouping structure after
 
