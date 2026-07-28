@@ -26,7 +26,7 @@
 suppressPackageStartupMessages({library(data.table); library(ggplot2); library(scales)})  # data.table for the aggregation, ggplot2/scales for the print figures; quietly, to keep the console clean
 options(scipen = 999)                                                 # disable scientific notation so large counts print as plain integers everywhere (console + CSVs)
 
-DATASETS <- here::here("data/datasets")                               # source dir for the six-dataset layer
+DATASETS <- here::here("data/datasets")                               # source dir for the eight-dataset layer
 OUT_CSV  <- here::here("output/regulatory_profile")                   # destination for every computed CSV below
 OUT_FIG  <- here::here("output/figures/datasets/regulatory")          # destination for every PNG figure below
 dir.create(OUT_CSV, showWarnings = FALSE, recursive = TRUE)           # create if missing, silently if it already exists

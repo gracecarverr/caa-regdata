@@ -1,6 +1,6 @@
 # Dataset Construction Decisions
 
-> Scope: the **`code/04_datasets/` layer** — the six deliverable datasets that supersede the single wide
+> Scope: the **`code/04_datasets/` layer** — the eight deliverable datasets that supersede the single wide
 > panel, now this repo's main product. This layer never depends on the facility-spine/panel-building code
 > (`code/03_panel_building/`, still present in this repo for now) — it consumes the `data/processed/`
 > cleaned assets directly. The PM2.5-attainment slice of the panel layer specifically (`01_attainment.R`,
@@ -8,7 +8,7 @@
 > synced to the CAA_Project repo on 2026-07-23 and lives there now; see decision W10 in
 > `../panel/panel_construction_decisions.md`.
 
-**The deliverable is six datasets, not one panel.** Each is built once over the FULL facility universe;
+**The deliverable is eight datasets, not one panel.** Each is built once over the FULL facility universe;
 any sample restriction is a downstream filter, not a pre-built panel. All join on `PGM_SYS_ID` (+ `YEAR`
 where the grain is facility × year).
 
@@ -30,8 +30,8 @@ where the grain is facility × year).
 | # | Decision | Alternative not taken | Why |
 |---|---|---|---|
 | **G1** | **Window `YEARS = 2005:2025`** applied at dataset build, not in the assets. | Bake the window into `data/processed/`. | Assets stay reusable for any window; the window is one line here. Inherited from panel-layer CC2. |
-| **G2** | **Every column in the dataset layer is `UPPER_SNAKE_CASE`.** Builders assemble internally in lowercase, then uppercase **once on write** via `write_dataset()`. | Hand-name every output column uppercase in each aggregator; or leave mixed case as sources deliver it. | One convention across all six files so join keys (`PGM_SYS_ID`, `YEAR`) and every derived column line up on merge with no per-file casing fixups. Single transform point = no typo drift across ~60 column literals. `toupper()` is idempotent on the already-uppercase ICIS attributes. |
-| **G3** | **Full universe, no sample panels.** Datasets 1–5 built over all facilities; restrictions are downstream filters. | Ship pre-filtered contiguous-US / major-source panels as in the old panel layer. | The six-dataset design pushes sample definition to the analysis, not the build — one canonical set of files, many samples. |
+| **G2** | **Every column in the dataset layer is `UPPER_SNAKE_CASE`.** Builders assemble internally in lowercase, then uppercase **once on write** via `write_dataset()`. | Hand-name every output column uppercase in each aggregator; or leave mixed case as sources deliver it. | One convention across all eight files so join keys (`PGM_SYS_ID`, `YEAR`) and every derived column line up on merge with no per-file casing fixups. Single transform point = no typo drift across ~60 column literals. `toupper()` is idempotent on the already-uppercase ICIS attributes. |
+| **G3** | **Full universe, no sample panels.** Datasets 1–5 built over all facilities; restrictions are downstream filters. | Ship pre-filtered contiguous-US / major-source panels as in the old panel layer. | The eight-dataset design pushes sample definition to the analysis, not the build — one canonical set of files, many samples. |
 | **G4** | **Every dataset carries `REGISTRY_ID` (FRS cross-program facility id) alongside `PGM_SYS_ID`**, joined in from `facilities.csv.gz`; `NA` where a facility has no FRS match (same convention as `coordinates`' `HAS_COORDINATE==0`). | Leave `REGISTRY_ID` only on `regulatory`/`coordinates` (the prior state) and require a manual join elsewhere. | `regulatory` and `coordinates` already carried it, but `operating`, `hpv_spells`, `hpv_active`, `penalties` didn't — surfaced when checking whether multi-facility settlement co-defendants share an FRS id (`multi_facility_settlement_decision.md` §5) required a manual join to `facilities.csv.gz` that shouldn't be necessary for a question this basic (facility identity across ICIS program systems, not just within one). |
 
 ---

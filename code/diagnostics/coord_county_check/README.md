@@ -13,6 +13,15 @@ coordinate is wrong: the ICIS label, the county-boundary vintage, or name-resolu
 The check bounds **county-level** error only — a point can be in the right county yet still far from the site.
 Neither field is ground truth; this is a consistency cross-check between two imperfect sources.
 
+## Run
+
+```sh
+Rscript code/diagnostics/coord_county_check/coord_county_check.R
+```
+
+Depends on `data/panels/spine.csv.gz` already existing (for `county_fips`) — run
+`Rscript code/03_panel_building/03_build.R` first if it doesn't.
+
 ## Method (`coord_county_check.R`)
 1. Resolve ICIS `(STATE, COUNTY_NAME)` → GEOID using the **same** county shapefile
    (`data/raw/us_counties/us_counties.shp`) that produced `county_fips`, so the derived side is

@@ -32,14 +32,14 @@ The only columns ever **added**:
 |------|------|
 | `02_clean.R` | **driver** — sources the two files below, loops over `CLEAN_SPECS`, then runs the Wayback cleaners |
 | `02_cleaning_functions.R` | shared mechanics: `read_raw`, `dup_index`, `write_clean`, `clean_one` |
-| `02_cleaning_parameters.R` | `CLEAN_SPECS` — one entry per regular source (16 of 19) |
+| `02_cleaning_parameters.R` | `CLEAN_SPECS` — one entry per regular source (17 of 20) |
 | `02_cleaning_functions_README.md` | function-by-function reference |
 | `02_cleaning_parameters_README.md` | field-by-field reference + the full source→output table |
 | `wayback/` | the 3 bespoke operating-status cleaners (17–19); see `wayback/README.md` |
 
-## Structure: why 16 sources are data and 3 are scripts
+## Structure: why 17 sources are data and 3 are scripts
 
-16 of the 19 sources follow one of two regular shapes — **event** (add date/year/dup/dup_exact) or
+17 of the 20 sources follow one of two regular shapes — **event** (add date/year/dup/dup_exact) or
 **attribute** (add only dup_exact). Those differ only in *which* file, *which* date column, and *which*
 duplicate key, so they are expressed as data in `CLEAN_SPECS` and executed by one function, `clean_one()`.
 

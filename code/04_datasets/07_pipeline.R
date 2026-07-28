@@ -149,6 +149,15 @@ stopifnot(
     !any(pipe$pipeline_observed == 1 &
          (is.na(pipe$n_viol_with_eval) | is.na(pipe$n_viol_with_ea))))
 
+# =========================================================================================================
+# FLAGGED ISSUES
+# =========================================================================================================
+# 1. (ea_penalty_amt_sum, ~line 104; see header CAVEAT) Very likely the SAME underlying dollars as ds 3
+#    penalties.csv.gz's PENALTY_AMOUNT (both trace to the same enforcement-action universe). Exposed here per
+#    violation, but must NOT be summed alongside ds 3's PENALTY_AMOUNT without a dedup rule -- that
+#    reconciliation is deliberately left undone (see briefs/datasets/dataset_construction_decisions.md).
+# =========================================================================================================
+
 # ---- write and summarize ------------------------------------------------------------------------------------
 write_dataset(pipe, "pipeline")                          # uppercases all columns on write (see 00_parameters.R)
 cat(sprintf(                                              # one-line build summary, printed to the console

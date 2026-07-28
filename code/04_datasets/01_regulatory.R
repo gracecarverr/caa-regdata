@@ -223,6 +223,17 @@ stopifnot(                                              # hard assertions -- any
   "observability rule violated: unobserved row with non-NA count" =
     !any(reg$icis_observed == 0 & !is.na(reg$n_violations)))
 
+# =========================================================================================================
+# FLAGGED ISSUES
+# =========================================================================================================
+# 1. (agg_enforcement(), ~line 148) penalty_amount's zero-vs-NA convention disagrees with 03_panel_building's
+#    attach_penalty(), which re-codes penalty_amount==0 back to NA after the join. THIS file makes no such
+#    correction: penalty_amount goes through the blanket coalesce(x, 0) below along with every other
+#    COUNT_COLS measure, so an ICIS-observed facility-year with a formal action but no positive penalty reads
+#    as a true, distinguishable 0 -- consistent with this file's own zero-vs-NA rule, but the two layers now
+#    disagree on what 0 vs NA means for the identically-named penalty_amount column.
+# =========================================================================================================
+
 write_dataset(reg, "regulatory")                 # uppercases all columns on write (see 00_parameters.R)
 cat(sprintf("regulatory: %s rows | %d cols | %s facilities | %s observed facility-years (%.1f%%)\n",
             format(nrow(reg), big.mark = ","), ncol(reg), format(length(ids), big.mark = ","),

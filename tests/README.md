@@ -23,3 +23,9 @@ consistent, so `filter(dup == 0)` reliably reproduces the event-level (deduplica
 > After any change to the cleaning functions or parameters, run `test_assets.R` **and** re-verify byte
 > identity of the processed assets (`gzip -dc … | md5`) against a pre-change baseline — a cleaning change that
 > alters outputs must be surfaced, not silently accepted.
+
+## Roadmap
+
+`test_schema.R` is currently a stub (prints a TODO list, asserts nothing). Planned checks, per asset:
+required columns present and keys non-missing; `dup==0` row count matches the distinct-event count (dedup
+reconstruction); expected row-count ranges (guard against silent source changes); `dup_exact` implies `dup > 0`.

@@ -1,6 +1,6 @@
 # 02_cleaning_parameters.R — reference
 
-`CLEAN_SPECS` is a list with one entry per **regular** source (16 of the 19). The driver `02_clean.R` calls
+`CLEAN_SPECS` is a list with one entry per **regular** source (17 of the 20). The driver `02_clean.R` calls
 `clean_one()` on each. The 3 Wayback sources are not here — they have bespoke scripts in `wayback/`.
 
 ## Spec fields

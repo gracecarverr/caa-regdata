@@ -17,7 +17,7 @@
 #   out      : output/hpv_spell_diagnostics/records.csv.gz   (record-level, all native cols + diagnostics)
 #              + a console summary profiling the decision-relevant distributions.
 #
-#   NB lowercase derived column names on purpose -- this is a diagnostic, NOT part of the six-dataset layer,
+#   NB lowercase derived column names on purpose -- this is a diagnostic, NOT part of the eight-dataset layer,
 #   so it does not follow the UPPER_SNAKE_CASE dataset convention (G2). Native columns keep source casing.
 # =========================================================================================================
 library(readr); library(dplyr); library(lubridate)                    # readr for I/O, dplyr for the pipe chain, lubridate for mdy() date parsing
