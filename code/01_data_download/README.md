@@ -19,6 +19,7 @@ Every successfully extracted file gets a row appended to `data/raw/MANIFEST.csv`
 | **ICIS-Air** bulk tables (EPA ECHO) | `data/raw/ICIS-AIR_downloads/` | **automated** — downloads & unzips the ECHO bundle |
 | **AFS** legacy tables | `data/raw/afs_downloads/` | **automated** — same ECHO bulk directory as ICIS-Air |
 | combined **emissions** report | `data/raw/POLL_RPT_COMBINED_EMISSIONS.csv` | **automated** — same ECHO bulk directory |
+| **CAA Compliance Pipeline** dataset | `data/raw/PIPELINE_CAA_00_COMPLETE.csv` | **automated** — same ECHO bulk directory (manually staged 2026-07-23, automated 2026-07-27) |
 | **FRS** facility coordinates + program linkages | `data/raw/frs/` | **automated** — separate ECHO bulk zip; see note below |
 | **US counties** boundaries | `data/raw/us_counties/` | **automated** — Census cartographic boundary file (2022 vintage), full US incl. AK/HI/PR |
 | ICIS-Air **Wayback** snapshots (2015–2017, 2019–2025) | `data/raw/ICIS_AIR_WAYBACK/ICIS-AIR_downloads_<year>/` | **automated** — pinned per-year to a confirmed capture timestamp, not a live search; see note below |

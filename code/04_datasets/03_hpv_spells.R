@@ -88,6 +88,21 @@ stopifnot(
   # a "closed" row's spell_days would fail "closed spell_days must be >= 1" (NA >= 1 is NA, and stopifnot
   # treats a non-TRUE/NA result as a failure), halting the build rather than shipping a silently-wrong row
 
+# =========================================================================================================
+# FLAGGED ISSUES
+# =========================================================================================================
+# 1. (spell_status case_when, ~line 49) The first two branches test nz() on the RAW string, not on whether
+#    mdy() actually managed to parse it. A HPV_DAYZERO_DATE that is non-blank but fails to parse (dayzero
+#    date == NA) would skip "missing_start" and fall through to "open"/"closed" with a NA dayzero baked in.
+#    0 rows affected as of the 2026-07-27 snapshot (independently verified) -- mdy() is permissive enough to
+#    parse even garbage like "11-05-0218" into a wrong-but-non-NA year 218 (the CAMDAM1489 case documented in
+#    04_hpv_active.R). If it ever did happen, the stopifnot() invariants below (specifically "closed
+#    spell_days must be >= 1") would halt the build rather than silently shipping a bad row -- a latent
+#    robustness gap with an effective safety net, not an active bug.
+# 2. (frs_ids, ~line 35) Same "reads ICIS facilities.csv.gz, not actual FRS data" naming note as
+#    02_operating.R and 05_penalties.R.
+# =========================================================================================================
+
 write_dataset(spells, "hpv_spells")              # uppercases all columns on write (see 00_parameters.R)
 cat(sprintf("hpv_spells: %s spells | %d cols | %s facilities\n  status: %s\n",
             format(nrow(spells), big.mark = ","), ncol(spells),

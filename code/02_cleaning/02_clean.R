@@ -3,7 +3,7 @@
 #   in data/processed/ (keep all columns, keep all rows; add only date/year/dup/dup_exact where relevant).
 #
 #   Run order:
-#     1. the 16 regular sources, described as data in 02_cleaning_parameters.R (executed via clean_one())
+#     1. the 17 regular sources, described as data in 02_cleaning_parameters.R (executed via clean_one())
 #     2. the 3 bespoke Wayback operating-status cleaners in wayback/ (17 -> 18 -> 18 depends on 17's output)
 #
 #   Standalone:  Rscript code/02_cleaning/02_clean.R      (assumes data/raw/ is already populated)

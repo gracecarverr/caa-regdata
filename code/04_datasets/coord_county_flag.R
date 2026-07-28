@@ -5,8 +5,8 @@
 #   county_fips (so the derived side is vintage-consistent), then measures how far the coordinate falls from
 #   the ICIS-claimed county.
 #
-#   Standalone copy, local to this datasets layer only (2026-07-23) -- panel-building, including the
-#   original copy of this helper and its standalone diagnostic, moved to CAA_Project.
+#   Standalone copy, local to this datasets layer only (2026-07-23). Panel-building, including the original
+#   copy of this helper and its standalone diagnostic, still lives in this repo at code/03_panel_building/.
 #   REVIEW(design): this is a byte-for-byte duplicate (module docstring aside) of
 #   code/03_panel_building/coord_county_flag.R plus one added output column (icis_county_fips). Any future
 #   fix to the shared logic -- e.g. the 2026-07-27 PR/VI/GU/MP + diacritics fix below -- has to be applied
@@ -97,3 +97,12 @@ flag_coord_county <- function(fac, counties_sf) {
          coord_county_dist_km = dist_km,
          coord_gross_error = ifelse(is.na(dist_km), NA_integer_, as.integer(dist_km > GROSS_ERROR_KM)))
 }
+
+# =========================================================================================================
+# FLAGGED ISSUES
+# =========================================================================================================
+# 1. (module docstring, ~line 10) This is a byte-for-byte duplicate (module docstring aside) of
+#    code/03_panel_building/coord_county_flag.R, plus one added output column (icis_county_fips). Any future
+#    fix to the shared logic -- e.g. the 2026-07-27 PR/VI/GU/MP + diacritics fix (see .STATE_FIPS and
+#    .norm_name above) -- has to be applied to both copies by hand; nothing enforces they stay in sync.
+# =========================================================================================================

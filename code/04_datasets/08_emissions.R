@@ -161,6 +161,17 @@ stopifnot(
       crosswalk |> distinct(PGM_SYS_ID, is_shared_registry, n_pgm_sys_id_sharing_registry) |> arrange(PGM_SYS_ID),
       em |> distinct(PGM_SYS_ID, is_shared_registry, n_pgm_sys_id_sharing_registry) |> arrange(PGM_SYS_ID)))
 
+# =========================================================================================================
+# FLAGGED ISSUES
+# =========================================================================================================
+# 1. (broadcast, ~line 116; see header REGISTRY_ID FAN-OUT note) Some REGISTRY_IDs map to more than one
+#    PGM_SYS_ID -- a straight join broadcasts one facility's reported emissions onto every co-mapped
+#    PGM_SYS_ID identically. IS_SHARED_REGISTRY / N_PGM_SYS_ID_SHARING_REGISTRY expose the structure but
+#    don't resolve it. Do NOT sum emissions across facilities sharing a REGISTRY_ID without accounting for
+#    this, and note the fan-out count is NOT pinned to a snapshot (ICIS-AIR/FRS are live current-bulk
+#    downloads, so the exact figure shifts with every refresh -- see dataset_construction_decisions.md EM2).
+# =========================================================================================================
+
 # ---- write and summarize ------------------------------------------------------------------------------------
 write_dataset(em, "emissions")                            # uppercases all columns on write (see 00_parameters.R)
 n_shared_registry <- n_distinct(crosswalk$REGISTRY_ID[crosswalk$is_shared_registry == 1 &

@@ -8,7 +8,7 @@
 #
 #   GRAIN -- one row per formal-action record (105,656; ALL rows kept, dup>0 flagged not dropped, per the
 #     layer convention). Joins on PGM_SYS_ID (+ YEAR for facility-year merges). NOT window-restricted: all
-#     action years are kept (the six-dataset design pushes sample/window filters downstream). Only FORMAL
+#     action years are kept (the eight-dataset design pushes sample/window filters downstream). Only FORMAL
 #     actions carry penalties -- informal actions have no PENALTY_AMOUNT column and are out of scope here.
 #
 #   MULTI-FACILITY SETTLEMENTS (the load-bearing caveat, panel E4/F2) -- ENF_IDENTIFIER is the settlement key.
@@ -67,6 +67,16 @@ stopifnot(
   "is_multi_facility disagrees with count"      = all(pen$is_multi_facility == as.integer(pen$n_settlement_facilities > 1)),
   "n_settlement_facilities < 1"                 = all(pen$n_settlement_facilities >= 1),
   "action facility not in ds0 universe"         = all(pen$PGM_SYS_ID %in% ids))
+
+# =========================================================================================================
+# FLAGGED ISSUES
+# =========================================================================================================
+# 1. (has_penalty, ~line 43) Recomputes parse_number(PENALTY_AMOUNT) a second time rather than reusing the
+#    penalty_amount column just defined above (dplyr's transmute() would allow referencing it) -- harmless
+#    duplication, same result.
+# 2. (frs_ids, ~line 54) Same "reads ICIS facilities.csv.gz, not FRS_FACILITIES.csv" naming note as
+#    02_operating.R and 03_hpv_spells.R.
+# =========================================================================================================
 
 write_dataset(pen, "penalties")                  # uppercases all columns on write (see 00_parameters.R)
 cat(sprintf("penalties: %s actions | %d cols | %s facilities | years %d-%d\n",

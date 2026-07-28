@@ -25,14 +25,16 @@ this README stay at the top level as the reference/index docs.
 | [`panel/panel_open_questions.md`](panel/panel_open_questions.md) | Choices **not yet settled** — balance vs. unbalanced, operating-indicator / Census merge, violation date rule, the electric definition, covariates, and verification items. |
 | [`panel/panel_findings_summary.md`](panel/panel_findings_summary.md) | Meeting-ready one-pager of panel scale, key measures, duplicate load, and penalties. Rendered as-is on the site's Panels page by `code/diagnostics/build_panels_page.R`, alongside live-computed summary-stat tables. |
 
-### `datasets/` — the six-dataset layer (`code/04_datasets/`)
+### `datasets/` — the eight-dataset layer (`code/04_datasets/`)
 
 | brief | scope |
 |-------|-------|
-| [`datasets/dataset_construction_decisions.md`](datasets/dataset_construction_decisions.md) | Every dataset-construction decision (R/O/P/H-numbered) across all six datasets, the alternative not taken, and the data issue behind it. |
+| [`datasets/dataset_construction_decisions.md`](datasets/dataset_construction_decisions.md) | Every dataset-construction decision (R/O/P/H-numbered) across all eight datasets, the alternative not taken, and the data issue behind it. |
 | [`datasets/regulatory_dataset_profile.md`](datasets/regulatory_dataset_profile.md) | General profile writeup of dataset 0 (`regulatory.csv.gz`) — coverage, event-count distributions, facility characteristics. No open decision attached. |
 | [`datasets/hpv_profile.md`](datasets/hpv_profile.md) | General profile writeup of datasets 2/2b (`hpv_spells.csv.gz` / `hpv_active.csv.gz`) — spell status/duration, program/agency composition, active-rate trend. No open decision attached. |
 | [`datasets/coordinates_profile.md`](datasets/coordinates_profile.md) | General profile writeup of dataset 4 (`coordinates.csv.gz`) — coverage funnel, coordinate-vs-county agreement, facility geography, state-level coverage gaps. No open decision attached. |
+| [`datasets/pipeline_profile.md`](datasets/pipeline_profile.md) | General profile writeup of dataset 6 (`pipeline.csv.gz`) — EPA ECHO's CAA Compliance Pipeline, evaluation-to-enforcement chain. No open decision attached. |
+| [`datasets/emissions_profile.md`](datasets/emissions_profile.md) | General profile writeup of dataset 7 (`emissions.csv.gz`) — combined pollutant report coverage and magnitude distributions. No open decision attached. |
 | [`datasets/begin_year_operating_proxy.md`](datasets/begin_year_operating_proxy.md) | **Open decision.** Whether `EARLIEST_PROGRAM_BEGIN_YEAR` (dataset 1) is usable as a pre-2015 facility-existence marker. |
 | [`datasets/afs_crosswalk_feasibility.md`](datasets/afs_crosswalk_feasibility.md) | **Open decision.** Whether the AFS↔ICIS facility-id crosswalk is good enough to use AFS's pre-2015 historical compliance status (incl. an explicit shut-down code) as an operating-status signal — 74.5% coverage for the population that needs it, but with severe state-level variance. |
 | [`datasets/multi_facility_settlement_decision.md`](datasets/multi_facility_settlement_decision.md) | **Open decision.** How to handle multi-facility settlement penalties in dataset 3 — naive summing overstates the total by 35.2%. |

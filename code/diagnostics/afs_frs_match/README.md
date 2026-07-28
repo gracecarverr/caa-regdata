@@ -17,6 +17,16 @@ under-covers closed facilities. It was never brought into `caa-regdata`, and its
 number is traceable from here, not only a sibling project) and then asks the two questions the prior run
 never did: does the crosswalk reach the facilities *this repo* would actually apply it to.
 
+## Run
+
+```sh
+Rscript code/diagnostics/afs_frs_match/afs_icis_crosswalk.R
+```
+
+**Depends on `10_begin_year_proxy.R` having already run** — step 4 below reads
+`output/begin_year_proxy/pre2015_single_year_facilities.csv`, so run `Rscript code/diagnostics/10_begin_year_proxy.R`
+first if that file doesn't exist yet.
+
 ## Method (`afs_icis_crosswalk.R`)
 Two hops, bridged through FRS:
 

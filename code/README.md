@@ -42,7 +42,7 @@ Package versions are pinned with `renv` — run `renv::restore()` once first.
 - **Modular where it pays, explicit where it doesn't.** The two stages with heavy repetition are factored
   into a small set of **functions** + a **parameters** file that lists what differs per source/panel, driven
   by a thin loop:
-  - `02_cleaning/` — `02_cleaning_functions.R` + `02_cleaning_parameters.R` (16 regular sources as data) +
+  - `02_cleaning/` — `02_cleaning_functions.R` + `02_cleaning_parameters.R` (17 regular sources as data) +
     a `wayback/` subfolder for the 3 bespoke operating-status cleaners.
   - `03_panel_building/` — `03_build_functions.R` (`build_panel()`) + `03_build_parameters.R` (`PANEL_SPECS`).
   Genuinely one-off scripts (spine, the wayback cleaners) stay as their own scripts.
@@ -57,6 +57,6 @@ Package versions are pinned with `renv` — run `renv::restore()` once first.
 
 Code READMEs explain *how*. For *why* a construction choice was made (facility key, date rules, duplicate
 handling, zero semantics, Wayback status, HPV intervals) see **`briefs/panel/panel_construction_decisions.md`**
-(panel layer) or **`briefs/datasets/dataset_construction_decisions.md`** (six-dataset layer); for
+(panel layer) or **`briefs/datasets/dataset_construction_decisions.md`** (eight-dataset layer); for
 the institutional setting see **`briefs/institutional_overview.md`**; for column-level detail see
 **`data/processed/*.README.md`** and **`docs/data_dictionary.md`**.

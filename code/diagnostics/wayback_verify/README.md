@@ -13,6 +13,15 @@ URL at any status code (deleted from `data/raw/` as a mislabeled duplicate of 20
 This asks the sharper question directly: **for each currently-staged year, does *any* Wayback capture
 reproduce it byte-for-byte** — rather than trusting a heuristic guess for which capture to try.
 
+## Run
+
+```sh
+Rscript code/diagnostics/wayback_verify/wayback_verify.R
+```
+
+Needs **network access** (queries the Wayback Machine's CDX API and downloads candidate zips into `_cache/`,
+gitignored). Set `EXHAUSTIVE=true` to keep checking candidates past the first match.
+
 ## Method (`wayback_verify.R`)
 1. md5 every staged `*.csv` first (the ground truth being tested against).
 2. Per staged year, query the CDX API once (unfiltered by status, digest-collapsed) for captures of the

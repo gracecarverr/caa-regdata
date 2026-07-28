@@ -17,6 +17,7 @@ definitions of every derived field in the spine and the three sample panels, see
 | `03_build.R` | **Driver** — runs the spine build above, then builds the sample panels by applying each `PANEL_SPECS` filter to the spine and calling `build_panel()`. |
 | `03_build_functions.R` | The shared **panel recipe**: per-source aggregators, HPV-interval status, penalty, wayback status, known-zero coding, and `build_panel()`. See `03_build_functions_README.md`. |
 | `03_build_parameters.R` | `YEARS`, `CONUS`, and `PANEL_SPECS` (the per-panel filters). See `03_build_parameters_README.md`. |
+| `coord_county_flag.R` | `flag_coord_county()` — cross-checks each facility's FRS coordinate against its ICIS-listed county, returning `coord_county_dist_km` / `coord_gross_error`. Sourced by `00_spine.R` and carried into every sample panel. **Duplicated** (module docstring aside, byte-for-byte) in `code/04_datasets/coord_county_flag.R`, which adds one extra output column (`icis_county_fips`) for that layer's `06_coordinates.R`. Nothing enforces the two copies stay in sync — a future fix to the shared logic (e.g. the FIPS/name-normalization rules) has to be hand-applied to both. |
 
 ## The sample panels
 

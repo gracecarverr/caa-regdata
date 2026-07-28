@@ -82,6 +82,15 @@ stopifnot(
         as.integer(coords$coord_county_dist_km[!is.na(coords$coord_county_dist_km)] > 5)),
   "county_fips present without a coordinate"      = all(is.na(coords$county_fips) | coords$has_coordinate == 1))
 
+# =========================================================================================================
+# FLAGGED ISSUES
+# =========================================================================================================
+# 1. (frs, ~line 48) distinct(REGISTRY_ID, .keep_all = TRUE) is a first-row-wins dedup on duplicate
+#    REGISTRY_ID, with no preference for a row that actually carries a coordinate -- same caveat as
+#    03_panel_building/00_spine.R's identical pattern. A duplicate REGISTRY_ID whose first row lacks lat/lon
+#    stays coordinate-less even if a later duplicate row has one.
+# =========================================================================================================
+
 write_dataset(coords, "coordinates")             # uppercases all columns on write (see 00_parameters.R)
 n <- nrow(coords)
 cat(sprintf("coordinates: %s facilities | %d cols\n", format(n, big.mark = ","), ncol(coords)))

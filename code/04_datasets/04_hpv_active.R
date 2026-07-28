@@ -89,6 +89,14 @@ stopifnot(
   "NA only where uncovered (covered year is never NA)"=
     !any(is.na(ha$hpv_active) & paste(ha$PGM_SYS_ID, ha$year) %in% covered_key))
 
+# =========================================================================================================
+# FLAGGED ISSUES
+# =========================================================================================================
+# 1. (DZ_MAX, ~line 29) A hardcoded literal matching but not derived from max(YEARS) -- same drift risk noted
+#    for BEGIN_YEAR_MAX in 02_operating.R: the two would silently diverge if the analysis window is ever
+#    extended without also updating this constant.
+# =========================================================================================================
+
 write_dataset(ha, "hpv_active")                  # uppercases all columns on write (see 00_parameters.R)
 cat(sprintf("hpv_active: %s rows | %s active (1) | %s not-active (0) | %s unknown (NA) | %s ever-active facilities\n",
             format(nrow(ha), big.mark = ","), format(sum(ha$hpv_active == 1, na.rm = TRUE), big.mark = ","),

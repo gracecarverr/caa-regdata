@@ -122,6 +122,18 @@ stopifnot(
     # own correctness -- a strong safety net; any real data-refresh regression here halts the build loudly
     # rather than silently shipping a dataset that violates its own documented contract
 
+# =========================================================================================================
+# FLAGGED ISSUES
+# =========================================================================================================
+# 1. (frs_ids, ~line 26) Despite the name, this reads the CLEANED ICIS "facilities" table (the same source
+#    01_regulatory.R calls `attrs`), NOT FRS_FACILITIES.csv (the actual FRS source, used in 06_coordinates.R)
+#    -- a misleading name for what's really the ICIS facility-ID universe; easy to misread as "facilities
+#    present in FRS". Same note applies to 03_hpv_spells.R and 05_penalties.R's identically-named reads.
+# 2. (BEGIN_YEAR_MAX, ~line 76) A separate hardcoded literal from YEARS (00_parameters.R), not derived as
+#    max(YEARS) -- happens to match today, but the two would silently diverge if the analysis window is ever
+#    extended without also updating this constant. Same pattern as DZ_MAX in 04_hpv_active.R.
+# =========================================================================================================
+
 write_dataset(op, "operating")                   # uppercases all columns on write (see 00_parameters.R)
 cat(sprintf("operating: %s rows | %d cols | %s facilities | %s wayback-observed facility-years (%.1f%%)\n",
             format(nrow(op), big.mark = ","), ncol(op), format(length(ids), big.mark = ","),

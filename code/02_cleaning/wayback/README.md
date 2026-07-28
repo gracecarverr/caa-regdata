@@ -15,9 +15,9 @@ need to know *when* a facility (and its programs) were actually in service. Thes
 snapshot **presence** and observed status transitions across the 11 Wayback captures. One snapshot = one panel
 year (it reflects the ~Q4 state of that year).
 
-Consumed downstream by the facility-spine/panel-building code, which moved to the CAA_Project repo
-(2026-07-23) along with its construction-decisions doc (formerly `briefs/panel/panel_construction_decisions.md`
-and `panel_open_questions.md`) — see that repo for the full rationale and known caveats.
+Consumed downstream by the facility-spine/panel-building code at `code/03_panel_building/` — see
+`briefs/panel/panel_construction_decisions.md` and `panel_open_questions.md` for the full rationale and known
+caveats.
 
 ## The three scripts
 
@@ -44,4 +44,4 @@ and `panel_open_questions.md`) — see that repo for the full rationale and know
   `panel_construction_decisions.md`.
 
 The program-group code → group mapping in `19_...R` (`GROUPS`) must stay aligned with the `prog_*` flags
-built downstream (formerly `code/03_panel_building/00_spine.R`, now in the CAA_Project repo).
+built downstream in `code/03_panel_building/00_spine.R`.
