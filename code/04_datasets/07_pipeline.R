@@ -23,10 +23,14 @@
 #     -- not silently dropped, just structurally unable to appear (asserted at the end of this script).
 #
 #   YEAR ANCHOR -- VIOL_START_DATE, the one date present on every real (non-placeholder) row. NOT the clean
-#     asset's own `date`/`year` (= SORT_DATE, EPA's own "latest stage reached" display date -- verified to
-#     equal EA_DATE if an EA is linked, else VIOL_START_DATE, else EVAL_DATE). SORT_DATE would shift a
-#     violation into a later year purely because it was eventually enforced, which would misdate the
-#     violation itself -- so this script parses VIOL_START_DATE itself rather than reusing the cleaned date.
+#     asset's own `date`/`year` (= SORT_DATE, EPA's own "latest stage reached" display date -- verified 2026-07-27
+#     to equal EVAL_DATE if a linked evaluation exists, else VIOL_START_DATE, else EA_DATE -- 0 exceptions
+#     across 66,699 non-blank SORT_DATE rows via `code/diagnostics/16_pipeline_profile.R`'s PL2 check;
+#     corrects an earlier, backwards statement of this priority order that had EA_DATE first -- that
+#     ordering gave a 58% mismatch rate when actually tested, this one gives 0). SORT_DATE would shift a
+#     violation into a later year purely because it was eventually enforced or evaluated after the fact,
+#     which would misdate the violation itself -- so this script parses VIOL_START_DATE itself rather than
+#     reusing the cleaned date.
 #
 #   UNIVERSE -- the SAME 279,211-facility x 2005-2025 rectangle as ds 0/1/2b (G3/G4), so this dataset joins
 #     1:1 to regulatory.csv.gz on (PGM_SYS_ID, YEAR).

@@ -1,19 +1,19 @@
 EVAL_TYPE_DESC,N,pct
-PCE Off-Site,5055,0.2226
-FCE On-Site,4035,0.1777
-Self-Disclosure,3243,0.1428
-PCE On-Site,2715,0.1196
-Enforcement Action Monitoring,2226,0.098
-PCE Stack Test,1805,0.0795
-Applicability Determination,1111,0.0489
-Investigation,900,0.0396
-PCE Title V CCR,549,0.0242
-PCE On-Site Record/Report Review,527,0.0232
-FCE Off-Site,265,0.0117
-Conference with Facility,136,0.006
+PCE Off-Site,5199,0.2259
+FCE On-Site,4193,0.1822
+Self-Disclosure,3213,0.1396
+PCE On-Site,2733,0.1187
+Enforcement Action Monitoring,2222,0.0965
+PCE Stack Test,1813,0.0788
+Applicability Determination,1104,0.048
+Investigation,926,0.0402
+PCE Title V CCR,540,0.0235
+PCE On-Site Record/Report Review,522,0.0227
+FCE Off-Site,266,0.0116
+Conference with Facility,132,0.0057
 Citizen Complaint,94,0.0041
-PCE On-Site Monitoring/Sampling,21,0.0009
-PCE On-Site Visible Emission Observation,8,0.0004
+PCE On-Site Monitoring/Sampling,36,0.0016
+PCE On-Site Visible Emission Observation,8,0.0003
 PCE On-Site CEMS/CMS Audit,5,0.0002
 Accepted Lead Change,4,0.0002
 Corporate-Wide Negotiation,3,0.0001

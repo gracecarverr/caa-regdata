@@ -5,48 +5,58 @@
 (H1–H7) are documented in `dataset_construction_decisions.md` Parts D/D2 — this brief characterizes the
 built assets, it doesn't re-litigate how they were built.*
 
+*Refreshed 2026-07-27 (was 2026-07-22, predates the 2026-07-26 ICIS-AIR refresh) — "was X" notes give the
+previously-documented value.*
+
 ---
 
-## Part A — `hpv_spells.csv.gz` (dataset 2, spell-level, 44,490 rows)
+## Part A — `hpv_spells.csv.gz` (dataset 2, spell-level, 44,777 rows, was 44,490)
 
-**Scale**: 44,490 spells across 15,638 facilities. `PGM_SYS_ID` is not unique — this is spell grain, not
-facility or facility-year grain (H2: overlapping/concurrent spells are deliberately not merged here).
+**Scale**: 44,777 spells across 15,656 facilities (was 44,490/15,638). `PGM_SYS_ID` is not unique — this is
+spell grain, not facility or facility-year grain (H2: overlapping/concurrent spells are deliberately not
+merged here).
 
 ### A.1 Spell status
 
 | status | n | % | meaning |
 |---|--:|--:|---|
-| closed | 40,083 | 90.1% | day-zero + resolved date, well-ordered |
-| open | 3,997 | 9.0% | day-zero, no resolved date — persistent noncompliance |
-| bad_order | 377 | 0.8% | resolved date recorded *before* day-zero |
-| missing_start | 33 | 0.0% | no day-zero date at all |
+| closed | 40,515 | 90.5% | day-zero + resolved date, well-ordered |
+| open | 3,755 | 8.4% | day-zero, no resolved date — persistent noncompliance |
+| bad_order | 474 | 1.1% | resolved date recorded *before* day-zero |
+| missing_start | 33 | 0.1% | no day-zero date at all |
+
+*(Was closed 40,083/90.1%, open 3,997/9.0%, bad_order 377/0.8%, missing_start 33/0.0%.)*
 
 ### A.2 Spell duration (closed spells only, `SPELL_DAYS` inclusive)
 
-n = 40,083 | min 1 | p25 154 | **median 314** | p75 667 | p90 1,296 | max 658,336 | mean 569.8 days.
-**44.2% of closed spells last over a year.** The max (658,336 days ≈ 1,803 years) is certainly a bad-data
-outlier in one of the two dates — not screened out here since `SPELL_DAYS` is a faithful pass-through of
-`hpv_resolved_date − hpv_dayzero_date` for whatever the raw dates say (screening is a downstream/collapse
-concern per H4, not this table's job).
+n = 40,515 (was 40,083) | min 1 | p25 154 | **median 315** (was 314) | p75 666 (was 667) | p90 1,291 (was
+1,296) | max 658,336 (unchanged) | mean 569.1 days (was 569.8). **44.2% of closed spells last over a year**
+(unchanged). The max (658,336 days ≈ 1,803 years) is certainly a bad-data outlier in one of the two dates —
+not screened out here since `SPELL_DAYS` is a faithful pass-through of `hpv_resolved_date − hpv_dayzero_date`
+for whatever the raw dates say (screening is a downstream/collapse concern per H4, not this table's job).
 
 ### A.3 Facility concentration
 
-**42.6% of facilities with any HPV spell have more than one** — matches H2's cited figure exactly. Multi-spell
-facilities are the norm, not the exception; a per-facility "ever HPV" flag would substantially undercount
-actual HPV *episodes*.
+**42.8% of facilities with any HPV spell have more than one** (was 42.6%) — close to, but no longer exactly,
+H2's cited figure; drift is expected since H2 was measured at a different snapshot. Multi-spell facilities are
+the norm, not the exception; a per-facility "ever HPV" flag would substantially undercount actual HPV
+*episodes*.
 
 ### A.4 Programs implicated (`PROGRAM_CODES`, multi-value per spell)
 
 | program | n spells | % of spells |
 |---|--:|--:|
-| Title V (`CAATVP`) | 25,555 | 57.4% |
-| SIP (`CAASIP`) | 21,613 | 48.6% |
-| NSPS (`CAANSPS`) | 4,834 | 10.9% |
-| MACT (`CAAMACT`) | 3,798 | 8.5% |
-| PSD (`CAAPSD`) | 2,062 | 4.6% |
-| NESHAP (`CAANESH`) | 981 | 2.2% |
-| FESOP (`CAAFESOP`) | 840 | 1.9% |
-| NSR (`CAANSR`) | 832 | 1.9% |
+| Title V (`CAATVP`) | 25,662 | 57.3% |
+| SIP (`CAASIP`) | 21,715 | 48.5% |
+| NSPS (`CAANSPS`) | 4,890 | 10.9% |
+| MACT (`CAAMACT`) | 3,857 | 8.6% |
+| PSD (`CAAPSD`) | 2,084 | 4.7% |
+| NESHAP (`CAANESH`) | 983 | 2.2% |
+| FESOP (`CAAFESOP`) | 847 | 1.9% |
+| NSR (`CAANSR`) | 834 | 1.9% |
+
+*(As of 2026-07-27; was Title V 25,555/57.4%, SIP 21,613/48.6%, NSPS 4,834/10.9%, MACT 3,798/8.5%,
+PSD 2,062/4.6%, NESHAP 981/2.2%, FESOP 840/1.9%, NSR 832/1.9%.)*
 
 Percentages don't sum to 100 — a spell can implicate multiple programs simultaneously (`PROGRAM_CODES` is a
 whitespace-joined multi-value field). Title V and SIP together account for the large majority of HPV activity
@@ -55,21 +65,24 @@ whitespace-joined multi-value field). Title V and SIP together account for the l
 noticeably more Title-V-concentrated than facility enrollment is, i.e. Title V facilities are
 over-represented among HPV spells relative to their share of the universe).
 
-> **Implementation note (caught while building this profile):** tokenizing `PROGRAM_CODES` via
-> `strsplit()` must not be called bare inside `data.table`'s `[i, j]` (unwrapped in `.()`) — `data.table` tries
-> to rectangularize the resulting ragged list and silently recycles/corrupts it. Verified: this inflated every
-> program's count by roughly 5× before being caught (e.g. Title V showed 143,323 instead of the correct
-> 25,555). Fixed in the script by splitting on the plain vector (`sp$PROGRAM_CODES[...]`) outside the `[`
-> indexing. Flagging in case the same pattern gets reused elsewhere on a multi-value field.
+> **Implementation note (caught while building this profile, dated finding — figures below are as originally
+> caught, not refreshed):** tokenizing `PROGRAM_CODES` via `strsplit()` must not be called bare inside
+> `data.table`'s `[i, j]` (unwrapped in `.()`) — `data.table` tries to rectangularize the resulting ragged list
+> and silently recycles/corrupts it. Verified: this inflated every program's count by roughly 5× before being
+> caught (e.g. Title V showed 143,323 instead of the correct 25,555 then current — 25,662 as of 2026-07-27).
+> Fixed in the script by splitting on the plain vector (`sp$PROGRAM_CODES[...]`) outside the `[` indexing.
+> Flagging in case the same pattern gets reused elsewhere on a multi-value field.
 
 ### A.5 Enforcing agency
 
 | agency | n | % |
 |---|--:|--:|
-| State | 25,675 | 57.7% |
-| Local | 15,250 | 34.3% |
-| U.S. EPA | 3,556 | 8.0% |
-| Tribal / State Contractor / County / Other | 8 | 0.02% |
+| State | 25,898 | 57.8% |
+| Local | 15,314 | 34.2% |
+| U.S. EPA | 3,556 | 7.9% |
+| Tribal / State Contractor / County / Other | 9 | 0.02% |
+
+*(As of 2026-07-27; was State 25,675/57.7%, Local 15,250/34.3%, EPA 3,556/8.0%, other 8.)*
 
 Nearly all HPV enforcement is state or local — direct EPA action is under 10% of spells.
 
@@ -79,51 +92,62 @@ FRV (Federally Reportable Violation) is the enforcement-response tier just below
 is carried through from the raw extract but plays no role in `spell_status`/`spell_days` construction (03_hpv_spells.R).
 This is a first look at how often it's populated and how it orders relative to HPV day-zero.
 
-**Coverage**: only 15,462 / 44,490 spells (34.8%) have a non-missing FRV date — most HPV spells have none.
+**Coverage**: 15,749 / 44,777 spells (35.2%, was 15,462/44,490/34.8%) have a non-missing FRV date — most HPV
+spells have none.
 
-**Ordering** (of the 15,462 spells with both dates populated):
+**Ordering** (of the 15,749 spells with both dates populated):
 
 | relationship | n | % |
 |---|--:|--:|
-| FRV date = day-zero | 14,394 | 93.1% |
-| FRV date **before** day-zero | 1,057 | 6.8% |
+| FRV date = day-zero | 14,672 | 93.2% |
+| FRV date **before** day-zero | 1,066 | 6.8% |
 | FRV date after day-zero | 10 | 0.06% |
+
+*(Was 14,394/93.1%, 1,057/6.8%, 10/0.06%.)*
 
 The overwhelming pattern, where present, is that the FRV date **coincides exactly** with `HPV_DAYZERO_DATE` —
 consistent with day-zero commonly being set to the earliest FRV determination itself. FRV-before-day-zero is
-a real but minority pattern (6.8%): among those 1,057 spells, the gap (`HPV_DAYZERO_DATE − EARLIEST_FRV_DETERM_DATE`)
-is min 1, p25 25, **median 55**, p75 90, p90 216, mean 786.8 days — mostly a matter of weeks to a few months,
-i.e. an FRV determination that predates the eventual HPV escalation by a modest lag, plausibly the FRV→HPV
-escalation process itself. The max (730,485 days ≈ 2,000 years) is a bad-data outlier in one of the two raw
-dates, same pattern as the `SPELL_DAYS` max in A.2 — not screened out here for the same reason (no plausibility
-screen at this layer, per H4). FRV-after-day-zero (10 spells, 0.06%) is negligible and likely data noise rather
-than a real pattern, since day-zero should not postdate the violation tier that (per program logic) precedes it.
+a real but minority pattern (6.8%): among those 1,066 spells (was 1,057), the gap
+(`HPV_DAYZERO_DATE − EARLIEST_FRV_DETERM_DATE`) is min 1, p25 25, **median 55**, p75 90, p90 205.5 (was 216),
+mean 779.2 days (was 786.8) — mostly a matter of weeks to a few months, i.e. an FRV determination that
+predates the eventual HPV escalation by a modest lag, plausibly the FRV→HPV escalation process itself. The
+max (730,485 days ≈ 2,000 years, unchanged) is a bad-data outlier in one of the two raw dates, same pattern as
+the `SPELL_DAYS` max in A.2 — not screened out here for the same reason (no plausibility screen at this layer,
+per H4). FRV-after-day-zero (10 spells, 0.06%, unchanged) is negligible and likely data noise rather than a
+real pattern, since day-zero should not postdate the violation tier that (per program logic) precedes it.
 
 Full detail: `output/hpv_profile/frv_date_coverage.csv`, `frv_vs_dayzero_ordering.csv`, `frv_before_dayzero_gap_days.csv`.
 
 ---
 
-## Part B — `hpv_active.csv.gz` (dataset 2b, facility × year, 5,863,431 rows)
+## Part B — `hpv_active.csv.gz` (dataset 2b, facility × year, 5,872,965 rows, was 5,863,431)
 
-**Zero/NA breakdown** (mirrors dataset 0's discipline, H6): 35,186 active (0.6%), 719,147 confirmed
-not-active (12.3%), 5,109,098 unknown/`NA` (87.1%) — **9,734 facilities are ever HPV-active** across the
-window (2005–2025).
+**Zero/NA breakdown** (mirrors dataset 0's discipline, H6): 35,417 active (0.6%, was 35,186), 709,220
+confirmed not-active (12.1%, was 719,147/12.3%), 5,128,328 unknown/`NA` (87.3%, was 5,109,098/87.1%) —
+**9,743 facilities are ever HPV-active** across the window 2005–2025 (was 9,734).
 
 ### B.1 Active rate over time
 
+*(Figures as of 2026-07-27.)*
+
 | year | n known | n active | % active | year | n known | n active | % active |
 |---|--:|--:|--:|---|--:|--:|--:|
-| 2005 | 39,364 | 3,296 | 8.4% | 2016 | 33,973 | 1,080 | 3.2% |
-| 2008 | 40,026 | 2,967 | 7.4% | 2018 | 32,608 | 959 | 2.9% |
-| 2010 | 40,799 | 2,363 | 5.8% | 2020 | 29,223 | 931 | 3.2% |
-| 2012 | 41,019 | 1,912 | 4.7% | 2022 | 30,805 | 944 | 3.1% |
-| 2014 | 39,264 | 1,473 | 3.8% | 2024 | 30,728 | 735 | 2.4% |
-| 2015 | 35,903 | 1,175 | 3.3% | 2025 | 29,824 | 554 | 1.9% |
+| 2005 | 39,110 | 3,296 | 8.4% | 2016 | 33,512 | 1,091 | 3.3% |
+| 2008 | 39,410 | 2,968 | 7.5% | 2018 | 32,269 | 980 | 3.0% |
+| 2010 | 40,305 | 2,364 | 5.9% | 2020 | 28,916 | 953 | 3.3% |
+| 2012 | 40,686 | 1,913 | 4.7% | 2022 | 30,425 | 969 | 3.2% |
+| 2014 | 38,415 | 1,474 | 3.8% | 2024 | 30,284 | 761 | 2.5% |
+| 2015 | 35,216 | 1,181 | 3.4% | 2025 | 29,587 | 581 | 2.0% |
+
+*(Was 2005 39,364/3,296/8.4%, 2008 40,026/2,967/7.4%, 2010 40,799/2,363/5.8%, 2012 41,019/1,912/4.7%, 2014
+39,264/1,473/3.8%, 2015 35,903/1,175/3.3%, 2016 33,973/1,080/3.2%, 2018 32,608/959/2.9%, 2020 29,223/931/3.2%,
+2022 30,805/944/3.1%, 2024 30,728/735/2.4%, 2025 29,824/554/1.9%.)*
 
 Full year-by-year table: `output/hpv_profile/active_rate_by_year.csv`.
 
-**This is a steady, near-monotonic 4.5x decline (8.4% → 1.9%), not noise — but don't read it as a clean
-enforcement-intensity trend without the two caveats already on record elsewhere in this project:**
+**This is a steady, near-monotonic ~4.3x decline (8.4% → 2.0%, was 4.5x/8.4%→1.9%), not noise — but don't
+read it as a clean enforcement-intensity trend without the two caveats already on record elsewhere in this
+project:**
 
 - **Early-year coverage ramp (V5/P8, `panel_construction_decisions.md`)**: violation-record coverage ramps up
   from sparse in the mid-2000s to fuller later — already flagged as "a reporting artifact, not a real
@@ -131,33 +155,38 @@ enforcement-intensity trend without the two caveats already on record elsewhere 
   early-year active rate could reflect a smaller, more heavily-scrutinized early denominator rather than
   genuinely more prevalent HPV status.
 - **This doesn't fully explain the pattern, though** — `n_known` (the denominator) actually *shrinks* in the
-  second half of the window (42,358 at its 2009 peak down to 29,824 by 2025), while `n_active` falls much
-  faster in percentage terms (3,296 → 554, an 83% drop, vs. the denominator's ~24% drop over the same span).
-  A shrinking, not growing, denominator can't be diluting the rate in later years — so the late-window decline
-  is not explained by the same coverage-ramp mechanism that applies early on. Right-truncation of 2025 (CC2,
-  already documented) is a more likely partial explanation for the last year or two specifically (an HPV
-  determination process takes time; very recent violations haven't had time to reach an HPV day-zero yet), but
-  that doesn't reach back to explain the decline across 2010–2020.
+  second half of the window (41,772 at its 2009 peak down to 29,587 by 2025, was 42,358→29,824), while
+  `n_active` falls much faster in percentage terms (3,296 → 581, an ~82% drop, was 3,296→554/83%, vs. the
+  denominator's ~29% drop over the same span, was ~24%). A shrinking, not growing, denominator can't be
+  diluting the rate in later years — so the late-window decline is not explained by the same coverage-ramp
+  mechanism that applies early on. Right-truncation of 2025 (CC2, already documented) is a more likely partial
+  explanation for the last year or two specifically (an HPV determination process takes time; very recent
+  violations haven't had time to reach an HPV day-zero yet), but that doesn't reach back to explain the decline
+  across 2010–2020.
 - **Net**: the trend is real in the data as constructed, but this profile doesn't establish why — flagging as
   a "worth investigating further" observation, not a finding with an identified mechanism.
 
 ### B.2 "Spell wins" — active status with no other ICIS record that year
 
-2,370 of the 35,186 active facility-years (6.7%) occur in a year where the facility had **no other ICIS
-record at all** (`ICIS_OBSERVED == 0` in dataset 0) — matches H6's cited figure exactly. This is the entire
-point of the interval-based design (P8): an HPV spell that started in an earlier year carries status forward
-into a quiet year with no new determination, rather than going `NA` just because nothing else happened that
-year.
+2,431 of the 35,417 active facility-years (6.9%, was 2,370/35,186/6.7%) occur in a year where the facility had
+**no other ICIS record at all** (`ICIS_OBSERVED == 0` in dataset 0) — matches H6's cited figure. This is the
+entire point of the interval-based design (P8): an HPV spell that started in an earlier year carries status
+forward into a quiet year with no new determination, rather than going `NA` just because nothing else happened
+that year.
 
 ## Summary
 
-- `hpv_spells` is spell-level and multi-valued by design (H1/H2) — 42.6% of facilities carry more than one
-  spell, and program/pollutant fields are multi-value per row, not one-hot.
-- Closed-spell duration is long-tailed: median 314 days, but 44.2% exceed a year.
+*(Figures as of 2026-07-27.)*
+
+- `hpv_spells` is spell-level and multi-valued by design (H1/H2) — 42.8% of facilities carry more than one
+  spell (was 42.6%), and program/pollutant fields are multi-value per row, not one-hot.
+- Closed-spell duration is long-tailed: median 315 days (was 314), but 44.2% exceed a year (unchanged).
 - Title V and SIP dominate HPV program involvement, more concentrated in Title V specifically than their
   share of the general facility population would predict.
-- `EARLIEST_FRV_DETERM_DATE` is populated for only 34.8% of spells; where present, it equals day-zero 93.1%
-  of the time and precedes it (median 55-day gap) 6.8% of the time — FRV-after-day-zero is negligible (0.06%).
-- `hpv_active`'s active rate declines steadily and substantially over the window (8.4% → 1.9%), but the
-  mechanism is not fully accounted for by the coverage-ramp / right-truncation caveats already on record —
-  worth a closer look if this trend matters to any downstream analysis, not something to take at face value.
+- `EARLIEST_FRV_DETERM_DATE` is populated for only 35.2% of spells (was 34.8%); where present, it equals
+  day-zero 93.2% of the time (was 93.1%) and precedes it (median 55-day gap) 6.8% of the time —
+  FRV-after-day-zero is negligible (0.06%).
+- `hpv_active`'s active rate declines steadily and substantially over the window (8.4% → 2.0%, was 8.4% →
+  1.9%), but the mechanism is not fully accounted for by the coverage-ramp / right-truncation caveats already
+  on record — worth a closer look if this trend matters to any downstream analysis, not something to take at
+  face value.

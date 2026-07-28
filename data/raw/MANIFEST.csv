@@ -12,3 +12,4 @@ icis_air,ICIS-AIR_VIOLATION_HISTORY.csv,https://echo.epa.gov/files/echodownloads
 frs,FRS_FACILITIES.csv,https://www.epa.gov/frs/epa-state-combined-csv-download-files,2026-07-13T12:04:06-0400,bd3df511a490f9109fa1320f26cd780b
 us_counties,us_counties.shp,https://www.census.gov/geographies/mapping-files/time-series/geo/cartographic-boundary.html,2026-07-13T12:04:07-0400,8a86522e3af171edeeacc5437db032d1
 frs,FRS_PROGRAM_LINKS.csv,https://echo.epa.gov/tools/data-downloads/frs-download-summary,2026-07-26T12:25:05-0400,a77b9cc6c427aa2add8d80eb77b0aa23
+pipeline,PIPELINE_CAA_00_COMPLETE.csv,https://echo.epa.gov/files/echodownloads/pipeline_caa_downloads.zip,2026-07-27T16:15:50-0400,fbb7fc3c52c5f7c5715604dc74905552

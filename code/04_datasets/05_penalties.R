@@ -29,14 +29,20 @@ f <- read_csv(file.path(CLEAN, "formal_actions.csv.gz"), col_select = all_of(COL
                                ENF_IDENTIFIER = col_character(), date = col_date(), year = col_integer(),
                                dup = col_integer(), dup_exact = col_integer(), .default = col_character()),
               show_col_types = FALSE)
+              # PENALTY_AMOUNT is ALWAYS populated in the source (verified: 0 blank/NA rows, min value 0 --
+              # even non-monetary action types like Warning Letters carry an explicit "0"), which is what
+              # makes the "penalty_amount NA or negative" invariant below safe to assert unconditionally
 
 pen <- f |>
   group_by(ENF_IDENTIFIER) |> mutate(n_settlement_facilities = n_distinct(PGM_SYS_ID)) |> ungroup() |>
+    # count of distinct co-defendant facilities sharing this settlement's ENF_IDENTIFIER
   transmute(
     PGM_SYS_ID, ACTIVITY_ID, ENF_IDENTIFIER,
     settlement_entered_date = date, year,
     penalty_amount = parse_number(PENALTY_AMOUNT),
     has_penalty    = as.integer(parse_number(PENALTY_AMOUNT) > 0),
+      # recomputes parse_number(PENALTY_AMOUNT) a second time rather than reusing the penalty_amount column
+      # just defined above (dplyr's transmute() would allow referencing it) -- harmless duplication, same result
     enf_type_code = ENF_TYPE_CODE, enf_type_desc = ENF_TYPE_DESC,
     activity_type_code = ACTIVITY_TYPE_CODE, activity_type_desc = ACTIVITY_TYPE_DESC,
     state_epa_flag = STATE_EPA_FLAG,
@@ -48,12 +54,13 @@ pen <- f |>
 frs_ids <- read_csv(file.path(CLEAN, "facilities.csv.gz"),
                     col_types = cols_only(PGM_SYS_ID = col_character(), REGISTRY_ID = col_character()),
                     show_col_types = FALSE)
+                    # same "reads ICIS facilities.csv.gz, not FRS_FACILITIES.csv" naming note as other files here
 ids <- frs_ids$PGM_SYS_ID
 pen <- pen |> left_join(frs_ids, by = "PGM_SYS_ID") |> relocate(REGISTRY_ID, .after = PGM_SYS_ID)
 
 # ---- invariants -----------------------------------------------------------------------------------------
 stopifnot(
-  "row count != source formal_actions"          = nrow(pen) == nrow(f),
+  "row count != source formal_actions"          = nrow(pen) == nrow(f),           # every source row kept, none dropped/added
   "ENF_IDENTIFIER blank"                         = all(!is.na(pen$ENF_IDENTIFIER) & pen$ENF_IDENTIFIER != ""),
   "penalty_amount NA or negative"               = all(!is.na(pen$penalty_amount) & pen$penalty_amount >= 0),
   "has_penalty disagrees with penalty_amount>0" = all(pen$has_penalty == as.integer(pen$penalty_amount > 0)),

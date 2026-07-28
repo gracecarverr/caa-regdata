@@ -16,6 +16,9 @@ YEARS <- 2005:2025   # panel window (assets keep all dated events; the window is
 CONUS <- c("AL","AZ","AR","CA","CO","CT","DE","DC","FL","GA","ID","IL","IN","IA","KS","KY","LA","ME","MD",
            "MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI",
            "SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY")
+           # deliberate 48+DC scope for the sample panels (AK/HI/territories still exist in the spine itself,
+           # they're just excluded HERE from every PANEL_SPECS filter below) -- note this is a genuinely
+           # accurate CONUS restriction, unlike the inaccurate "CONUS shapefile" comment in coord_county_flag.R
 
 # Emissions classes admitted by the major/synthetic-minor filter (and inherited by electric).
 MAJOR_SYNMIN_CLASSES <- c("Major Emissions", "Synthetic Minor Emissions")
@@ -25,7 +28,16 @@ MAJOR_SYNMIN_CLASSES <- c("Major Emissions", "Synthetic Minor Emissions")
 electric_filter <- function(s) dplyr::filter(s, STATE %in% CONUS,
                                              AIR_POLLUTANT_CLASS_DESC %in% MAJOR_SYNMIN_CLASSES,
                                              grepl("(^|[^0-9])2211", NAICS_CODES) |
+                                             # matches any 6-digit NAICS code in the 2211xx (electric power)
+                                             # subsector, wherever it appears in a possibly multi-code field --
+                                             # left-bounded only (not followed by a digit boundary check) is
+                                             # intentional here since every real NAICS leaf code under 2211 IS
+                                             # a 4+ digit extension of "2211" (e.g. 221112, 221122), so a
+                                             # trailing-digit match is always a true positive
                                              grepl("(^|[^0-9])4911([^0-9]|$)", SIC_CODES))
+                                             # SIC 4911 (Electric Services) is itself a complete leaf code, so
+                                             # this regex is bounded on BOTH sides -- asymmetric with the NAICS
+                                             # regex above by design, not an oversight
 
 PANEL_SPECS <- list(
 

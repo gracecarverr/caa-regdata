@@ -5,52 +5,62 @@
 `output/figures/datasets/regulatory/reg_{coverage_over_time,activity_over_time,inspections_distribution,
 activity_by_classification,coverage_by_classification_over_time}.png`.*
 
+*Refreshed 2026-07-27 — this brief had not been regenerated since it was first written (last touched at
+commit `f2ce80c`), so it missed both the 2026-07-17 enforcement no-dedup revision and the 2026-07-26
+ICIS-AIR refresh. Figures below are freshly re-derived from the current `regulatory.csv.gz`, not lightly
+patched; "was X" notes give the previously-documented value.*
+
 ---
 
 ## 1. Scale & coverage
 
-Balanced facility × year rectangle, **279,211 facilities × 21 years (2005–2025) = 5,863,431 facility-years**.
+Balanced facility × year rectangle, **279,665 facilities × 21 years (2005–2025) = 5,872,965 facility-years**
+(as of 2026-07-27; drifts with each live ICIS-AIR refresh, was 279,211 / 5,863,431).
 `ICIS_OBSERVED` is the zero-vs-NA gate — a facility-year is observed iff ICIS holds *any* record that year
 (then every `N_*` count is a real 0/positive); unobserved years are `NA` throughout, never coded 0.
 
-**Only 12.8% of the rectangle is ICIS-observed** (751,963 facility-years) — this is dataset 0's defining
-limitation: ICIS-Air only carries a record where there was actual regulatory activity (an inspection,
-violation, enforcement action, cert, or stack test), so the other 87.2% of facility-years have no ICIS
-footprint at all that year, not a confirmed "nothing happened." (Contrast the wayback-based `operating.csv.gz` at 42.1% observed —
-see `output/operating_profile/overview.csv` (`code/diagnostics/11_operating_profile.R`) — because wayback's
-coverage rule is "does the facility appear in a snapshot," a much lower bar than "did ICIS record an event.")
+**Only 12.6% of the rectangle is ICIS-observed** (742,206 facility-years, was 12.8%/751,963) — this is
+dataset 0's defining limitation: ICIS-Air only carries a record where there was actual regulatory activity
+(an inspection, violation, enforcement action, cert, or stack test), so the other 87.4% of facility-years
+have no ICIS footprint at all that year, not a confirmed "nothing happened." (Contrast the wayback-based
+`operating.csv.gz` at 42.1% observed — see `output/operating_profile/overview.csv`
+(`code/diagnostics/11_operating_profile.R`) — because wayback's coverage rule is "does the facility appear in
+a snapshot," a much lower bar than "did ICIS record an event.")
 
-**Coverage drifts down over the window**, not flat: 14.0% (2005) → 15.1% (2009, the peak) → 12.8% (2015) →
-10.4% (2020, the low) → 10.7% (2025). A ~4-point decline from peak to end, roughly a 30% relative drop. Worth
-knowing before treating any long-difference regulatory-intensity comparison as apples-to-apples across the
-window — some of any measured decline in mean activity could be coverage composition, not true intensity
-change.
+**Coverage drifts down over the window**, not flat: 13.9% (2005) → 14.9% (2009, the peak) → 12.6% (2015) →
+10.3% (2020, the low) → 10.6% (2025) — as of 2026-07-27 (was 14.0%/15.1%/12.8%/10.4%/10.7%). A ~4.3-point
+decline from peak to end, roughly a 29% relative drop. Worth knowing before treating any long-difference
+regulatory-intensity comparison as apples-to-apples across the window — some of any measured decline in mean
+activity could be coverage composition, not true intensity change.
 
-## 2. Key event-count measures (observed facility-years only, n = 751,963)
+## 2. Key event-count measures (observed facility-years only, n = 742,206; was 751,963)
+
+*(Figures as of 2026-07-27 — was 87.2% NA overall.)*
 
 | measure | pct NA (overall) | median | p75 | p99 | max | mean | pct zero (observed) |
 |---|--:|--:|--:|--:|--:|--:|--:|
-| Inspections | 87.2% | 1 | 2 | 11 | 439 | 1.68 | 17.1% |
-| Violations | 87.2% | 0 | 0 | 2 | 277 | 0.09 | 93.1% |
-| — of which HPV | 87.2% | 0 | 0 | 1 | 237 | 0.03 | 97.9% |
-| Enforcement (pooled) | 87.2% | 0 | 0 | 4 | 555 | 0.36 | 85.6% |
-| — Formal | 87.2% | 0 | 0 | 2 | 117 | 0.09 | 94.0% |
-| — Informal | 87.2% | 0 | 0 | 4 | 550 | 0.27 | 89.3% |
-| Certifications | 87.2% | 0 | 5 | 20 | 850 | 3.03 | 64.6% |
-| Stack tests | 87.2% | 0 | 0 | 13 | 2,609 | 0.75 | 84.2% |
-| Penalty actions | 87.2% | 0 | 0 | 1 | 116 | 0.07 | 95.3% |
+| Inspections | 87.4% | 1 | 2 | 11 | 439 | 1.66 | 17.6% |
+| Violations | 87.4% | 0 | 0 | 2 | 277 | 0.09 | 93.0% |
+| — of which HPV | 87.4% | 0 | 0 | 1 | 237 | 0.03 | 97.9% |
+| Enforcement (pooled) | 87.4% | 0 | 0 | 4 | 555 | 0.36 | 85.4% |
+| — Formal | 87.4% | 0 | 0 | 2 | 117 | 0.09 | 93.9% |
+| — Informal | 87.4% | 0 | 0 | 4 | 550 | 0.27 | 89.1% |
+| Certifications | 87.4% | 0 | 5 | 20 | 850 | 3.07 | 64.1% |
+| Stack tests | 87.4% | 0 | 0 | 12 | 2,609 | 0.72 | 84.6% |
+| Penalty actions | 87.4% | 0 | 0 | 1 | 116 | 0.07 | 95.3% |
 
 Every measure is heavily right-skewed and zero-inflated even conditional on being observed — inspections is
-the least sparse (17.1% zero) and violations/HPV/penalties the most (93–98% zero). Certifications carries the
-fattest tail by a wide margin (max 850 in one facility-year — almost certainly a large multi-pollutant/
-multi-program Title V facility filing many certs the same year, not a data error, but worth a sanity spot-check
-if it ever drives a result).
+the least sparse (17.6% zero, was 17.1%) and violations/HPV/penalties the most (93–98% zero). Certifications
+carries the fattest tail by a wide margin (max 850 in one facility-year, unchanged — almost certainly a large
+multi-pollutant/multi-program Title V facility filing many certs the same year, not a data error, but worth a
+sanity spot-check if it ever drives a result).
 
-**Trend** (`reg_activity_over_time.png`): inspections and enforcement are essentially flat across the window;
-certifications is the most volatile series, with a sharp real dip in 2015 (2.12, down from 3.42 in 2014 and
-recovering to 3.40 by 2016) sandwiched inside an otherwise rising-then-falling arc that peaks at 4.60 in 2018
-— worth checking against a known program/reporting change before reading the 2015 dip as substantive. Stack
-tests is the one measure that trends up structurally over the window (0.49 in 2005 to a peak of ~1.29 in 2024).
+**Trend** (`reg_activity_over_time.png`, regenerated 2026-07-27): inspections and enforcement are essentially
+flat across the window; certifications is the most volatile series, with a sharp real dip in 2015 (2.15, was
+2.12, down from 3.47 in 2014 and recovering to 3.42 by 2016) sandwiched inside an otherwise rising-then-falling
+arc that peaks at 4.66 in 2018 (was 4.60) — worth checking against a known program/reporting change before
+reading the 2015 dip as substantive. Stack tests is the one measure that trends up structurally over the
+window (0.47 in 2005 to a peak of ~1.21 in 2024, was 0.49 → ~1.29).
 
 ## 3. Facility characteristics (time-invariant, one row per facility)
 
@@ -58,8 +68,9 @@ tests is the one measure that trends up structurally over the window (0.49 in 20
 single-digit-facility territories (MP, GU). EPA Region 6 (18.3%) and Region 5 (18.0%) are the largest regions;
 Regions 9 and 10 are the smallest (1.5% and 1.4%).
 
-**Ownership**: 72.1% privately owned, 17.6% "Non-classified," 5.9% corporation; government-owned facilities
-(county/city/federal/state combined) are under 3%.
+**Ownership**: 72.0% privately owned, 17.6% "Non-classified," 5.9% corporation; government-owned facilities
+(county/city/federal/state combined) are ~4.2% — corrected from an earlier "under 3%" claim, which undercounted;
+figure is stable across the refresh, not new drift.
 
 **Pollutant class**: 74.4% Minor Emissions, 14.2% Synthetic Minor, only **7.2% Major Emissions** — the
 regulatory-attention-heavy Title V major-source population is a small minority of the full ICIS universe.
@@ -73,12 +84,12 @@ dataset 1).
 
 | flag | share = 1 |
 |---|--:|
-| Emits PM | 42.6% |
+| Emits PM | 42.5% |
 | Emits VOC | 41.9% |
 | Emits NOx | 28.8% |
 | Emits CO | 24.4% |
 | Emits SO2 | 17.5% |
-| Emits HAP | 15.4% |
+| Emits HAP | 15.3% |
 
 | program | share = 1 |
 |---|--:|
@@ -107,22 +118,35 @@ consistent with Title V's tiered oversight design:
 
 | classification | n facilities | % ICIS-observed |
 |---|--:|--:|
-| Major | 19,078 | 60.9% |
-| Synthetic Minor | 37,446 | 28.0% |
-| Minor | 196,214 | 6.5% |
-| Other/Unknown | 26,473 | 3.4% |
+| Major | 19,071 | 60.8% |
+| Synthetic Minor | 37,507 | 27.7% |
+| Minor | 196,467 | 6.4% |
+| Other/Unknown | 26,620 | 3.4% |
+
+*(As of 2026-07-27; was 19,078/60.9%, 37,446/28.0%, 196,214/6.5%, 26,473/3.4%.)*
 
 Minor sources — 70.3% of the entire facility universe — show up in ICIS in roughly 1 year out of 15 on
 average; most of their facility-years are structurally `NA`, not a confirmed zero.
 
 **A wrinkle worth flagging**: Other/Unknown has the *lowest* observation rate here (3.4%) but, when it *is*
-observed, an anomalously *high* enforcement rate (mean 0.83 enforcement actions per observed facility-year —
-above Major's 0.52) — driven specifically by the sub-population with a **missing** `AIR_POLLUTANT_CLASS_DESC`
-(not the three named residual categories, which sit at 0.21–0.64). Digging into who these facilities are:
+observed, an anomalously *high* enforcement rate — driven specifically by the sub-population with a
+**missing** `AIR_POLLUTANT_CLASS_DESC` (not the three named residual categories). ⚠ **Re-verified 2026-07-27,
+not just refreshed**: the standard profile script's coarse "Other/Unknown" aggregate now shows a mean
+enforcement rate (0.51) barely above Major's (0.52) — on its own that would read as the wrinkle having
+vanished. It hasn't: that coarse aggregate pools the missing-field facilities together with the three *named*
+residual categories (`Not applicable` / `Emissions classification unknown` / `Other`), which sit much lower
+(mean 0.33) and now dilute the aggregate. Recomputed the fine-grained split directly from
+`regulatory.csv.gz` to confirm: the **missing-field bucket alone still has mean 0.83 enforcement actions per
+observed facility-year** — unchanged from what was previously documented here — genuinely still far above
+Major's 0.52, Minor's 0.28, and Synthetic Minor's 0.28. Digging into who these facilities are:
 
-- **47.9% of NAICS 211111 (crude petroleum & natural gas extraction) facilities have a missing pollutant
-  class**, versus only 3.0% for every other facility type combined — a ~16x gap. This one industry code is
-  the dominant driver of the missing-classification population.
+- **29.8% of NAICS 211111 (crude petroleum & natural gas extraction) facilities have a missing pollutant
+  class** as of 2026-07-27 — down substantially from 47.9% previously — versus 2.8% for every other facility
+  type combined (was 3.0%) — still a ~10.6x gap (was ~16x). This one industry code remains the dominant
+  driver of the missing-classification population, though a meaningfully smaller share of it than before;
+  worth a closer look at whether NAICS 211111 facilities are getting classified going forward (i.e. the gap
+  closing because ICIS is filling in the field) or whether this is compositional (211111 facility count itself
+  shifting) — not distinguished here.
 - These aren't placeholder or dummy records — several of the highest-enforcement individual facilities in
   this group are substantial, real, active operations (e.g. a major refinery, established chemical
   manufacturers), so the missing field is a genuine data-completeness gap on real facilities, not junk rows.
@@ -130,23 +154,36 @@ above Major's 0.52) — driven specifically by the sub-population with a **missi
   programs distinct from the standard facility-classification workflow other stationary sources go through,
   which would explain why `AIR_POLLUTANT_CLASS_DESC` was never populated for them specifically. This is a
   reasonable institutional explanation given the pattern, not something independently verified here.
-- Enforcement volume against this group has grown sharply over the window — from single digits in 2014–2016
-  to 300–580 actions/year by 2020–2024 — consistent with (not proof of) the well-documented ramp-up in EPA/state
-  oil & gas methane and VOC enforcement over the past decade.
+- Enforcement volume against this group has grown sharply over the window — re-derived 2026-07-27:
+  **87 (2014) → 162 (2015) → 188 (2016)**, then **444–870/year across 2020–2024** — both ends of this series
+  are notably higher than what was previously documented here ("single digits" in 2014–2016, "300–580/yr" in
+  2020–2024). The direction (a real ramp-up) still holds and is consistent with the well-documented rise in
+  EPA/state oil & gas methane and VOC enforcement over the past decade, but the earlier absolute figures don't
+  reconcile with a same-methodology recount. **The no-dedup-revision theory floated in an earlier version of
+  this note was checked directly and does not hold**: recomputing 2014–2016 under the *old* (event-distinct,
+  deduped) convention still gives 64/114/119 — nowhere near "single digits." The true source of the level
+  shift is genuinely unresolved — plausibly the missing-classification population's composition changed
+  between snapshots (see the NAICS 211111 note above, itself not fully explainable without the pre-refresh
+  raw facility file, which no longer exists) — but don't cite a specific mechanism here; flag as an open
+  question rather than assert an explanation that hasn't been checked.
 
 **Practical implication**: `AIR_POLLUTANT_CLASS_DESC` missingness is not random. Anyone using pollutant
 classification as a control variable or sample filter should be aware that "unclassified" facilities are
-disproportionately oil & gas extraction sites, not an arbitrary residual category.
+disproportionately oil & gas extraction sites, not an arbitrary residual category — though that concentration
+has eased somewhat (29.8% vs. 47.9% previously) and is worth re-checking again in future passes rather than
+assumed stable.
 
 ## Notable things to sanity-check before relying on this dataset for a headline number
 
-- **The 12.8% observed rate is the central caveat of this dataset** — any facility-year-level mean or rate
-  computed without conditioning on `ICIS_OBSERVED` will silently mix real activity with unrecorded absence.
+- **The 12.6% observed rate is the central caveat of this dataset** (was 12.8%) — any facility-year-level mean
+  or rate computed without conditioning on `ICIS_OBSERVED` will silently mix real activity with unrecorded
+  absence.
 - **Coverage is not flat over the window** (§1) — a naive time trend in mean activity could partly reflect
   changing coverage composition, not changing true intensity.
 - **The 2015 certifications dip** (§2) is real in the data as constructed but unexplained here — worth one
   targeted look (e.g. was there a Title V recertification cycle or reporting-format change around then)
   before citing it as a finding.
 - **`AIR_POLLUTANT_CLASS_DESC` missingness is concentrated in NAICS 211111 (oil & gas extraction)** (§5) —
-  47.9% missing vs. 3.0% elsewhere. Don't treat "Other/Unknown" as a random residual category, especially in
-  any enforcement-related analysis.
+  29.8% missing vs. 2.8% elsewhere as of 2026-07-27 (was 47.9%/3.0% — the gap narrowed materially since this
+  was last measured). Don't treat "Other/Unknown" as a random residual category, especially in any
+  enforcement-related analysis, but don't treat the 47.9% figure as current either.

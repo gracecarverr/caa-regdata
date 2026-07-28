@@ -29,15 +29,17 @@ v <- read_csv(file.path(CLEAN, "violations.csv.gz"), col_select = all_of(COLS),
               col_types = cols(PGM_SYS_ID = col_character(), dup = col_integer(),
                                dup_exact = col_integer(), .default = col_character()),
               show_col_types = FALSE) |>
-  filter(ENF_RESPONSE_POLICY_CODE == "HPV")
+  filter(ENF_RESPONSE_POLICY_CODE == "HPV")          # the enforcement-response TIER, not "has a day-zero date"
 
 # FRS id (REGISTRY_ID), joined in alongside PGM_SYS_ID (violations.csv.gz carries no REGISTRY_ID natively).
 frs_ids <- read_csv(file.path(CLEAN, "facilities.csv.gz"),
                     col_types = cols_only(PGM_SYS_ID = col_character(), REGISTRY_ID = col_character()),
                     show_col_types = FALSE)
+                    # same "reads ICIS facilities.csv.gz, not actual FRS data" naming note as 02_operating.R
 v <- v |> left_join(frs_ids, by = "PGM_SYS_ID")
 
-nz <- function(x) !is.na(x) & x != ""
+nz <- function(x) !is.na(x) & x != ""                 # "non-blank raw string" check, applied to the RAW text
+                                                        # columns below, not the parsed Date -- see REVIEW below
 spells <- v |> mutate(
   hpv_dayzero_date        = mdy(HPV_DAYZERO_DATE, quiet = TRUE),
   hpv_resolved_date       = mdy(HPV_RESOLVED_DATE, quiet = TRUE),
@@ -49,8 +51,19 @@ spells <- v |> mutate(
     !nz(HPV_RESOLVED_DATE)                                         ~ "open",
     !is.na(hpv_resolved_date) & hpv_resolved_date < hpv_dayzero_date ~ "bad_order",
     TRUE                                                          ~ "closed"),
+    # REVIEW(design, latent edge case -- 0 rows affected as of the 2026-07-27 snapshot, independently
+    # verified): the first two branches test nz() on the RAW string, not on whether mdy() actually managed
+    # to parse it. A HPV_DAYZERO_DATE that is non-blank but fails to parse (hpv_dayzero_date == NA) would
+    # skip the "missing_start" branch and fall through to "open" or "closed" with a NA dayzero date baked in
+    # -- e.g. a "closed" spell with spell_days == NA despite spell_status claiming spell_days should be
+    # defined. In practice this doesn't happen today (mdy() is permissive enough to parse even garbage like
+    # "11-05-0218" into a wrong-but-non-NA year 218, per the CAMDAM1489 case documented in 04_hpv_active.R),
+    # and if it ever did, the stopifnot() invariants below would halt the build with an NA-comparison error
+    # rather than silently shipping a bad row -- so this is a latent robustness gap with an effective safety
+    # net, not an active bug.
   spell_days = if_else(spell_status == "closed",
                        as.integer(hpv_resolved_date - hpv_dayzero_date) + 1L, NA_integer_)) |>
+                       # inclusive day count: e.g. dayzero==resolved gives 1 day, not 0
   transmute(PGM_SYS_ID, REGISTRY_ID, ACTIVITY_ID, COMP_DETERMINATION_UID,
             hpv_dayzero_date, hpv_resolved_date, dayzero_year, resolved_year,
             spell_status, spell_days, earliest_frv_determ_date,
@@ -71,6 +84,9 @@ stopifnot(
   "dayzero_year NA iff missing_start" =
     all(is.na(spells$dayzero_year) == (spells$spell_status == "missing_start")),
   "violations carry no dups (per ds0 assertion)" = all(spells$dup == 0))
+  # six hard assertions -- also the safety net for the case_when edge case noted above: an NA slipping into
+  # a "closed" row's spell_days would fail "closed spell_days must be >= 1" (NA >= 1 is NA, and stopifnot
+  # treats a non-TRUE/NA result as a failure), halting the build rather than shipping a silently-wrong row
 
 write_dataset(spells, "hpv_spells")              # uppercases all columns on write (see 00_parameters.R)
 cat(sprintf("hpv_spells: %s spells | %d cols | %s facilities\n  status: %s\n",

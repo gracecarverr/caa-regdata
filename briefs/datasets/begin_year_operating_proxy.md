@@ -27,6 +27,10 @@ would be a new use, not a restoration of an old one.
 Diagnostic script: `code/diagnostics/10_begin_year_proxy.R`. Full output tables:
 `output/begin_year_proxy/*.csv`.
 
+*Refreshed 2026-07-27 (predates the 2026-07-26 ICIS-AIR refresh) — figures move only slightly throughout,
+consistent with the roster change; no reversal of any finding. "was X" notes give the previously-documented
+value.*
+
 ## 1. Single-year anchor: how corroborated is "existed as of begin-year" for facilities with begin-year < 2015?
 
 This is the population where the marker would add genuinely new information — wayback has zero evidence for
@@ -34,23 +38,24 @@ anyone before 2015, so this is the only check available: for a facility with `EA
 2015`, is what wayback shows *once it starts observing* (2015 onward) **consistent** with the facility having
 already existed at that earlier year?
 
-**n = 171,324 facilities** have a screened begin-year before 2015. Four mutually exclusive outcomes:
+**n = 171,161 facilities** (was 171,324) have a screened begin-year before 2015. Four mutually exclusive
+outcomes:
 
 | group | n facilities | % | reading |
 |---|---|---|---|
-| **A** — left-censored at 2015 | 112,314 | 65.6% | Consistent: the facility is already present and operating at wayback's very first snapshot, exactly what you'd expect if it existed earlier. Wayback can't confirm the specific begin-year, but there's no contradiction either. |
-| **B** — first observed operating *after* 2015 | 13,190 | 7.7% | A real discrepancy: begin-year claims existence before 2015, but wayback's first evidence of actual operation comes later. Gap size matters a lot here — see below. |
-| **C** — never observed operating, but present in wayback (e.g. shows `CLS`) | 45,712 | 26.7% | Consistent with "existed once, closed before 2015" — plausible, not contradicted, but also not confirmed as *operating* at the begin-year (could have been enrolled without ever starting). |
-| **D** — never appears in any real wayback snapshot 2015–2025 | 108 | 0.1% | No corroboration at all, either way. Negligible in size. |
+| **A** — left-censored at 2015 | 112,154 (was 112,314) | 65.5% (was 65.6%) | Consistent: the facility is already present and operating at wayback's very first snapshot, exactly what you'd expect if it existed earlier. Wayback can't confirm the specific begin-year, but there's no contradiction either. |
+| **B** — first observed operating *after* 2015 | 13,174 (was 13,190) | 7.7% | A real discrepancy: begin-year claims existence before 2015, but wayback's first evidence of actual operation comes later. Gap size matters a lot here — see below. |
+| **C** — never observed operating, but present in wayback (e.g. shows `CLS`) | 45,709 (was 45,712) | 26.7% | Consistent with "existed once, closed before 2015" — plausible, not contradicted, but also not confirmed as *operating* at the begin-year (could have been enrolled without ever starting). |
+| **D** — never appears in any real wayback snapshot 2015–2025 | 124 (was 108) | 0.1% | No corroboration at all, either way. Negligible in size. |
 
 **The critical caveat is in group B.** The gap between the claimed begin-year and the first real evidence of
 operation grows sharply the further back the begin-year is:
 
 | begin-year bucket | n facilities (group B) | median gap (years) | mean gap (years) |
 |---|---|---|---|
-| 2010–2014 | 12,341 | 2 | 2.6 |
-| 2000–2009 | 681 | 13 | 13.8 |
-| \<2000 | 168 | 26 | 28.3 |
+| 2010–2014 | 12,316 (was 12,341) | 2 | 2.6 |
+| 2000–2009 | 686 (was 681) | 13 | 13.8 |
+| \<2000 | 172 (was 168) | 26 | 28.1 (was 28.3) |
 
 For begin-years in 2010–2014, a 2-year median gap is small and plausible (permitting lag, similar to the 2015+
 lag pattern in §2 below). For begin-years in the 1990s or earlier, a 26-year median gap means the begin-year
@@ -58,7 +63,7 @@ and the facility's actual observed operation are, empirically, telling very diff
 pre-2000 begin-year as reliable evidence of existence *at that specific year* is much weaker than treating a
 2013 begin-year the same way. This isn't visible if you only look at the aggregate 65.6%/7.7%/26.7%/0.1% split.
 
-**Read on this:** groups A + C (92.3%) are at least *not contradicted* by later evidence. Group B (7.7%) is
+**Read on this:** groups A + C (92.2%, was 92.3%) are at least *not contradicted* by later evidence. Group B (7.7%) is
 where the marker's reliability should be treated as a function of how far back it claims — trustworthy near
 the 2015 boundary, increasingly speculative further back.
 
@@ -66,13 +71,15 @@ the 2015 boundary, increasingly speculative further back.
 
 An earlier pass tested `proxy = 1{EARLIEST_PROGRAM_BEGIN_YEAR <= YEAR}` as a stand-in for `OPERATING` in every
 year from the begin-year onward, using 2015–2025 as a ground-truth check (`WAYBACK_OBSERVED == 1`). Aggregate:
-sensitivity 0.909, **specificity 0.010**, overall agreement 0.655 (n=2,420,480 facility-years). By year,
-specificity collapses from an already-poor 0.027 (2015) to **exactly 0.000 by 2025**, while sensitivity
-climbs to 1.000 — because the proxy is a one-way ratchet with no close-date signal: once true, it's true
-forever. Confirmed structurally in the post-exit check — for facility-years strictly after a confirmed
-closure (`exit_source == "cls"`, 93,351 facility-years / 17,145 facilities), the proxy is wrong **99.5%** of
-the time, and that rate does not decay with time since exit (98.8% at year 1, 100.0% by year 9). **This is why
-the single-year framing in §1 is the right question to ask, not "is it operating right now."**
+sensitivity 0.909, **specificity 0.010**, overall agreement 0.655 (n=2,420,480 facility-years) — not
+independently re-derived this pass (aggregate agreement stats, not part of the 2026-07-27 recompute).
+By year, specificity collapses from an already-poor 0.027 (2015) to **exactly 0.000 by 2025**, while
+sensitivity climbs to 1.000 — because the proxy is a one-way ratchet with no close-date signal: once true,
+it's true forever. Confirmed structurally in the post-exit check — for facility-years strictly after a
+confirmed closure (`exit_source == "cls"`, 93,264 facility-years / 17,119 facilities, was 93,351/17,145), the
+proxy is wrong **99.5%** of the time (unchanged), and that rate does not decay with time since exit (98.8% at
+year 1, 100.0% by year 9, both unchanged). **This is why the single-year framing in §1 is the right question
+to ask, not "is it operating right now."**
 
 Full tables for this version: `output/begin_year_proxy/{agreement,agreement_by_year,post_exit_false_positive,post_exit_false_positive_by_gap}.csv`.
 
@@ -98,20 +105,25 @@ other program types do.
 **Tested directly at the program level** (not the facility-level min used in §1/§3) — `data/processed/programs.csv.gz`
 carries `BEGIN_DATE` per individual program enrollment row, so each facility's *own* earliest `BEGIN_DATE`
 within each of the 10 program groups was compared to that facility's wayback `ENTERED_YEAR`, screened to
-`[1970, 2025]` (same screen as O5). n = 354,743 facility-program pairs with both dates observed:
+`[1970, 2025]` (same screen as O5). n = 352,755 facility-program pairs with both dates observed (was 354,743):
 
 | program | n facilities | mean lag (years) | % begins before entry | % same year | % begins after entry |
 |---|--:|--:|--:|--:|--:|
-| **CFC** | 7,862 | **0.67** | **90.7%** | 0.7% | 8.6% |
-| SIP | 180,704 | 0.02 | 62.4% | 16.3% | 21.3% |
-| NSR | 11,124 | −0.29 | 68.1% | 7.6% | 24.3% |
-| MACT | 50,399 | −0.29 | 60.4% | 15.8% | 23.8% |
-| NESHAP | 2,880 | −0.23 | 66.5% | 4.9% | 28.6% |
-| PSD | 6,510 | −0.45 | 62.2% | 11.3% | 26.5% |
-| Title V | 19,805 | −0.50 | 63.0% | 6.8% | 30.2% |
-| FESOP | 10,217 | −0.65 | 59.9% | 8.6% | 31.5% |
-| NSPS | 50,191 | −0.67 | 51.9% | 17.6% | 30.5% |
-| **GACT** | 15,051 | **−1.00** | **38.5%** | 10.8% | **50.7%** |
+| **CFC** | 7,854 | **0.67** | **90.8%** | 0.7% | 8.5% |
+| SIP | 180,070 | 0.02 | 62.5% | 16.2% | 21.3% |
+| NSR | 11,102 | −0.29 | 68.1% | 7.6% | 24.3% |
+| MACT | 49,863 | −0.23 | 61.0% | 15.8% | 23.1% |
+| NESHAP | 2,840 | −0.13 | 67.4% | 4.9% | 27.7% |
+| PSD | 6,493 | −0.44 | 62.3% | 11.3% | 26.4% |
+| Title V | 19,758 | −0.50 | 63.1% | 6.8% | 30.1% |
+| FESOP | 10,195 | −0.66 | 59.9% | 8.6% | 31.5% |
+| NSPS | 49,582 | −0.59 | 52.5% | 17.7% | 29.8% |
+| **GACT** | 14,998 | **−1.00** | **38.5%** | 10.8% | **50.6%** |
+
+*(As of 2026-07-27; was CFC 7,862/90.7%, SIP 180,704/62.4%, NSR 11,124/68.1%, MACT 50,399/−0.29/60.4%,
+NESHAP 2,880/−0.23/66.5%, PSD 6,510/62.2%, Title V 19,805/63.0%, FESOP 10,217/59.9%, NSPS 50,191/−0.67/51.9%,
+GACT 15,051/38.5%/50.7%. MACT and NSPS moved slightly more than the others; still not a reversal of the
+CFC-leads/GACT-lags pattern below.)*
 
 **This does not confirm the naive version of the prior.** NSR (68.1% begin-before-entry) and PSD (62.2%) are
 *not* dramatically ahead of ordinary operating programs — NESHAP (66.5%) and SIP (62.4%) look similar or
@@ -141,10 +153,10 @@ Full tables: `output/begin_year_proxy/program_type_lag_by_group.csv` (summary) a
 
 - **As a same-year "is this facility operating" signal, no** — structurally broken by construction (§2).
 - **As a one-time "existed by year X" marker for facilities whose begin-year predates 2015, mostly usable but
-  distance-dependent**: 92.3% of the pre-2015-begin-year population isn't contradicted by later wayback
-  evidence (§1, groups A+C), and the discrepant group (B) is small (7.7%) but its reliability itself decays
-  the further back the claimed year — solid for begin-years in the early 2010s, speculative for pre-2000
-  claims.
+  distance-dependent**: 92.2% of the pre-2015-begin-year population isn't contradicted by later wayback
+  evidence (was 92.3%; §1, groups A+C), and the discrepant group (B) is small (7.7%) but its reliability
+  itself decays the further back the claimed year — solid for begin-years in the early 2010s, speculative for
+  pre-2000 claims.
 - **Program type matters, but not the way the "preconstruction permit" prior predicts** (§4): CFC leads entry
   most reliably, GACT lags behind it more often than not, and NSR/PSD sit close to the pack rather than
   standing out as expected.

@@ -26,7 +26,11 @@ source(here::here("code/04_datasets/00_parameters.R"))
 frs_ids <- read_csv(file.path(CLEAN, "facilities.csv.gz"),
                     col_types = cols_only(PGM_SYS_ID = col_character(), REGISTRY_ID = col_character()),
                     show_col_types = FALSE)
-ids <- frs_ids$PGM_SYS_ID
+                    # REVIEW(naming): despite the name, this reads the CLEANED ICIS "facilities" table (the
+                    # same source 01_regulatory.R calls `attrs`), NOT FRS_FACILITIES.csv (the actual FRS
+                    # source, used elsewhere for coordinates) -- `frs_ids` is a misleading name for what's
+                    # really the ICIS facility-ID universe; easy to misread as "facilities present in FRS"
+ids <- frs_ids$PGM_SYS_ID                              # the same 279,211-facility ICIS universe as dataset 0
 stopifnot("facilities: PGM_SYS_ID is not unique -- the facility grain is broken" = !anyDuplicated(ids))
 
 # ---- year-varying wayback layers (2015-2025) ------------------------------------------------------------
@@ -45,6 +49,9 @@ status <- read_csv(file.path(CLEAN, "wayback_facility_status.csv.gz"),
 PROG_GROUPS <- c("sip", "titlev", "nsps", "mact", "neshap", "fesop", "nsr", "psd")
 progst <- read_csv(file.path(CLEAN, "wayback_program_status.csv.gz"),
                    col_select = all_of(c("PGM_SYS_ID", "year", paste0("prog_", PROG_GROUPS, "_active"))),
+                   # explicit col_select is the actual guardrail here -- it's what keeps gact/cfc out even
+                   # though the source file still carries them, rather than relying on anyone remembering to
+                   # filter them post-hoc
                    col_types = cols(PGM_SYS_ID = col_character(), year = col_integer(),
                                     .default = col_integer()), show_col_types = FALSE)
 
@@ -67,16 +74,20 @@ spells <- read_csv(file.path(CLEAN, "wayback_facility_spells.csv.gz"),
 #   The screen is a validity filter on malformed source values, not imputation; neither is clipped to YEARS.
 BEGIN_YEAR_MIN <- 1970L        # Clean Air Act -- no air-program enrollment plausibly predates it
 BEGIN_YEAR_MAX <- 2025L        # analysis-window end -- 2026-2028 begin years are extract-impossible errors
+                                # REVIEW(design): a separate hardcoded literal from YEARS (00_parameters.R),
+                                # not derived as max(YEARS) -- happens to match today, but the two would
+                                # silently diverge if the analysis window is ever extended without also
+                                # updating this constant
 begin <- read_csv(file.path(CLEAN, "programs.csv.gz"),
                   col_types = cols(.default = col_character()), show_col_types = FALSE) |>
-  mutate(byr = year(mdy(BEGIN_DATE, quiet = TRUE))) |>
+  mutate(byr = year(mdy(BEGIN_DATE, quiet = TRUE))) |>  # parse to Date then take calendar year; unparseable -> NA
   group_by(PGM_SYS_ID) |>
   summarise(
     earliest_program_begin_year_raw =
-      { v <- byr[!is.na(byr)]; if (length(v)) min(v) else NA_integer_ },
+      { v <- byr[!is.na(byr)]; if (length(v)) min(v) else NA_integer_ },   # unscreened min -- garbage included
     earliest_program_begin_year =
       { v <- byr[!is.na(byr) & byr >= BEGIN_YEAR_MIN & byr <= BEGIN_YEAR_MAX]
-        if (length(v)) min(v) else NA_integer_ }, .groups = "drop")
+        if (length(v)) min(v) else NA_integer_ }, .groups = "drop")        # screened min -- validity-filtered
 
 # ---- assemble the rectangle -----------------------------------------------------------------------------
 cat("building the facility x year rectangle...\n")
@@ -106,6 +117,10 @@ stopifnot(
     all(op$earliest_program_begin_year >= BEGIN_YEAR_MIN & op$earliest_program_begin_year <= BEGIN_YEAR_MAX, na.rm = TRUE),
   "screened begin year < raw (screen only removes)"  =
     all(op$earliest_program_begin_year >= op$earliest_program_begin_year_raw, na.rm = TRUE))
+    # seven hard assertions covering grain, rectangle completeness, the 2015 wayback boundary, internal
+    # consistency between wayback_observed/operating and their source columns, and the begin-year screen's
+    # own correctness -- a strong safety net; any real data-refresh regression here halts the build loudly
+    # rather than silently shipping a dataset that violates its own documented contract
 
 write_dataset(op, "operating")                   # uppercases all columns on write (see 00_parameters.R)
 cat(sprintf("operating: %s rows | %d cols | %s facilities | %s wayback-observed facility-years (%.1f%%)\n",

@@ -27,11 +27,16 @@ source(here::here("code/04_datasets/00_parameters.R"))
 
 # ---- R2 spell -> covered facility-years -----------------------------------------------------------------
 DZ_MIN <- 1970L; DZ_MAX <- 2025L                             # plausible day-zero year range (H4 screen)
+                                                               # DZ_MAX again a hardcoded literal matching but
+                                                               # not derived from max(YEARS) -- same drift risk
+                                                               # noted for BEGIN_YEAR_MAX in 02_operating.R
 # Dates read as CHARACTER and parsed with ymd() (the spell table stores ISO strings). ymd recognizes the
 #   mistyped year-218 date exactly as diagnostic 09's mdy did, so the plausibility screen -- not a silent
 #   col_date() round-trip failure -- is what excludes it.
 s_all <- read_csv(file.path(DATASETS, "hpv_spells.csv.gz"),
                   col_select = c(PGM_SYS_ID, HPV_DAYZERO_DATE, HPV_RESOLVED_DATE, SPELL_STATUS),
+                  # note the UPPERCASE column names -- hpv_spells.csv.gz was written by write_dataset() in
+                  # 03_hpv_spells.R, which uppercases every column name on write (00_parameters.R)
                   col_types = cols(PGM_SYS_ID = col_character(), .default = col_character()),
                   show_col_types = FALSE) |>
   filter(SPELL_STATUS != "missing_start") |>                 # need an interval start
@@ -44,24 +49,26 @@ s <- s_all[keep, ] |>
   mutate(end_cons = if_else(SPELL_STATUS == "closed", rs,
                             make_date(dz_year, 12L, 31L)))    # open/bad_order -> day-zero-year-end
 
-cover <- bind_rows(lapply(YEARS, function(Y) {
+cover <- bind_rows(lapply(YEARS, function(Y) {                # for each panel year, which spells overlap it?
   ys <- make_date(Y, 1L, 1L); ye <- make_date(Y, 12L, 31L)
   hit <- s$dz <= ye & s$end_cons >= ys
   if (any(hit)) tibble(PGM_SYS_ID = s$PGM_SYS_ID[hit], year = Y) else NULL
 })) |> distinct() |> mutate(covered = 1L)
+  # distinct() is essential here: a facility with >1 spell overlapping the same year would otherwise produce
+  # >1 (PGM_SYS_ID, year) row for that year -- distinct() collapses to one "covered" row per facility-year
 
 # ---- rectangle (ds 0 universe) + zero-vs-NA -------------------------------------------------------------
 frs_ids <- read_csv(file.path(CLEAN, "facilities.csv.gz"),
                     col_types = cols_only(PGM_SYS_ID = col_character(), REGISTRY_ID = col_character()),
                     show_col_types = FALSE)
 ids <- frs_ids$PGM_SYS_ID
-obs <- read_csv(file.path(DATASETS, "regulatory.csv.gz"),
+obs <- read_csv(file.path(DATASETS, "regulatory.csv.gz"),        # depends on 01_regulatory.R having already run
                 col_select = c(PGM_SYS_ID, YEAR, ICIS_OBSERVED),
                 col_types = cols(PGM_SYS_ID = col_character(), YEAR = col_integer(),
                                  ICIS_OBSERVED = col_integer()), show_col_types = FALSE) |>
-  rename(year = YEAR, icis_observed = ICIS_OBSERVED)
+  rename(year = YEAR, icis_observed = ICIS_OBSERVED)              # back to this file's internal lowercase convention
 
-ha <- expand_grid(PGM_SYS_ID = ids, year = YEARS) |>
+ha <- expand_grid(PGM_SYS_ID = ids, year = YEARS) |>              # balanced rectangle, same universe as ds 0
   left_join(cover, by = c("PGM_SYS_ID", "year")) |>
   left_join(obs,   by = c("PGM_SYS_ID", "year")) |>
   mutate(hpv_active = case_when(!is.na(covered)      ~ 1L,    # spell wins

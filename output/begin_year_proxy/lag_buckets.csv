@@ -1,7 +1,7 @@
 bucket,n_facilities,pct
-begin-year AFTER entry (proxy lags reality),33988,16.9
-same year,28336,14.1
-1 year lead,112709,55.9
-2-5 years lead,18667,9.3
-6-10 years lead,4565,2.3
->10 years lead,3253,1.6
+begin-year AFTER entry (proxy lags reality),33692,16.8
+same year,28181,14
+1 year lead,112525,56
+2-5 years lead,18628,9.3
+6-10 years lead,4556,2.3
+>10 years lead,3249,1.6
