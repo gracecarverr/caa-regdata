@@ -1,7 +1,6 @@
 # =========================================================================================================
 # code/04_panel_building/00_spine.R -- build the shared CANDIDATE FACILITY SET for the two panels this
-#   pipeline ships (major_synmin_continuous_2015_2025, electric_continuous_2015_2025). NOT a general-purpose
-#   "ever-active universe" like the old (archived) spine -- both target panels require CONUS + Major/
+#   pipeline ships (major_synmin_2015_2025, electric_2015_2025). Both target panels require CONUS + Major/
 #   Synthetic-Minor class, so that filter is applied HERE, once, rather than duplicated per panel spec.
 #   electric is a strict subset of this candidate set (03_build_parameters.R adds the NAICS/SIC filter).
 #
@@ -28,8 +27,8 @@ CONUS <- c("AL","AZ","AR","CA","CO","CT","DE","DC","FL","GA","ID","IL","IN","IA"
 # Emissions classes both target panels require (electric is a further-restricted subset of this).
 MAJOR_SYNMIN_CLASSES <- c("Major Emissions", "Synthetic Minor Emissions")
 
-CONTINUITY_YEARS <- 2015:2025   # the window the continuity screen (and both final panels) are defined over --
-                                 # matches Wayback's real coverage window, not this repo's usual 2005:2025
+SCREEN_YEARS <- 2015:2025   # the window the eligibility screen (and both final panels) are defined over --
+                             # matches Wayback's real coverage window, not this repo's usual 2005:2025
 
 # ---- facility attributes (one row per facility) -----------------------------------------------------------
 # regulatory.csv.gz (dataset 0) already carries the current-snapshot attributes, the 6 EMITS_* flags, and the
@@ -37,10 +36,16 @@ CONTINUITY_YEARS <- 2015:2025   # the window the continuity screen (and both fin
 # R6 -- so there's no extra work needed here to drop them, unlike the archived pipeline which had to
 # deliberately exclude them from its own 10-group wayback read).
 attrs <- read_csv(file.path(DATASETS, "regulatory.csv.gz"),
+                  # OP_STATUS_CURRENT_DESC deliberately EXCLUDED (2026-07-29, explicit user decision): it's a
+                  # static, current-ICIS-snapshot status, constant across all 11 rows of a facility -- carrying
+                  # it here risked being mistaken for the genuinely year-varying operating-status evidence this
+                  # panel already provides (OP_STATUS_CODE/OPERATING/ACTIVE/ACTIVE_BROAD, all from
+                  # operating.csv.gz). Still available in regulatory.csv.gz itself (dataset-layer decision R5)
+                  # for anyone who wants the current snapshot specifically.
                   col_select = c(PGM_SYS_ID, YEAR, REGISTRY_ID, FACILITY_NAME, STREET_ADDRESS, CITY,
                                  COUNTY_NAME, STATE, ZIP_CODE, EPA_REGION, NAICS_CODES, SIC_CODES,
                                  FACILITY_TYPE_CODE, FACILITY_TYPE, AIR_POLLUTANT_CLASS_DESC,
-                                 OP_STATUS_CURRENT_DESC, EMITS_VOC, EMITS_PM, EMITS_CO, EMITS_NOX, EMITS_SO2,
+                                 EMITS_VOC, EMITS_PM, EMITS_CO, EMITS_NOX, EMITS_SO2,
                                  EMITS_HAP, PROG_SIP, PROG_TITLEV, PROG_NSPS, PROG_MACT, PROG_NESHAP,
                                  PROG_FESOP, PROG_NSR, PROG_PSD, N_PROGRAMS),
                   # every column typed explicitly, not col_guess() -- guessing on this large a file is
@@ -59,7 +64,6 @@ attrs <- read_csv(file.path(DATASETS, "regulatory.csv.gz"),
                                    NAICS_CODES = col_character(), SIC_CODES = col_character(),
                                    FACILITY_TYPE_CODE = col_character(), FACILITY_TYPE = col_character(),
                                    AIR_POLLUTANT_CLASS_DESC = col_character(),
-                                   OP_STATUS_CURRENT_DESC = col_character(),
                                    EMITS_VOC = col_integer(), EMITS_PM = col_integer(),
                                    EMITS_CO = col_integer(), EMITS_NOX = col_integer(),
                                    EMITS_SO2 = col_integer(), EMITS_HAP = col_integer(),
@@ -100,10 +104,12 @@ coords <- read_csv(file.path(DATASETS, "coordinates.csv.gz"),
   # to begin with", which is HAS_COORDINATE==0 and COUNTY_FIPS NA for a different reason)
 
 # ---- facility-level operating fields (entry/exit spell + begin-year), one row per facility -----------------
+# LEFT_CENSORED/RIGHT_CENSORED deliberately EXCLUDED (2026-07-29, explicit user decision) -- ENTERED_YEAR/
+# EXITED_YEAR/EXIT_SOURCE already carry the same entry/exit information directly; the two censoring flags
+# were a derived convenience on top of them, not independent evidence, and weren't judged worth carrying.
 op_facility <- read_csv(file.path(DATASETS, "operating.csv.gz"),
                         col_select = c(PGM_SYS_ID, YEAR, ENTERED_YEAR, EXITED_YEAR, EXIT_SOURCE,
-                                       LEFT_CENSORED, RIGHT_CENSORED, EARLIEST_PROGRAM_BEGIN_YEAR,
-                                       EARLIEST_PROGRAM_BEGIN_YEAR_RAW),
+                                       EARLIEST_PROGRAM_BEGIN_YEAR, EARLIEST_PROGRAM_BEGIN_YEAR_RAW),
                         # EXITED_YEAR/EXIT_SOURCE are NA for most facilities (only ~14% have ever exited),
                         # so col_guess() samples mostly-NA rows and mistypes both as col_logical() --
                         # CONFIRMED empirically this session (spec_csv on this exact column set guessed
@@ -111,41 +117,38 @@ op_facility <- read_csv(file.path(DATASETS, "operating.csv.gz"),
                         # PENALTY_AMOUNT above, caught before it could corrupt this panel's spell columns.
                         col_types = cols(PGM_SYS_ID = col_character(), YEAR = col_integer(),
                                          ENTERED_YEAR = col_integer(), EXITED_YEAR = col_integer(),
-                                         EXIT_SOURCE = col_character(), LEFT_CENSORED = col_integer(),
-                                         RIGHT_CENSORED = col_integer(),
+                                         EXIT_SOURCE = col_character(),
                                          EARLIEST_PROGRAM_BEGIN_YEAR = col_integer(),
                                          EARLIEST_PROGRAM_BEGIN_YEAR_RAW = col_integer()),
                         show_col_types = FALSE) |>
   filter(PGM_SYS_ID %in% cand_ids) |>
-  arrange(PGM_SYS_ID, YEAR) |> distinct(PGM_SYS_ID, .keep_all = TRUE) |>   # these 7 fields are broadcast
+  arrange(PGM_SYS_ID, YEAR) |> distinct(PGM_SYS_ID, .keep_all = TRUE) |>   # these 5 fields are broadcast
   select(-YEAR)                                                            # identically across all 21 rows
                                                                              # in operating.csv.gz already --
                                                                              # one row/facility is enough here
 
-# ---- continuity screen: ACTIVE_BROAD == 1 in EVERY year 2015-2025 ------------------------------------------
-# The load-bearing new rule (replaces the archived pipeline's "active every year" via raw regulatory events
-# only). ACTIVE_BROAD (operating.csv.gz, decision O6 in dataset_construction_decisions.md) is itself a union
-# of wayback-operating, ICIS-observed, and emissions/GHG-reported evidence for that SPECIFIC year -- using it
-# here means a facility only counts as "continuously active" if every one of the 11 years has POSITIVE
-# evidence from at least one of those three channels; a single year with a confirmed non-operating status
-# (ACTIVE_BROAD == 0) OR a single year of no evidence at all (ACTIVE_BROAD == NA) fails the screen. There is
-# no partial credit and no imputation across the gap -- `all()` on an 11-element vector requires every
-# element to be exactly 1.
-continuity <- read_csv(file.path(DATASETS, "operating.csv.gz"),
-                       col_select = c(PGM_SYS_ID, YEAR, ACTIVE_BROAD),
-                       col_types = cols(PGM_SYS_ID = col_character(), YEAR = col_integer(),
-                                        ACTIVE_BROAD = col_integer()), show_col_types = FALSE) |>
-  filter(PGM_SYS_ID %in% cand_ids, YEAR %in% CONTINUITY_YEARS) |>
+# ---- eligibility screen: ACTIVE_BROAD == 1 in AT LEAST ONE year 2015-2025 -----------------------------------
+# REVISED 2026-07-29 (explicit user decision, see PB2 in panel_construction_decisions.md): replaces the prior
+# "every one of the 11 years" screen. That stricter rule required full-window continuity, which drops exactly
+# the facilities most likely to exit *because of* enforcement/penalty outcomes -- survivorship bias in a panel
+# meant to study enforcement and compliance. Two-way fixed-effects estimators don't need a balanced panel, so
+# there was no mechanical reason to require one. ACTIVE_BROAD (operating.csv.gz, decision O6 in
+# dataset_construction_decisions.md) is itself a union of wayback-operating, ICIS-observed, and emissions/GHG-
+# reported evidence for that SPECIFIC year -- using it here means a facility counts as eligible if ANY one of
+# the 11 years has POSITIVE evidence from at least one of those three channels. `any(ACTIVE_BROAD == 1,
+# na.rm = TRUE)`: a single qualifying year is enough; years with ACTIVE_BROAD == 0 or NA elsewhere don't block
+# eligibility (na.rm = TRUE drops NAs before the any() check, unlike the old all()-based screen where a single
+# NA anywhere failed the whole facility). A facility with NO qualifying year anywhere in the span (all 0/NA)
+# is the only way to fail -- any() over an all-NA-after-removal vector returns FALSE, not NA, so there's no
+# accidental pass-through.
+eligible <- read_csv(file.path(DATASETS, "operating.csv.gz"),
+                     col_select = c(PGM_SYS_ID, YEAR, ACTIVE_BROAD),
+                     col_types = cols(PGM_SYS_ID = col_character(), YEAR = col_integer(),
+                                      ACTIVE_BROAD = col_integer()), show_col_types = FALSE) |>
+  filter(PGM_SYS_ID %in% cand_ids, YEAR %in% SCREEN_YEARS) |>
   group_by(PGM_SYS_ID) |>
-  summarise(CONTINUOUSLY_ACTIVE = all(ACTIVE_BROAD == 1), .groups = "drop")
-  # `all(ACTIVE_BROAD == 1)`: if ANY of the 11 years has ACTIVE_BROAD == 0, this is FALSE (fails); if ANY
-  # year has ACTIVE_BROAD == NA, `NA == 1` is NA, and all() with an NA present (no FALSE) returns NA -- which
-  # R then treats as "not TRUE" everywhere this is used as a filter condition below (dplyr::filter() keeps
-  # only rows where the condition is exactly TRUE, silently dropping NA rows same as FALSE ones) -- so a
-  # facility with a data GAP in the 2015-2025 span fails the screen exactly like a confirmed-inactive year
-  # would, never passes by silent coercion. Verified this is the desired behavior (not merely a side effect)
-  # against the spec: "continuously active" should mean no gaps, not "no confirmed gaps."
-stopifnot("continuity: PGM_SYS_ID x YEAR not unique in operating.csv.gz" =
+  summarise(EVER_ACTIVE = any(ACTIVE_BROAD == 1, na.rm = TRUE), .groups = "drop")
+stopifnot("eligible: PGM_SYS_ID x YEAR not unique in operating.csv.gz" =
             !anyDuplicated(read_csv(file.path(DATASETS, "operating.csv.gz"),
                                     col_select = c(PGM_SYS_ID, YEAR),
                                     col_types = cols(PGM_SYS_ID = col_character(), YEAR = col_integer()),
@@ -155,11 +158,11 @@ stopifnot("continuity: PGM_SYS_ID x YEAR not unique in operating.csv.gz" =
 spine <- candidates |>
   left_join(coords,      by = "PGM_SYS_ID") |>
   left_join(op_facility, by = "PGM_SYS_ID") |>
-  left_join(continuity,  by = "PGM_SYS_ID") |>
-  mutate(CONTINUOUSLY_ACTIVE = coalesce(CONTINUOUSLY_ACTIVE, FALSE)) |>
-  # a candidate facility absent from `continuity` entirely (zero rows in operating.csv.gz for 2015-2025,
-  # which shouldn't happen given operating.csv.gz is a full balanced rectangle -- but coalesced defensively
-  # rather than left as NA, since a missing continuity read must mean "fails the screen," not "unknown")
+  left_join(eligible,    by = "PGM_SYS_ID") |>
+  mutate(EVER_ACTIVE = coalesce(EVER_ACTIVE, FALSE)) |>
+  # a candidate facility absent from `eligible` entirely (zero rows in operating.csv.gz for 2015-2025, which
+  # shouldn't happen given operating.csv.gz is a full balanced rectangle -- but coalesced defensively rather
+  # than left as NA, since a missing eligibility read must mean "fails the screen," not "unknown")
   arrange(PGM_SYS_ID)
 
 stopifnot(
@@ -168,19 +171,19 @@ stopifnot(
   "spine: a non-major/synmin class leaked in"        = all(spine$AIR_POLLUTANT_CLASS_DESC %in% MAJOR_SYNMIN_CLASSES),
   "spine: COORD_NO_COUNTY_MATCH set without a coordinate" =
     all(spine$COORD_NO_COUNTY_MATCH[spine$HAS_COORDINATE == 0] == 0 | is.na(spine$COORD_NO_COUNTY_MATCH[spine$HAS_COORDINATE == 0])),
-  "spine: CONTINUOUSLY_ACTIVE is not a clean logical (TRUE/FALSE, no NA)" =
-    all(!is.na(spine$CONTINUOUSLY_ACTIVE)))
+  "spine: EVER_ACTIVE is not a clean logical (TRUE/FALSE, no NA)" =
+    all(!is.na(spine$EVER_ACTIVE)))
 
-cat(sprintf("spine (candidate set: CONUS + major/synmin class): %d facilities | %d continuously active 2015-2025 (%.1f%%)\n",
-            nrow(spine), sum(spine$CONTINUOUSLY_ACTIVE), 100 * mean(spine$CONTINUOUSLY_ACTIVE)))
+cat(sprintf("spine (candidate set: CONUS + major/synmin class): %d facilities | %d ever active 2015-2025 (%.1f%%)\n",
+            nrow(spine), sum(spine$EVER_ACTIVE), 100 * mean(spine$EVER_ACTIVE)))
 
 # =========================================================================================================
 # FLAGGED ISSUES
 # =========================================================================================================
-# 1. (continuity uniqueness check, ~line 75) Re-reads operating.csv.gz's (PGM_SYS_ID, YEAR) columns a
+# 1. (eligibility uniqueness check, ~line 75) Re-reads operating.csv.gz's (PGM_SYS_ID, YEAR) columns a
 #    second time purely to assert grain uniqueness -- a small redundant read, kept because
-#    stopifnot() needs the check to run against the UNFILTERED file (the `continuity` object above is
-#    already filtered to `cand_ids`/CONTINUITY_YEARS, which would only assert uniqueness on a subset).
+#    stopifnot() needs the check to run against the UNFILTERED file (the `eligible` object above is
+#    already filtered to `cand_ids`/SCREEN_YEARS, which would only assert uniqueness on a subset).
 #    Cheap relative to the rest of this script's reads; not worth a third read to avoid.
 # 2. (COORD_NO_COUNTY_MATCH, ~line 55) Derived here rather than read from coordinates.csv.gz, since that
 #    dataset doesn't ship this exact flag -- a small duplication of logic (the same derivation would need

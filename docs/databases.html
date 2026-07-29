@@ -1,4 +1,4 @@
-<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Databases — CAA Regulatory Data</title><meta name='description' content="What each CAA regulatory database (ICIS-Air, AFS, emissions, pipeline) contains, what's missing, and how the files join."><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=Merriweather:wght@300;700&family=Merriweather+Sans:wght@300;600;700&display=swap' rel='stylesheet'><style>
+<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Datasets — CAA Regulatory Data</title><meta name='description' content="The eight datasets this pipeline builds from raw EPA data: what each contains, the construction decisions behind it, and its headline finding and caveat."><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=Merriweather:wght@300;700&family=Merriweather+Sans:wght@300;600;700&display=swap' rel='stylesheet'><style>
 :root{
   --navy:#003349; --navy-dark:#001f2e; --accent:#933f71; --accent-dark:#612141;
   --bg:#ffffff; --bg-alt:#f2f4f7; --ink:#0f131f; --text:#333333; --muted:#727f9f; --border:#e3e7f0;
@@ -20,12 +20,15 @@ a{color:var(--accent);}
 
 .hero{background:linear-gradient(160deg,var(--navy) 0%,var(--navy-dark) 100%);color:#fff;
   padding:3rem 1.2rem 2.4rem;}
-.hero-inner{max-width:1100px;margin:0 auto;}
+.hero-photo{background-size:cover;background-position:center;padding:5rem 1.2rem 3.2rem;}
+.hero-inner{max-width:1100px;margin:0 auto;position:relative;}
 .hero .eyebrow{text-transform:uppercase;letter-spacing:.13em;font-size:.76rem;color:rgba(255,255,255,.66);
   font-weight:700;margin:0 0 .7rem;}
 .hero h1{font-family:'Merriweather',Georgia,serif;font-weight:300;font-size:2.5rem;
   line-height:1.18;margin:0 0 .7rem;}
 .hero p{font-size:1.05rem;max-width:760px;color:#dde1ec;margin:0;line-height:1.55;}
+.hero .photo-credit{font-size:.7rem;color:rgba(255,255,255,.55);max-width:none;margin:1.6rem 0 0;
+  font-style:italic;}
 
 main{max-width:1100px;margin:0 auto;padding:2.4rem 1.2rem 3rem;}
 
@@ -50,6 +53,26 @@ main{max-width:1100px;margin:0 auto;padding:2.4rem 1.2rem 3rem;}
 .prose th{background:var(--bg-alt);}
 .prose code{font-family:ui-monospace,Menlo,monospace;background:var(--bg-alt);padding:.05rem .3rem;font-size:.9em;}
 
+/* ---- doc-nav (Home's institutional-overview sections, Raw Data's per-source sections): docs-site-style
+   sidebar + content pane. One title list on the left (sticky), one pane visible at a time on the right.
+   Needs doc_nav_script (below) to switch panes and support #hash deep-linking -- everything else on this
+   site is plain HTML/CSS with no JS, but a click-to-switch sidebar has no static-HTML equivalent. ------- */
+.doc-nav{display:flex;gap:2.2rem;align-items:flex-start;margin-top:.4rem;}
+.doc-sidebar{flex:0 0 230px;display:flex;flex-direction:column;gap:.1rem;position:sticky;top:1rem;
+  border-right:1px solid var(--border);padding-right:1.1rem;}
+.doc-sidebar-link{display:block;padding:.6rem .7rem;color:var(--text);text-decoration:none;font-size:.93rem;
+  border-left:3px solid transparent;transition:background-color .15s ease,color .15s ease,border-color .15s ease;}
+.doc-sidebar-link:hover{background:var(--bg-alt);color:var(--navy);}
+.doc-sidebar-link.active{background:var(--bg-alt);color:var(--accent);border-left-color:var(--accent);font-weight:600;}
+.doc-content{flex:1;min-width:0;overflow-x:auto;}
+@media (max-width:820px){
+  .doc-nav{flex-direction:column;gap:0;}
+  .doc-sidebar{flex:none;position:static;top:auto;flex-direction:row;flex-wrap:wrap;gap:.3rem;
+    border-right:none;border-bottom:1px solid var(--border);padding:0 0 .8rem;margin-bottom:1rem;}
+  .doc-sidebar-link{border-left:none;border-bottom:3px solid transparent;padding:.4rem .6rem;}
+  .doc-sidebar-link.active{border-left-color:transparent;border-bottom-color:var(--accent);}
+}
+
 .section-note{background:var(--bg-alt);border:1px solid var(--border);border-left:3px solid var(--accent);
   padding:.9rem 1.1rem;margin:1.4rem 0;font-size:.92em;line-height:1.55;}
 
@@ -66,25 +89,19 @@ main{max-width:1100px;margin:0 auto;padding:2.4rem 1.2rem 3rem;}
   color:var(--muted);font-size:.82rem;}
 .site-footer code{font-family:ui-monospace,Menlo,monospace;background:#eef0f4;padding:.1rem .35rem;}
 
-/* ---- raw-data page: scoped table styling (unchanged rules from the original docs/index.html) -------- */
-.raw-data h1{text-align:center;margin-bottom:.2rem;font-family:'Merriweather',Georgia,serif;font-weight:300;}
-.raw-data .lead{text-align:center;color:var(--muted);margin-top:0;}
-.raw-data .section-toc{display:flex;flex-wrap:wrap;gap:.4rem .9rem;justify-content:center;margin:1.4rem 0 2rem;
-  font-weight:bold;}
-.raw-data .section-toc a{color:var(--accent);text-decoration:none;}
-.raw-data .section-toc a:hover{color:var(--accent-dark);text-decoration:underline;}
-.raw-data section{margin:2.6rem 0;padding-top:1rem;border-top:1px solid var(--border);overflow-x:auto;}
-.raw-data h2{margin-bottom:.1rem;text-align:center;font-family:'Merriweather',Georgia,serif;font-weight:300;
-  color:var(--navy);}
-.raw-data .src{text-align:center;color:#8a8f98;font-size:.85em;margin:.1rem 0;font-family:ui-monospace,Menlo,monospace;}
-.raw-data .desc{text-align:center;margin:.4rem auto .6rem;max-width:860px;}
-.raw-data .obs{text-align:center;font-weight:bold;margin:.3rem 0;}
-.raw-data .inv{text-align:center;color:var(--muted);font-size:.84em;margin:.2rem auto 1rem;max-width:920px;}
+/* ---- raw-data page: scoped table styling -------------------------------------------------------------- */
+.raw-data h2{margin:0 0 .3rem;font-family:'Merriweather',Georgia,serif;font-weight:300;color:var(--navy);
+  font-size:1.5rem;}
+.raw-data .src{color:var(--muted);font-size:.85em;margin:.1rem 0;font-family:ui-monospace,Menlo,monospace;}
+.raw-data .desc{margin:.4rem 0 .6rem;max-width:860px;}
+.raw-data .obs{font-weight:bold;margin:.3rem 0;}
+.raw-data .inv{color:var(--muted);font-size:.84em;margin:.2rem 0 1rem;max-width:920px;}
 .raw-data table{border-collapse:collapse;width:100%;margin:.5rem 0 1rem;font-size:.9em;}
-.raw-data th,.raw-data td{border:1px solid #9aa0a6;padding:5px 8px;text-align:center;vertical-align:middle;}
-.raw-data td.l{text-align:left;} .raw-data .var{text-align:left;}
+.raw-data th{text-align:left;border:1px solid var(--border);padding:5px 8px;vertical-align:middle;}
+.raw-data td{text-align:right;border:1px solid var(--border);padding:5px 8px;vertical-align:middle;}
+.raw-data td.l,.raw-data .var{text-align:left;}
 .raw-data .vd{font-weight:normal;color:var(--muted);font-size:.92em;}
-.raw-data table.cat th{background:#C6EFCE;} .raw-data table.num th{background:#F4B084;}
+.raw-data table.cat th{background:var(--navy);color:#fff;} .raw-data table.num th{background:var(--accent);color:#fff;}
 .raw-data .note{font-size:.86em;color:#3d444d;margin:.35rem 0;line-height:1.4;}
 .raw-data .dupes{font-size:.9em;margin:1rem 0 .3rem;line-height:1.4;}
 
@@ -93,184 +110,193 @@ main{max-width:1100px;margin:0 auto;padding:2.4rem 1.2rem 3rem;}
   .site-header-inner{flex-direction:column;align-items:flex-start;}
   .site-nav{gap:.9rem;font-size:.85rem;}
 }
-</style></head><body><header class='site-header'><div class='site-header-inner'><a class='site-brand' href='index.html'>CAA Regulatory Data</a><nav class='site-nav'><a href='index.html'>Home</a><a href='raw_data.html'>Raw Data</a><a href='databases.html' class='active'>Databases</a><a href='panels.html'>Panels</a></nav></div></header><div class='hero'><div class='hero-inner'><p class='eyebrow'>Sources</p><h1>Database Overviews</h1><p>What each database contains, what's missing, and how the files join — ICIS-Air (current), AFS (legacy, frozen 2014), the combined emissions dataset, and the compliance-and-enforcement pipeline.</p></div></div><main><div class='section-note'>For column-by-column definitions of every field, see the <a href='data_dictionary.md'>full data dictionary</a>. For live-computed variable coverage and frequent values per file, see <a href='raw_data.html'>Raw Data</a>.</div><div class='prose'><h2>Air Stationary Source Data Downloads</h2>
-<h3>ICIS-Air Datasets</h3>
-<p>Tracks compliance and enforcement data on stationary sources. Facility level. 10 different files associated
-with ICIS-Air.</p>
-<p><strong>Key information includes:</strong></p>
+</style></head><body><header class='site-header'><div class='site-header-inner'><a class='site-brand' href='index.html'>CAA Regulatory Data</a><nav class='site-nav'><a href='index.html'>Home</a><a href='raw_data.html'>Raw Data</a><a href='databases.html' class='active'>Datasets</a><a href='panels.html'>Panels</a></nav></div></header><div class='hero'><div class='hero-inner'><p class='eyebrow'>The Eight Datasets</p><h1>Datasets</h1><p>The eight datasets this pipeline builds — one row per facility × year (or, for Penalties and HPV Spells, one row per action/spell) — with the construction decisions behind each, its headline finding, and the one caveat that matters most before you use it.</p></div></div><main><div class='section-note'>These are the built datasets in <code>data/datasets/</code> — for the raw EPA source files they're built from, see <a href='raw_data.html'>Raw Data</a>; for column-by-column definitions of every field below, see the <a href='data_dictionary_derived.md'>derived data dictionary</a>.</div><div class='prose'><div class='doc-nav'><nav class='doc-sidebar'><a href='#regulatory' class='doc-sidebar-link' data-target='regulatory'>Regulatory</a><a href='#operating' class='doc-sidebar-link' data-target='operating'>Operating</a><a href='#hpv-spells' class='doc-sidebar-link' data-target='hpv-spells'>HPV Spells</a><a href='#hpv-active' class='doc-sidebar-link' data-target='hpv-active'>HPV Active</a><a href='#penalties' class='doc-sidebar-link' data-target='penalties'>Penalties</a><a href='#coordinates' class='doc-sidebar-link' data-target='coordinates'>Coordinates</a><a href='#pipeline' class='doc-sidebar-link' data-target='pipeline'>Pipeline</a><a href='#emissions' class='doc-sidebar-link' data-target='emissions'>Emissions</a></nav><div class='doc-content'><div class='doc-pane' id='regulatory'><h2>Regulatory</h2><p>Facility × year record built purely from ICIS-Air: inspections, violations, enforcement actions, penalties,
+certifications, and stack tests, alongside each facility's static characteristics (location, classification,
+industry codes). It's the spine every other dataset in this layer joins to.</p>
+<p><strong>Scale.</strong> 5,872,965 rows — every one of 279,665 ICIS-Air facilities × 21 years (2005–2025). Only 12.6% of
+that rectangle is actually observed in ICIS-Air that year; the rest is unknown, not zero.</p>
+<p><strong>Key decisions.</strong></p>
 <ul>
-<li>Facility identification and classification (location, ID number, SIC/NAICS, high priority violation (HPV)
-status)</li>
-<li>Violation/enforcement history</li>
-<li>Program/subpart identification (which regulatory regimes a facility is subject to)</li>
-<li>Pollutant information for each facility</li>
-<li>Title V certification information</li>
+<li>The universe is every facility ICIS-Air has ever tracked, with no &quot;was this facility ever active&quot; screen
+applied — including the 52.2% of facilities with zero events anywhere in the window (R1).</li>
+<li>A zero-vs-unknown discipline anchors this entire layer: a count is a true zero only if the facility was
+actually observed that year; otherwise it's unknown (R2). Every other dataset here inherits this rule.</li>
+<li>The penalty-amount field reads the same whether no formal action occurred or a formal action assessed
+exactly $0 — the two cases aren't distinguishable in this field alone (R4).</li>
 </ul>
-<p>Includes data files with static characteristics (location, programs, pollutants, etc.) and also time-varying
-&quot;events&quot; (evaluations, violations, enforcement actions).</p>
-<p>The Facility/Source Level Identifying Data (<code>ICIS-AIR_FACILITIES.csv</code>) could be a good &quot;spine,&quot; with:</p>
+<p><strong>Headline finding.</strong> Coverage is far from uniform — only 12.6% of facility-years are observed overall, and
+that share has drifted down over time (13.9% in the early window to 10.6% recently). It's also sharply
+tiered by facility classification: 60.8% of Major-source facility-years are observed, versus just 6.4% for
+Minor sources.</p>
+<p><strong>Caveat.</strong> Never compute a rate from this dataset without conditioning on whether the facility-year was
+actually observed — the 12.6% baseline observation rate means an unconditional average will be badly
+diluted by unknowns.</p>
+</div><div class='doc-pane' id='operating'><h2>Operating</h2><p>Supplies the year-varying operating evidence the Regulatory dataset deliberately withholds: web-archive-
+reconstructed operating status, program-active flags, entry/exit spells, and two facility-existence tiers
+that combine multiple independent signals. Joins one-to-one to Regulatory.</p>
+<p><strong>Scale.</strong> Same 5,872,965-row rectangle. 42.1% of facility-years are archive-observed overall — close to
+80% within 2015–2025, the actual window that source covers. A companion file separately tracks about 15,302
+facilities the archive saw operating that current ICIS-Air no longer lists at all.</p>
+<p><strong>Key decisions.</strong></p>
 <ul>
-<li>One row per air source</li>
-<li>FRS ID information</li>
-<li>Location</li>
-<li>Industry classification (SIC/NAICS)</li>
-<li>Emissions classification (major/synthetic minor/minor)</li>
+<li>Every signal here is kept strictly raw — no imputation. Outside 2015–2025, or wherever the archive has no
+snapshot, the value is unknown (O2).</li>
+<li>The broader of the two existence tiers unions archive-confirmed operating status with ICIS and
+emissions/greenhouse-gas reporting, closing gaps no single signal covers alone (O6) — the panel layer's
+continuity screen is built on this tier.</li>
+<li>The universe here matches Regulatory's exactly, dropping the ~15,302 archive-only facilities into their
+own companion file so the two main datasets stay row-for-row joinable (O1/O1a).</li>
 </ul>
-<p>All other ICIS files can join with it via <code>PGM_SYS_ID</code>. Non-ICIS ECHO files can connect via <code>REGISTRY_ID</code>
-(Facility Registry Service (FRS) code).</p>
-<p><em>What's missing:</em> emissions (tracks pollutants, but not amount); historical status for programs/pollutants
-(offered in AFS).</p>
-<h3>Air Emissions Dataset</h3>
-<p>Facility-level aggregate data from four EPA programs (NEI, GHGRP, TRI, CAMD). Facility-pollutant-program-year
-combinations.</p>
-<p><strong>Key information includes:</strong></p>
+<p><strong>Headline finding.</strong> 92,080 facilities are archive-confirmed operating with zero ICIS events recorded,
+ever — meaning ICIS observation alone badly undercounts which facilities genuinely exist, which is exactly
+what motivated building the broader existence tiers in the first place.</p>
+<p><strong>Caveat.</strong> A facility's disappearance from ICIS is only reliably captured here when it's a confirmed
+closure — real mid-window disappearances that were never formally closed (roughly 1,018 of them) are
+invisible in this main file; they only show up in the companion &quot;archive-only&quot; file.</p>
+</div><div class='doc-pane' id='hpv-spells'><h2>HPV Spells</h2><p>The uncollapsed, spell-grain record of every High Priority Violation determination — one row per HPV spell,
+kept deliberately raw rather than merged or deduplicated.</p>
+<p><strong>Scale.</strong> 44,777 spells across 15,656 facilities; 42.8% of those facilities have more than one spell.</p>
+<p><strong>Key decisions.</strong></p>
 <ul>
-<li>Annual emission quantities by facility, pollutant, and reporting program</li>
-<li>Pollutant category classification (criteria pollutants, HAPs, greenhouse gases)</li>
-<li>Units of measure (NEI/TRI/CAMD report in pounds, GHGRP reports in metric tons of CO2e)</li>
+<li>The HPV universe is defined by the enforcement-response-policy code itself, not a broader violation
+category — it excludes the less-severe &quot;federally reportable&quot; tier entirely (H1).</li>
+<li>Overlapping spells at the same facility are NOT merged here — that collapse is deliberately deferred to
+the facility-year dataset below, keeping this file a faithful, minimally processed record (H2).</li>
+<li>Where a spell needs to become a single facility-year flag, an interval-overlap rule was chosen over two
+simpler alternatives (day-zero-year-only, or open-ended extension) after directly comparing what each
+would produce (H5).</li>
 </ul>
-<p>Reporting frequency differs between programs: CAMD, TRI, and GHGRP report annually, NEI is triennial.</p>
+<p><strong>Headline finding.</strong> Once resolved, an HPV spell tends to run long — median 315 days, and 44.2% span more
+than a full calendar year. Title V (57.3%) and state implementation plan (48.5%) obligations dominate which
+programs are implicated.</p>
+<p><strong>Caveat.</strong> Dates here are carried exactly as they parse from the raw source, with no plausibility
+screening — a handful of clearly wrong values (one has a day-zero year of &quot;218&quot;) pass through unchanged.
+Screening happens downstream, in HPV Active, not here.</p>
+</div><div class='doc-pane' id='hpv-active'><h2>HPV Active</h2><p>The facility × year collapse of HPV Spells into a single, ready-to-use &quot;was this facility in active-HPV
+status this year&quot; flag. Joins one-to-one to Regulatory and Operating.</p>
+<p><strong>Scale.</strong> Same 5,872,965-row rectangle; 35,417 facility-years are active (0.6%), 709,220 are confirmed
+not-active, and the remaining 5,128,328 are unknown. 9,743 facilities are ever-active across the whole
+window.</p>
+<p><strong>Key decisions.</strong></p>
 <ul>
-<li><strong>NEI:</strong> most comprehensive. Attempts to inventory all stationary source emissions of criteria pollutants
-and HAPs. State-submitted estimates, not direct measurement. Broadest coverage but least frequent.</li>
-<li><strong>GHGRP:</strong> only large emitters (25,000+ metric tons CO2e/year). Annual, greenhouse gases only.
-Self-reported by facilities.</li>
-<li><strong>TRI:</strong> facilities in specific industries with 10+ employees that manufacture, process, or use listed
-toxic chemicals above threshold quantities. Annual. Covers ~770 chemicals. TRI comes from a different
-statute (not CAA).</li>
-<li><strong>CAMD:</strong> only electric generating units in the cap-and-trade programs (Acid Rain, CSAPR). Annual. SO2 and
-NOx, directly measured by continuous emission monitors. Smallest universe but highest data quality.</li>
+<li>The same zero-vs-unknown discipline as Regulatory applies, with one addition: a spell can mark a
+facility-year active even in a year ICIS-Air itself has no other observed record for that facility
+(2,431 facility-years) (H6).</li>
+<li>Collapsing spells into years applies a plausibility screen on day-zero dates (rejecting anything outside
+1970–2025) — which caught a real data-entry bug: a mistyped day-zero year that would otherwise have
+spuriously flagged over a decade of facility-years as HPV-active (H7).</li>
 </ul>
-<p>Connects to ICIS-Air via <code>REGISTRY_ID</code>.</p>
-<p><em>What's missing:</em> facility characteristics; NEI gaps (due to reporting frequency); TRI has different
-reporting requirements.</p>
-<h3>AFS Dataset</h3>
-<p>EPA's legacy database for air stationary source compliance/enforcement information. Replaced by ICIS-Air and
-frozen as of 2014. Follows a similar structure to ICIS-Air:</p>
-<p><strong>Key information includes:</strong></p>
+<p><strong>Headline finding.</strong> The active-HPV rate has fallen steadily and substantially, from 8.4% in 2005 to 2.0%
+in 2025 — a roughly 4.3x decline that isn't fully explained by the known coverage-ramp and right-truncation
+caveats affecting the edges of the window.</p>
+<p><strong>Caveat.</strong> That declining trend is flagged as genuinely unresolved, not a clean measure of falling
+enforcement intensity — it's worth independent investigation before treating it as a headline finding on
+its own.</p>
+</div><div class='doc-pane' id='penalties'><h2>Penalties</h2><p>The action-level detail behind Regulatory's facility-year penalty-amount field — one row per formal
+enforcement action, reconciling exactly to that summary number.</p>
+<p><strong>Scale.</strong> 105,946 formal actions across 37,363 facilities, spanning 1972–2026 (this dataset isn't
+restricted to the main panel window); 72,560 of those actions assessed a nonzero penalty.</p>
+<p><strong>Key decisions.</strong></p>
 <ul>
-<li>Facility identification/classification (location, SIC/NAICS, emissions class)</li>
-<li>Violation/enforcement history (inspections, enforcement actions, stack tests, penalties)</li>
-<li>Air program assignments with compliance status</li>
-<li>Quarterly historical compliance status</li>
-<li>Pollutant information</li>
-<li>HPV history</li>
+<li>Only formal enforcement actions are included — informal actions have no penalty amount to report at all
+(P2).</li>
+<li>Multi-facility settlements (one enforcement action naming several co-defendant facilities) are exposed via
+an explicit settlement identifier and facility count, not silently resolved — the per-row penalty amount
+is left exactly as reported, which is often the full settlement total repeated on every co-defendant's row
+(P5).</li>
 </ul>
-<p>Compliance status over time could be valuable. To merge into ICIS data, use FRS information from the
-<a href="https://echo.epa.gov/tools/data-downloads/frs-download-summary">EPA FRS download summary</a>.</p>
-<p><em>What's missing:</em> no emissions quantities.</p>
-<h3>CAA Pipeline Dataset</h3>
-<p>Associations between compliance monitoring, violations, and enforcement. Records organized by enforcement
-pathway. Helps trace which inspection led to which violation led to which enforcement action.</p>
-<p><strong>Key information includes:</strong></p>
+<p><strong>Headline finding.</strong> 571 settlements (0.55% of all actions) span more than one facility. Naively summing
+the penalty amount across all rows overstates the true multi-facility penalty total by roughly $1.99B —
+35.7% of this dataset's entire penalty total. The good news: 507 of those 571 settlements simply repeat one
+uniform amount per co-defendant (a clean de-dup fixes them); only 19 settlements (3.3%) have genuinely
+different per-facility amounts that need case-by-case judgment.</p>
+<p><strong>Caveat.</strong> Never sum the penalty amount across a settlement's co-defendant facilities without a
+de-duplication rule — this is the single most consequential caveat anywhere in this dataset.</p>
+</div><div class='doc-pane' id='coordinates'><h2>Coordinates</h2><p>One row per facility: latitude/longitude sourced from EPA's Facility Registry Service, a derived county
+assignment (computed two independent ways), and diagnostics comparing the two.</p>
+<p><strong>Scale.</strong> 279,665 facilities; 236,219 (84.5%) have a coordinate, 236,059 (84.4%) have a county assignment,
+and 2,873 (1.3% of those checkable) show a gross location error.</p>
+<p><strong>Key decisions.</strong></p>
 <ul>
-<li>Facility identification (registry ID, facility name)</li>
-<li>Evaluation data</li>
-<li>Violation data</li>
-<li>Enforcement action data</li>
-<li>Indicators for which stages (evaluation, violation, enforcement action) are present in the &quot;pipeline&quot; for
-each record</li>
+<li>Coordinates come from the Facility Registry Service via each facility's registry ID; no match there means
+no coordinate at all, not an estimated one (C1).</li>
+<li>County assignment uses genuine point-in-polygon geometry against the full Census county file (all 56
+state/territory codes, not just the continental US) — not a text match against ICIS's own county name
+field (C2).</li>
+<li>A second, coordinate-independent county field is also included, derived from ICIS's own name text — it
+covers 93.6% of facilities, wider than the 84.5% that have a usable coordinate at all (C5).</li>
 </ul>
-<p>Evaluation (inspection) ↔ Violation ↔ Enforcement Action. Shares <code>REGISTRY_ID</code> with ICIS-Air.</p>
-<p><em>What's missing:</em> facility characteristics (<code>ICIS-AIR_FACILITIES.csv</code>); emissions data.</p>
-<hr />
-<h2>ICIS-Air Datasets</h2>
-<p>The ICIS-Air datasets have information describing general plant characteristics, compliance, and enforcement
-data on stationary sources of air pollution. The data is presented at the plant/facility level, meaning the
-entire facility is treated as one unit (not individual stacks/emission points).</p>
-<p><strong>Potential join codes:</strong> <code>PGM_SYS_ID</code> is the spine — it uniquely identifies all facilities and can be used
-to join any ICIS-Air files. <code>REGISTRY_ID</code> is the FRS ID, which can link facilities to non-ICIS data (like
-emissions).</p>
-<h4>Facility/Source Level Identifying Data (<code>ICIS-AIR_FACILITIES.csv</code>)</h4>
-<p>Universe of regulated stationary air sources. Base identification table. One row per source. Could be a good
-&quot;spine,&quot; with: one row per source, FRS ID, location, industry classification (SIC/NAICS), emissions
-classification (major/synthetic minor/minor), current HPV status. All other ICIS files can be joined to it
-via <code>PGM_SYS_ID</code> (which uniquely identifies each air source). Non-ICIS ECHO files can connect via
-<code>REGISTRY_ID</code> (Facility Registry Service (FRS) code).</p>
-<p><em>What's missing:</em> emissions information.</p>
-<h4>Air Programs (<code>ICIS-AIR_PROGRAMS.csv</code>)</h4>
-<p>Facilities subject to at least one CAA program. Lists the regulatory programs that a facility is subject to.
-One facility could be associated with multiple programs (e.g. Title V and NSPS). Each row is a
-facility-program combination.</p>
-<p><strong>Key information includes:</strong> program code and description; operational condition (a facility can be
-operating under one program and closed under another); date the facility entered program; date program
-record was last modified.</p>
-<h4>Air Program Subparts (<code>ICIS-AIR_PROGRAM_SUBPARTS.csv</code>)</h4>
-<p>One level deeper than programs. Identifies the specific regulatory subparts within a program that apply to a
-facility.</p>
-<p><strong>Key information includes:</strong> parent program; regulatory subpart.</p>
-<h4>Air Pollutants (<code>ICIS-AIR_POLLUTANTS.csv</code>)</h4>
-<p>Facilities with at least one tracked pollutant. Specific pollutants associated with each facility.</p>
-<p><strong>Key information includes:</strong> numeric code and name of pollutant; Substance Registry Services ID; Chemical
-Abstract Service (CAS) number; pollutant class code (major/synthetic minor/minor).</p>
-<h4>Air Full Compliance Evaluations (FCEs) and Partial Compliance Evaluations (PCEs)</h4>
-<p>Only facilities that have been inspected. Records of compliance monitoring activities. FCEs are more
-comprehensive; PCEs focus more on particular aspects.</p>
-<p><strong>Key information includes:</strong> activity ID for specific evaluation events; which agency conducted the
-evaluation (state/local agency or EPA); what kind of compliance monitoring was done (FCE on site/off site,
-PCE monitoring/sampling…); date of inspection/review; which regulatory programs the evaluation covered.</p>
-<h4>Air Stack Tests (<code>ICIS-AIR_STACK_TESTS.csv</code>)</h4>
-<p>Only facilities that have had a stack test. Results of emissions testing at facility stacks.</p>
-<p><strong>Key information includes:</strong> activity ID; type of compliance monitoring; responsible agency; date of test;
-which pollutants were tested; result (pass, fail, pending, incomplete…).</p>
-<h4>Air Title V Certifications (<code>ICIS-AIR_TITLEV_CERTS.csv</code>)</h4>
-<p>Only sources required to hold Title V permits. Record of operating permit/annual compliance certification
-certificates.</p>
-<p><strong>Key information includes:</strong> activity ID; responsible agency; date of certification; whether the facility
-self-reported deviations from permit requirements.</p>
-<h4>ICIS-Air Formal Actions (<code>ICIS-AIR_FORMAL_ACTIONS.csv</code>)</h4>
-<p>Only facilities that have received enforcement. Formal enforcement responses to violations. Actions with
-legal force (consent agreements, administrative orders, and judicial actions).</p>
-<p><strong>Key information includes:</strong> activity ID; identifier to group multiple activities that belong to the same
-case; type of enforcement activity (administrative formal, judicial…); responsible agency; date settlement
-was signed by a judge (marks formal resolution); penalty amount.</p>
-<h4>ICIS-Air Informal Actions (<code>ICIS-AIR_INFORMAL_ACTIONS.csv</code>)</h4>
-<p>Only facilities that have received enforcement. Informal enforcement responses (actions without direct legal
-force). Notices of violations (NOVs), warning letters, phone calls. Often precede formal actions.</p>
-<p><strong>Key information includes:</strong> activity ID; identifier to group multiple activities that belong to the same
-case; type of informal action; responsible agency; date the informal action was completed; indicator for
-whether the action was an official agency action.</p>
-<h4>Case File High Priority Violations (HPVs) and Federally Reportable Violations (FRVs) (<code>ICIS-AIR_VIOLATION_HISTORY.csv</code>)</h4>
-<p>Only facilities with HPV/FRV violations. Holds all Federally Reportable Violations, including the HPV
-subset. Tracks the lifecycle of each violation from discovery to resolution.</p>
-<p><strong>Key information includes:</strong> activity ID; which level of government is handling enforcement; identifier for
-case file activity; violation severity (HPV, FRV); which regulatory programs were violated; pollutants
-involved; date the violation was deemed federally reportable; date facility entered HPV status; date HPV was
-resolved; date violation was discovered; date facility was notified of violation.</p>
-<hr />
-<h2>AFS Datasets</h2>
-<h4>Facility/Source Level Identifying Data (<code>AFS_FACILITIES.csv</code>)</h4>
-<p>Universe of regulated stationary air sources tracked in the legacy Air Facility System. One row per plant.
-Treats the entire facility as one unit rather than looking at individual emission points.</p>
-<p><strong>Key information includes:</strong> AFS ID; location; industry classification; emissions classification
-(major/synthetic minor/minor); operating status; EPA and state compliance status; HPV status; government
-facility indicator (federal/state/county…); federally reportable flag. Other AFS files join via <code>AFS_ID</code>.</p>
-<p><em>What's missing:</em> emissions data, historical statuses, enforcement history.</p>
-<h4>Air Program (<code>AIR_PROGRAM.csv</code>)</h4>
-<p>Plants subject to at least one CAA program. Lists regulatory programs that a plant is subject to. One plant
-could be associated with multiple programs. Plant-program combinations.</p>
-<p><strong>Key information includes:</strong> air program code; operating status within the program; applicable subparts;
-pollutant code, CAS number, pollutant-level classification.</p>
-<p><em>What's missing:</em> detailed facility information; emissions information.</p>
-<h4>Actions (<code>AFS_ACTIONS.csv</code>)</h4>
-<p>Plants associated with actions. Compliance monitoring and enforcement activity rolled up to plant level.
-Inspections (FCE/PCEs), enforcement actions (NOVs, administrative orders, consent decrees), stack tests, and
-Title V certification reviews.</p>
-<p><strong>Key information includes:</strong> national action type and description; date achieved; all air programs
-addressed by the action; penalty amount; result code (pass/fail for stack tests, compliance status for Title
-V reviews); violation type codes; linkage to violation/FCE pathways.</p>
-<p><em>What's missing:</em> detailed facility information; emissions information; no state vs. EPA flag (embedded in
-action type code).</p>
-<h4>Historical Compliance — Air Program Level (<code>AFS_AIR_PRG_HIST_COMPLIANCE.csv</code>)</h4>
-<p>Quarterly compliance status for each air program at each plant. Beginning in FY2007.</p>
-<p><strong>Key information includes:</strong> air program code; quarter (YYQQ format, calendar year quarters); compliance
-status for that quarter.</p>
-<p><em>What's missing:</em> detailed facility information; emissions information.</p>
-<h4>Historical HPV Status (<code>AFS_HPV_HISTORY.csv</code>)</h4>
-<p>HPV plants. Tracks the lifecycle of HPV designations. Each row is one HPV episode.</p>
-<p><strong>Key information includes:</strong> lead enforcement agency at day 0; day-zero date (start of HPV status);
-resolution type (how the HPV was resolved); resolution date (gap between day 0 and resolution measures
-enforcement speed — blank if unresolved).</p>
-<p><em>What's missing:</em> detailed facility information; emissions information; no FRVs; no pollutants involved.
-Essentially gives a timeline with minimal detail.</p>
-</div></main><footer class='site-footer'><p>Automatically generated from the underlying data — no figures are hand-entered. Part of the <a href='https://github.com/gracecarverr/caa-regdata'>caa-regdata</a> reproducible pipeline.</p></footer></body></html>
+<p><strong>Headline finding.</strong> For facilities where both a coordinate and an ICIS-claimed county exist, 97.3% land in
+exactly the county ICIS claims. But quality varies sharply by state — Louisiana has only 29.1% coordinate
+coverage, while New York's gross-error rate (7.3%) runs roughly 10x its peers despite near-complete coverage
+there.</p>
+<p><strong>Caveat.</strong> Don't treat coordinate coverage or quality as geographically uniform — check the state before
+leaning on this dataset's geography for Louisiana, New Mexico, or New York specifically.</p>
+</div><div class='doc-pane' id='pipeline'><h2>Pipeline</h2><p>Facility × year data from EPA ECHO's Compliance Pipeline — the one dataset in this layer that links, on the
+same row, the specific evaluation that discovered a violation to the enforcement action it triggered.
+Covers both HPV and the less-severe &quot;federally reportable&quot; violation tier.</p>
+<p><strong>Scale.</strong> Same 5,872,965-row rectangle, but only 31,279 facility-years (0.53%) are actually observed
+here — 18,334 facilities ever appear, out of just 20,222 of the full 279,665-facility universe (7.2%) that
+show up in this source at all.</p>
+<p><strong>Key decisions.</strong></p>
+<ul>
+<li>Roughly 7,218 raw rows are EPA placeholder records with no real violation behind them, and are excluded
+outright (PL1).</li>
+<li>The year a record is assigned to is anchored to the violation's own start date, chosen only after testing
+it directly against alternative date fields — not assumed (PL2).</li>
+<li>A penalty-amount field carried over from this source is exposed but explicitly flagged not to be summed
+against the Penalties dataset — the two aren't additive (PL4).</li>
+</ul>
+<p><strong>Headline finding.</strong> The less-severe violation tier outnumbers HPV more than 2-to-1 in this source (39,987
+vs. 17,210). The evaluation-to-violation linkage this dataset is built to provide is essentially absent
+before 2015, climbing to roughly 40–45% by 2020 onward.</p>
+<p><strong>Caveat.</strong> That near-zero pre-2015 linkage reflects &quot;not yet tracked,&quot; not &quot;zero linked evaluations&quot; —
+treat it as a tracking-era artifact, not a real rate, before about 2015. Separately, this dataset's penalty
+field ($1.10B total) is not additional money on top of the Penalties dataset ($4.6B total) — the two should
+never be summed together.</p>
+</div><div class='doc-pane' id='emissions'><h2>Emissions</h2><p>Facility × year combined pollutant report drawing on four EPA reporting systems — the only dataset in this
+layer with actual measured emission quantities, rather than the boolean &quot;does this facility emit X&quot; flags
+carried in Regulatory.</p>
+<p><strong>Scale.</strong> Same 5,872,965-row rectangle; 281,413 facility-years (4.79%) are observed for at least one
+criteria pollutant, covering 54,335 facilities ever; 42,734 facility-years (5,334 facilities ever) are
+observed for greenhouse gases specifically.</p>
+<p><strong>Key decisions.</strong></p>
+<ul>
+<li>This is the one dataset in the layer that can't join on the standard facility program-system ID — it
+joins on the Facility Registry Service ID instead, since its raw rows are cross-program by nature (EM1).</li>
+<li>Pollutant totals are matched to each source row's pollutant name exactly, never by a partial/substring
+match — a direct test confirmed that a naive substring match would have inflated the PM10/PM2.5 totals by
+about 1.7x (EM4).</li>
+<li>Cases where several facilities share one registry ID are exposed as a flag rather than silently resolved
+(affecting 22,175 facilities) — the same kind of ambiguity Penalties handles for multi-facility
+settlements (EM2).</li>
+</ul>
+<p><strong>Headline finding.</strong> This dataset's coverage ceiling is only about 19.7% of the full ICIS-Air universe —
+most emissions reporters simply aren't ICIS-Air facilities at all. Several key pollutants (VOC, PM10,
+PM2.5, CO) only report in specific triennial cycle years (2008, 2011, 2014, 2017, 2020), reading as a hard
+zero in every off-cycle year; nitrogen and sulfur oxides report annually instead.</p>
+<p><strong>Caveat.</strong> Never sum emissions across facilities that share one Facility Registry Service ID — it
+double-counts. And never read an off-cycle-year zero for VOC/PM10/PM2.5/CO as a real emissions decline; it
+just means that pollutant wasn't due to report that year.</p>
+</div></div></div></div></main><footer class='site-footer'><p>Automatically generated from the underlying data — no figures are hand-entered. Part of the <a href='https://github.com/gracecarverr/caa-regdata'>caa-regdata</a> reproducible pipeline.</p></footer><script>
+(function(){
+  document.querySelectorAll('.doc-nav').forEach(function(nav){
+    var links = nav.querySelectorAll('.doc-sidebar-link');
+    var panes = nav.querySelectorAll('.doc-pane');
+    function show(id){
+      links.forEach(function(l){ l.classList.toggle('active', l.dataset.target === id); });
+      panes.forEach(function(p){ p.hidden = (p.id !== id); });
+    }
+    links.forEach(function(l){
+      l.addEventListener('click', function(e){
+        e.preventDefault();
+        history.replaceState(null, '', '#' + l.dataset.target);
+        show(l.dataset.target);
+      });
+    });
+    var initial = (location.hash || '').slice(1);
+    if (!initial || !nav.querySelector("[id='" + initial + "']")) initial = links.length ? links[0].dataset.target : null;
+    if (initial) show(initial);
+  });
+})();
+</script></body></html>

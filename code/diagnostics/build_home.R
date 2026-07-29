@@ -73,9 +73,9 @@ body <- paste0(
         "Per-source summary tables for all 16 raw ICIS-Air, AFS, and emissions files \u2014 variable",
         "coverage, frequent values, and missingness, computed directly from the raw downloads."),
         "raw_data.html"),
-      card("Databases", paste(
-        "What each database contains, what's missing, and how the files join \u2014 ICIS-Air, AFS, the",
-        "combined emissions dataset, and the compliance-and-enforcement pipeline."),
+      card("Datasets", paste(
+        "The eight datasets this pipeline builds from raw EPA data \u2014 construction decisions,",
+        "headline findings, and the caveat that matters most for each one."),
         "databases.html"),
       card("Panels", paste(
         "Two continuous facility \u00d7 year panels built for empirical work on enforcement and",

@@ -20,12 +20,15 @@ a{color:var(--accent);}
 
 .hero{background:linear-gradient(160deg,var(--navy) 0%,var(--navy-dark) 100%);color:#fff;
   padding:3rem 1.2rem 2.4rem;}
-.hero-inner{max-width:1100px;margin:0 auto;}
+.hero-photo{background-size:cover;background-position:center;padding:5rem 1.2rem 3.2rem;}
+.hero-inner{max-width:1100px;margin:0 auto;position:relative;}
 .hero .eyebrow{text-transform:uppercase;letter-spacing:.13em;font-size:.76rem;color:rgba(255,255,255,.66);
   font-weight:700;margin:0 0 .7rem;}
 .hero h1{font-family:'Merriweather',Georgia,serif;font-weight:300;font-size:2.5rem;
   line-height:1.18;margin:0 0 .7rem;}
 .hero p{font-size:1.05rem;max-width:760px;color:#dde1ec;margin:0;line-height:1.55;}
+.hero .photo-credit{font-size:.7rem;color:rgba(255,255,255,.55);max-width:none;margin:1.6rem 0 0;
+  font-style:italic;}
 
 main{max-width:1100px;margin:0 auto;padding:2.4rem 1.2rem 3rem;}
 
@@ -50,6 +53,26 @@ main{max-width:1100px;margin:0 auto;padding:2.4rem 1.2rem 3rem;}
 .prose th{background:var(--bg-alt);}
 .prose code{font-family:ui-monospace,Menlo,monospace;background:var(--bg-alt);padding:.05rem .3rem;font-size:.9em;}
 
+/* ---- doc-nav (Home's institutional-overview sections, Raw Data's per-source sections): docs-site-style
+   sidebar + content pane. One title list on the left (sticky), one pane visible at a time on the right.
+   Needs doc_nav_script (below) to switch panes and support #hash deep-linking -- everything else on this
+   site is plain HTML/CSS with no JS, but a click-to-switch sidebar has no static-HTML equivalent. ------- */
+.doc-nav{display:flex;gap:2.2rem;align-items:flex-start;margin-top:.4rem;}
+.doc-sidebar{flex:0 0 230px;display:flex;flex-direction:column;gap:.1rem;position:sticky;top:1rem;
+  border-right:1px solid var(--border);padding-right:1.1rem;}
+.doc-sidebar-link{display:block;padding:.6rem .7rem;color:var(--text);text-decoration:none;font-size:.93rem;
+  border-left:3px solid transparent;transition:background-color .15s ease,color .15s ease,border-color .15s ease;}
+.doc-sidebar-link:hover{background:var(--bg-alt);color:var(--navy);}
+.doc-sidebar-link.active{background:var(--bg-alt);color:var(--accent);border-left-color:var(--accent);font-weight:600;}
+.doc-content{flex:1;min-width:0;overflow-x:auto;}
+@media (max-width:820px){
+  .doc-nav{flex-direction:column;gap:0;}
+  .doc-sidebar{flex:none;position:static;top:auto;flex-direction:row;flex-wrap:wrap;gap:.3rem;
+    border-right:none;border-bottom:1px solid var(--border);padding:0 0 .8rem;margin-bottom:1rem;}
+  .doc-sidebar-link{border-left:none;border-bottom:3px solid transparent;padding:.4rem .6rem;}
+  .doc-sidebar-link.active{border-left-color:transparent;border-bottom-color:var(--accent);}
+}
+
 .section-note{background:var(--bg-alt);border:1px solid var(--border);border-left:3px solid var(--accent);
   padding:.9rem 1.1rem;margin:1.4rem 0;font-size:.92em;line-height:1.55;}
 
@@ -66,25 +89,19 @@ main{max-width:1100px;margin:0 auto;padding:2.4rem 1.2rem 3rem;}
   color:var(--muted);font-size:.82rem;}
 .site-footer code{font-family:ui-monospace,Menlo,monospace;background:#eef0f4;padding:.1rem .35rem;}
 
-/* ---- raw-data page: scoped table styling (unchanged rules from the original docs/index.html) -------- */
-.raw-data h1{text-align:center;margin-bottom:.2rem;font-family:'Merriweather',Georgia,serif;font-weight:300;}
-.raw-data .lead{text-align:center;color:var(--muted);margin-top:0;}
-.raw-data .section-toc{display:flex;flex-wrap:wrap;gap:.4rem .9rem;justify-content:center;margin:1.4rem 0 2rem;
-  font-weight:bold;}
-.raw-data .section-toc a{color:var(--accent);text-decoration:none;}
-.raw-data .section-toc a:hover{color:var(--accent-dark);text-decoration:underline;}
-.raw-data section{margin:2.6rem 0;padding-top:1rem;border-top:1px solid var(--border);overflow-x:auto;}
-.raw-data h2{margin-bottom:.1rem;text-align:center;font-family:'Merriweather',Georgia,serif;font-weight:300;
-  color:var(--navy);}
-.raw-data .src{text-align:center;color:#8a8f98;font-size:.85em;margin:.1rem 0;font-family:ui-monospace,Menlo,monospace;}
-.raw-data .desc{text-align:center;margin:.4rem auto .6rem;max-width:860px;}
-.raw-data .obs{text-align:center;font-weight:bold;margin:.3rem 0;}
-.raw-data .inv{text-align:center;color:var(--muted);font-size:.84em;margin:.2rem auto 1rem;max-width:920px;}
+/* ---- raw-data page: scoped table styling -------------------------------------------------------------- */
+.raw-data h2{margin:0 0 .3rem;font-family:'Merriweather',Georgia,serif;font-weight:300;color:var(--navy);
+  font-size:1.5rem;}
+.raw-data .src{color:var(--muted);font-size:.85em;margin:.1rem 0;font-family:ui-monospace,Menlo,monospace;}
+.raw-data .desc{margin:.4rem 0 .6rem;max-width:860px;}
+.raw-data .obs{font-weight:bold;margin:.3rem 0;}
+.raw-data .inv{color:var(--muted);font-size:.84em;margin:.2rem 0 1rem;max-width:920px;}
 .raw-data table{border-collapse:collapse;width:100%;margin:.5rem 0 1rem;font-size:.9em;}
-.raw-data th,.raw-data td{border:1px solid #9aa0a6;padding:5px 8px;text-align:center;vertical-align:middle;}
-.raw-data td.l{text-align:left;} .raw-data .var{text-align:left;}
+.raw-data th{text-align:left;border:1px solid var(--border);padding:5px 8px;vertical-align:middle;}
+.raw-data td{text-align:right;border:1px solid var(--border);padding:5px 8px;vertical-align:middle;}
+.raw-data td.l,.raw-data .var{text-align:left;}
 .raw-data .vd{font-weight:normal;color:var(--muted);font-size:.92em;}
-.raw-data table.cat th{background:#C6EFCE;} .raw-data table.num th{background:#F4B084;}
+.raw-data table.cat th{background:var(--navy);color:#fff;} .raw-data table.num th{background:var(--accent);color:#fff;}
 .raw-data .note{font-size:.86em;color:#3d444d;margin:.35rem 0;line-height:1.4;}
 .raw-data .dupes{font-size:.9em;margin:1rem 0 .3rem;line-height:1.4;}
 
@@ -93,10 +110,12 @@ main{max-width:1100px;margin:0 auto;padding:2.4rem 1.2rem 3rem;}
   .site-header-inner{flex-direction:column;align-items:flex-start;}
   .site-nav{gap:.9rem;font-size:.85rem;}
 }
-</style></head><body><header class='site-header'><div class='site-header-inner'><a class='site-brand' href='index.html'>CAA Regulatory Data</a><nav class='site-nav'><a href='index.html'>Home</a><a href='raw_data.html'>Raw Data</a><a href='databases.html'>Databases</a><a href='panels.html' class='active'>Panels</a></nav></div></header><div class='hero'><div class='hero-inner'><p class='eyebrow'>Facility × Year Panels</p><h1>Panels</h1><p>Two continuously screened facility × year panels for empirical work on enforcement and compliance, both spanning 2015–2025: a broad Major / Synthetic Minor panel and a narrower Electric utilities subset. Construction decisions, coverage, and summary statistics below.</p></div></div><main><div class='prose'><h2>1. Scale &amp; coverage</h2>
-<p>Both panels are, by construction, a <strong>balanced facility × year rectangle</strong> over 2015–2025 (11 years) — every
-facility present has a row in every year, since continuity (<code>ACTIVE_BROAD == 1</code> in all 11 years, <code>PB2</code>) is
-the entry condition, not an outcome measured after the fact.</p>
+</style></head><body><header class='site-header'><div class='site-header-inner'><a class='site-brand' href='index.html'>CAA Regulatory Data</a><nav class='site-nav'><a href='index.html'>Home</a><a href='raw_data.html'>Raw Data</a><a href='databases.html'>Datasets</a><a href='panels.html' class='active'>Panels</a></nav></div></header><div class='hero'><div class='hero-inner'><p class='eyebrow'>Facility × Year Panels</p><h1>Panels</h1><p>Two facility × year panels for empirical work on enforcement and compliance, both spanning 2015–2025 and screened to facilities active in at least one year of the window: a broad Major / Synthetic Minor panel and a narrower Electric utilities subset. Construction decisions, coverage, and summary statistics below.</p></div></div><main><div class='prose'><h2>1. Scale &amp; coverage</h2>
+<p>Both panels are still a <strong>full facility × year rectangle</strong> over 2015–2025 (11 years) — <code>build_panel()</code>'s
+<code>expand_grid</code> gives every eligible facility one row per year regardless of which year(s) made it eligible
+(<code>code/04_panel_building/03_build_functions.R</code>). What changed under <code>PB2</code> is the eligibility rule itself:
+a facility now qualifies with just <strong>one</strong> qualifying year (<code>ACTIVE_BROAD == 1</code> for at least one of 2015–2025),
+not all eleven — so the facility population is far larger than the old continuity-screened panels.</p>
 <table>
 <thead>
 <tr>
@@ -109,62 +128,84 @@ the entry condition, not an outcome measured after the fact.</p>
 <tbody>
 <tr>
 <td>Major/Synthetic Minor</td>
-<td align="right">20,261</td>
-<td align="right">222,871</td>
+<td align="right">45,873</td>
+<td align="right">504,603</td>
 <td>TRUE</td>
 </tr>
 <tr>
 <td>Electric</td>
-<td align="right">1,913</td>
-<td align="right">21,043</td>
+<td align="right">2,965</td>
+<td align="right">32,615</td>
 <td>TRUE</td>
 </tr>
 </tbody>
 </table>
-<p>Facility counts are flat lines across 2015–2025 for both panels,
-which doubles as a build-correctness check, not just a display of scale (a non-flat line would mean the
-continuity screen didn't actually hold for that build).</p>
-<h2>2. <code>OBS_SOURCE</code> composition — event vs. operating</h2>
-<p><code>OBS_SOURCE</code> can only be <code>&quot;event&quot;</code> (an ICIS record exists that year) or <code>&quot;operating&quot;</code> (no ICIS event, but
-confirmed active another way) in these panels — <code>&quot;unobserved&quot;</code> never appears, by construction (<code>PB4</code>; checked
-by the script every run, not just asserted here).</p>
-<p>The <strong>share of facility-years with an actual ICIS event</strong> (<code>pct_event</code>) declines over the window for both
-panels, most sharply in the final year:</p>
+<p>Compare to the retired continuity-screened build: 20,261 / 1,913 facilities respectively (36.3% of the
+55,777-facility CONUS+major/synmin candidate set passed the old all-11-years rule; <strong>82.2%</strong> pass the new
+≥1-year rule). Facility counts are flat lines across 2015–2025 for both panels,
+that invariant survives the rule change because eligibility is evaluated once over a facility's whole record,
+not per year, so the <em>set</em> of facilities in the panel can't vary by year regardless of which rule is used.</p>
+<h2>2. <code>OBS_SOURCE</code> composition — event vs. operating vs. unobserved</h2>
+<p><code>OBS_SOURCE</code> can now genuinely be <code>&quot;event&quot;</code>, <code>&quot;operating&quot;</code>, <strong>or <code>&quot;unobserved&quot;</code></strong> — under the old all-11-years
+rule <code>&quot;unobserved&quot;</code> was impossible by construction (every row had already passed <code>ACTIVE_BROAD==1</code> for that
+year); under the ≥1-year rule a facility can qualify via one year while other years in its 11-year rectangle
+have no confirmed activity (<code>PB4</code>, <code>panel_construction_decisions.md</code>). That share is now substantial —
+12–49% of facility-years depending on year and panel (<code>output/panel_profile/coverage_by_year.csv</code>).</p>
 <table>
 <thead>
 <tr>
 <th>panel</th>
 <th align="right">2015</th>
-<th align="right">2018 (peak)</th>
+<th align="right">2018</th>
 <th align="right">2021</th>
 <th align="right">2025</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>major_synmin</td>
-<td align="right">81.0%</td>
-<td align="right">90.5%</td>
-<td align="right">76.7%</td>
-<td align="right"><strong>72.5%</strong></td>
+<td>major_synmin — event</td>
+<td align="right">47.3%</td>
+<td align="right">45.8%</td>
+<td align="right">45.5%</td>
+<td align="right">44.7%</td>
 </tr>
 <tr>
-<td>electric</td>
-<td align="right">91.3%</td>
-<td align="right">96.4%</td>
-<td align="right">87.8%</td>
-<td align="right"><strong>81.4%</strong></td>
+<td>major_synmin — unobserved</td>
+<td align="right">23.6%</td>
+<td align="right"><strong>48.9%</strong></td>
+<td align="right">14.0%</td>
+<td align="right">12.1%</td>
+</tr>
+<tr>
+<td>electric — event</td>
+<td align="right">71.0%</td>
+<td align="right">69.3%</td>
+<td align="right">65.1%</td>
+<td align="right">60.5%</td>
+</tr>
+<tr>
+<td>electric — unobserved</td>
+<td align="right">10.0%</td>
+<td align="right"><strong>26.8%</strong></td>
+<td align="right">10.2%</td>
+<td align="right">13.0%</td>
 </tr>
 </tbody>
 </table>
-<p>Electric utilities carry a materially higher event-coverage rate than the broader major/synmin population in
-every single year (a ~10–15 point gap) — consistent with electric generating units facing denser ICIS
-touchpoints (more frequent inspections/reporting) than the major/synmin population as a whole. Both panels dip
-together in 2025, the most recent year, which is at least partly a right-censoring/reporting-lag artifact (the
-most recent year is the least likely to have every event fully entered into ICIS yet) rather than necessarily
-a real drop in regulatory activity — worth keeping in mind before reading 2025 as a genuine trend point.</p>
+<p>Both series are much flatter than the retired build's event-share table (which ran 72–96%, since that
+population was pre-selected for full-window activity). <strong>2018 stands out as an anomaly in both panels</strong> —
+<code>pct_unobserved</code> roughly doubles or triples relative to the surrounding years (and <code>pct_operating</code>
+correspondingly collapses to near-zero, <code>coverage_by_year.csv</code>), which was invisible under the old
+continuity screen precisely because it filtered out every facility that could expose it. <strong>Confirmed cause:
+2018 has no real Wayback snapshot</strong> — the raw folder was a mislabeled duplicate of 2019 and was removed from
+<code>data/raw/</code> (2026-07-21, see <code>code/02_cleaning/wayback/README.md</code>); <code>operating</code>/<code>prog_*_active</code> are asserted
+explicit <code>NA</code> for every facility that year (not LOCF-filled, since there's no real observation for any
+facility to infer from). That NA propagates into <code>ACTIVE_BROAD</code>'s wayback component (<code>O6</code>,
+<code>dataset_construction_decisions.md</code>), which is why the &quot;operating&quot; (wayback-confirmed-but-no-ICIS-event)
+share collapses and &quot;unobserved&quot; absorbs it — a known, structural data gap for this one year, not a
+panel-construction defect.</p>
 <h2>3. Key count measures (<code>ICIS_OBSERVED</code> subset)</h2>
-<p>Computed on the <code>ICIS_OBSERVED == 1</code> subset within each panel (175,944 major_synmin facility-years; 18,697
+<p>Computed on the <code>ICIS_OBSERVED == 1</code> subset within each panel (231,137 major_synmin facility-years; 21,583
 electric facility-years) — the same zero-vs-NA gate used at the dataset layer.</p>
 <table>
 <thead>
@@ -177,61 +218,56 @@ electric facility-years) — the same zero-vs-NA gate used at the dataset layer.
 <tbody>
 <tr>
 <td>Inspections</td>
-<td align="right">1 / 1.85 / 24.7%</td>
-<td align="right">1 / 2.49 / 27.5%</td>
+<td align="right">1 / 1.71 / 24.3%</td>
+<td align="right">1 / 2.43 / 27.3%</td>
 </tr>
 <tr>
 <td>Violations</td>
-<td align="right">0 / 0.17 / 88.8%</td>
-<td align="right">0 / 0.13 / 91.6%</td>
+<td align="right">0 / 0.17 / 88.6%</td>
+<td align="right">0 / 0.13 / 91.3%</td>
 </tr>
 <tr>
 <td>— of which HPV</td>
-<td align="right">0 / 0.05 / 97.6%</td>
-<td align="right">0 / 0.04 / 97.8%</td>
+<td align="right">0 / 0.04 / 97.9%</td>
+<td align="right">0 / 0.04 / 97.9%</td>
 </tr>
 <tr>
 <td>Enforcement (pooled)</td>
-<td align="right">0 / 0.42 / 85.9%</td>
-<td align="right">0 / 0.26 / 90.5%</td>
+<td align="right">0 / 0.39 / 85.7%</td>
+<td align="right">0 / 0.26 / 90.2%</td>
 </tr>
 <tr>
 <td>— Formal</td>
-<td align="right">0 / 0.11 / 93.8%</td>
-<td align="right">0 / 0.08 / 95.5%</td>
+<td align="right">0 / 0.10 / 94.0%</td>
+<td align="right">0 / 0.07 / 95.4%</td>
 </tr>
 <tr>
 <td>— Informal</td>
-<td align="right">0 / 0.31 / 89.2%</td>
-<td align="right">0 / 0.19 / 93.1%</td>
+<td align="right">0 / 0.30 / 88.9%</td>
+<td align="right">0 / 0.19 / 92.9%</td>
 </tr>
 <tr>
 <td>Certifications</td>
-<td align="right">5 / 5.00 / 36.2%</td>
-<td align="right">5 / 7.39 / 14.8%</td>
+<td align="right">5 / 4.18 / 46.3%</td>
+<td align="right">5 / 6.87 / 20.3%</td>
 </tr>
 <tr>
 <td>Stack tests</td>
-<td align="right">0 / 1.39 / 75.5%</td>
-<td align="right">2 / 3.65 / 59.8%</td>
+<td align="right">0 / 1.22 / 76.8%</td>
+<td align="right">0 / 3.47 / 61.1%</td>
 </tr>
 <tr>
 <td>Penalty actions</td>
-<td align="right">0 / 0.10 / 94.6%</td>
+<td align="right">0 / 0.09 / 94.8%</td>
 <td align="right">0 / 0.07 / 96.0%</td>
 </tr>
 </tbody>
 </table>
-<p>Electric utilities inspect more often (higher mean, lower pct-zero on inspections) but see <em>less</em> enforcement
-and fewer violations/HPVs per observed facility-year than the broader major/synmin population — more scrutiny,
-proportionally fewer findings. Certifications and stack tests are both markedly higher for electric (mean 7.39
-vs. 5.00 certs; mean 3.65 vs. 1.39 stack tests, and electric's stack-test median is 2 vs. major_synmin's 0) —
-expected, since continuous emissions monitoring and periodic stack testing are a standard Title V/NSPS
-obligation for fossil generating units specifically. The full distributions (pseudo-log x-axis) show that electric's inspection/enforcement curves sit visibly below major_synmin's
-at low counts and cross over in the tail, consistent with &quot;more facilities get at least one inspection, but
-the heaviest-enforcement tail is thinner.&quot;</p>
+<p>Directionally unchanged from the retired build: electric inspects more often (higher mean, lower pct-zero on
+inspections) but sees <em>less</em> enforcement and fewer violations/HPVs per observed facility-year than the
+broader major/synmin population, and carries much higher certification/stack-test counts (a standard Title
+V/NSPS obligation for fossil generating units). The full distributions (pseudo-log x-axis) show each panel's count-measure spread side by side.</p>
 <h2>4. HPV-active rate over time</h2>
-<p>Both panels show a <strong>steady decline in HPV-active share</strong>, and both decline together, not independently:</p>
 <table>
 <thead>
 <tr>
@@ -244,23 +280,22 @@ the heaviest-enforcement tail is thinner.&quot;</p>
 <tbody>
 <tr>
 <td>major_synmin</td>
-<td align="right">4.54%</td>
-<td align="right">3.78%</td>
-<td align="right"><strong>2.31%</strong></td>
+<td align="right">2.96%</td>
+<td align="right">2.23%</td>
+<td align="right"><strong>1.36%</strong></td>
 </tr>
 <tr>
 <td>electric</td>
-<td align="right">5.02%</td>
-<td align="right">4.34%</td>
-<td align="right"><strong>1.99%</strong></td>
+<td align="right">3.89%</td>
+<td align="right">3.57%</td>
+<td align="right"><strong>1.70%</strong></td>
 </tr>
 </tbody>
 </table>
-<p>Roughly a halving over the 11-year window for both — matches the direction (though not necessarily the exact
-magnitude or mechanism) already documented at the dataset layer. Electric runs
-slightly <em>above</em> major_synmin most years through ~2022 before crossing below it by 2025 — a reversal in the
-final two years that's a small enough gap (74 vs. 630, 38 vs. 468 active facility-years respectively) to be
-worth treating as noise rather than a real crossover until confirmed on a later refresh.</p>
+<p>Both panels still show a decline over the window, though the rates themselves sit noticeably lower than the
+retired build's (4.54%→2.31% major_synmin, 5.02%→1.99% electric) — expected, since the denominator here
+(<code>n_known</code>, HPV status non-<code>NA</code>) is much larger and includes many facilities that were never continuously
+active, diluting the active share. The direction still matches the pattern already documented at the dataset layer. <strong>2018 shows the same anomaly noted in §2</strong> — <code>n_known</code> drops sharply and <code>pct_na</code> spikes (<code>hpv_active_ by_year.csv</code>), the same 2018 no-Wayback-snapshot gap (§2) propagating through, not an HPV-specific issue.</p>
 <h2>5. <code>PENALTY_AMOUNT</code></h2>
 <p><code>PENALTY_AMOUNT</code> is <code>NA</code> if no formal action occurred that facility-year <em>or</em> if it summed to exactly $0 —
 both read the same (documented, unresolved ambiguity carried over unchanged from the underlying panel data).
@@ -280,32 +315,33 @@ Non-<code>NA</code> values only:</p>
 <tbody>
 <tr>
 <td>major_synmin</td>
-<td align="right">9,437</td>
-<td align="right">95.8%</td>
-<td align="right">$9,800</td>
-<td align="right">$298,196</td>
-<td align="right">$43.1M</td>
-<td align="right">$1.16B</td>
+<td align="right">12,014</td>
+<td align="right">97.6%</td>
+<td align="right">$9,000</td>
+<td align="right">$276,701</td>
+<td align="right">$47.8M</td>
+<td align="right">$1.74B</td>
 </tr>
 <tr>
 <td>electric</td>
-<td align="right">751</td>
-<td align="right">96.4%</td>
-<td align="right">$8,000</td>
-<td align="right">$159,500</td>
+<td align="right">871</td>
+<td align="right">97.3%</td>
+<td align="right">$7,815</td>
+<td align="right">$166,500</td>
 <td align="right">$4.9M</td>
-<td align="right">$58.3M</td>
+<td align="right">$65.8M</td>
 </tr>
 </tbody>
 </table>
-<p>Electric's median penalty ($8,000) is close to major_synmin's ($9,800), but its distribution is much shorter
-in the tail — max $4.9M vs. $43.1M — meaning the largest settlements in this space are concentrated outside
-electric generating units specifically. <strong>These totals are naive</strong> — no dup-row or multi-facility-settlement
-broadcast correction is applied here (same caveat noted at the dataset layer); don't cite
-the $1.16B/$58.3M totals as a corrected figure. Both distributions sit on a shared log10 axis when faceted by panel (separate y-axis scales given the ~14x size difference in n).</p>
+<p>Broadly similar shape to the retired build (electric's median close to major_synmin's, much shorter tail:
+max $4.9M vs. $47.8M) — the larger facility population raises <code>n non-NA</code> and the totals proportionally, but
+the pct-NA and relative-tail story is unchanged. <strong>These totals are naive</strong> — no dup-row or
+multi-facility-settlement broadcast correction is applied here (same caveat noted at the dataset layer); don't cite the $1.74B/$65.8M totals as corrected figures. Both distributions sit on a shared log10 axis when faceted by panel.</p>
 <h2>6. Facility characteristics (facility-level)</h2>
-<p><strong>Pollutant class</strong> — electric is far more Major-Emissions-heavy than the broader panel, as expected given
-NAICS 2211/SIC 4911 utilities tend to be large combustion sources:</p>
+<p><strong>Pollutant class</strong> — the eligibility-rule change flips the composition here: under the old all-11-years
+screen major_synmin skewed slightly Major (53.3%/46.7%); under the ≥1-year rule it now skews Synthetic
+Minor, since many synthetic-minor facilities that only pass the broader screen are smaller/shorter-lived
+sources that couldn't clear full-window continuity:</p>
 <table>
 <thead>
 <tr>
@@ -317,18 +353,18 @@ NAICS 2211/SIC 4911 utilities tend to be large combustion sources:</p>
 <tbody>
 <tr>
 <td>major_synmin</td>
-<td align="right">53.3%</td>
-<td align="right">46.7%</td>
+<td align="right">33.0%</td>
+<td align="right">67.0%</td>
 </tr>
 <tr>
 <td>electric</td>
-<td align="right">85.4%</td>
-<td align="right">14.6%</td>
+<td align="right">73.2%</td>
+<td align="right">26.9%</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Geography (top states, facility count)</strong> — largely overlapping, with California a notably bigger share of
-electric than of major_synmin:</p>
+<p><strong>Geography (top states, facility count)</strong> — also substantially reshuffled from the retired build (which had
+TX/PA/IN/CA/NC leading major_synmin and CA/TX/NY/KS/IL leading electric):</p>
 <table>
 <thead>
 <tr>
@@ -340,43 +376,43 @@ electric than of major_synmin:</p>
 </thead>
 <tbody>
 <tr>
-<td>TX</td>
-<td align="right">6.05%</td>
-<td>CA</td>
-<td align="right">8.36%</td>
-</tr>
-<tr>
-<td>PA</td>
-<td align="right">5.63%</td>
-<td>TX</td>
-<td align="right">7.79%</td>
-</tr>
-<tr>
-<td>IN</td>
-<td align="right">4.80%</td>
 <td>NY</td>
-<td align="right">5.96%</td>
-</tr>
-<tr>
+<td align="right">7.4%</td>
 <td>CA</td>
-<td align="right">4.63%</td>
-<td>KS</td>
-<td align="right">4.76%</td>
+<td align="right">8.5%</td>
 </tr>
 <tr>
-<td>NC</td>
-<td align="right">4.12%</td>
-<td>IL</td>
-<td align="right">4.23%</td>
+<td>OK</td>
+<td align="right">6.4%</td>
+<td>TX</td>
+<td align="right">7.7%</td>
+</tr>
+<tr>
+<td>TX</td>
+<td align="right">5.6%</td>
+<td>IA</td>
+<td align="right">7.4%</td>
+</tr>
+<tr>
+<td>CO</td>
+<td align="right">5.2%</td>
+<td>NY</td>
+<td align="right">6.0%</td>
+</tr>
+<tr>
+<td>IA</td>
+<td align="right">5.0%</td>
+<td>MI</td>
+<td align="right">4.2%</td>
 </tr>
 </tbody>
 </table>
-<p><strong>EPA Region</strong> — major_synmin is led by Region 4 (22.7%) and Region 5 (18.7%); electric is more evenly spread
-across Regions 5 (17.7%), 4 (15.2%), 7 (14.1%), and 6 (12.6%), with no single region dominating the way Region
-4 does for major_synmin. The top 10 states (ranked by major_synmin, both panels shown) give a direct visual comparison — note that electric's bars use major_synmin's state ordering, not its own top 10.</p>
-<p><strong>Ownership</strong> — both panels are dominated by privately-owned facilities (76.7% major_synmin, 71.7% electric);
-electric shows a materially larger municipal share (10.9% vs. 2.1% for major_synmin) — consistent with the
-prevalence of municipal power utilities.</p>
+<p><strong>EPA Region</strong> — major_synmin is now led by Region 6 (19.9%) and Region 4 (18.0%); electric by Region 5
+(18.1%), Region 7 (15.4%), and Region 4 (14.3%) — a different ranking from the retired build (which had
+Region 4 leading major_synmin at 22.7%). The top 10 states (ranked by major_synmin, both panels shown) give a direct visual comparison — note that electric's bars use major_synmin's state ordering, not its own top 10.</p>
+<p><strong>Ownership</strong> — both panels are still dominated by privately-owned facilities (73.8% major_synmin, 71.2%
+electric); electric still shows a materially larger municipal share (11.7% vs. 2.1% for major_synmin) —
+consistent with the prevalence of municipal power utilities.</p>
 <h2>7. Coordinate coverage &amp; geocoding quality</h2>
 <table>
 <thead>
@@ -391,28 +427,29 @@ prevalence of municipal power utilities.</p>
 <tbody>
 <tr>
 <td>major_synmin</td>
-<td align="right">97.5%</td>
-<td align="right">1.3%</td>
+<td align="right">90.4%</td>
+<td align="right">2.1%</td>
 <td align="right">0</td>
 <td align="right">1,617.8</td>
 </tr>
 <tr>
 <td>electric</td>
-<td align="right">98.7%</td>
-<td align="right">0.8%</td>
+<td align="right">96.7%</td>
+<td align="right">1.0%</td>
 <td align="right">0</td>
-<td align="right">336.9</td>
+<td align="right">768.2</td>
 </tr>
 </tbody>
 </table>
-<p>Both panels sit well above the full-universe coordinate coverage rate (84.5%)
-— expected, since both panels are restricted to continuously-active, currently-classified facilities, a
-population skewed toward better-maintained FRS records than the full 279,665-facility universe. Electric's
-lower gross-error rate and much smaller max distance (336.9km vs. 1,617.8km) likely reflect a smaller, more
-homogeneous, better-curated facility population rather than anything panel-construction-specific.</p>
+<p>Both panels still sit above the full-universe coordinate coverage rate (84.5%), but the gap is smaller than under the retired build (97.5%/98.7% there vs. 90.4%/96.7% here) —
+expected, since the broader ≥1-year population includes more marginal, shorter-lived, less-well-maintained
+facility records than the old continuity-screened population did.</p>
 <h2>8. Entry/exit censoring</h2>
-<p>Within the 2015–2025 window every facility here is active in all 11 years by construction — these columns
-describe activity <strong>outside</strong> the window, not gaps within it:</p>
+<p><strong>This section changes the most substantively of any in this brief, and is the direct, intended consequence
+of the <code>PB2</code> revision.</strong> Under the old all-11-years screen, every facility was active through 2025 by
+construction, so right-censoring sat near 100% and confirmed exits near 0% — the panel <em>could not</em> see a
+facility leave mid-window. Under the ≥1-year rule, facilities that exit the sample partway through are now
+included, and that's exactly the survivorship-bias fix this change was meant to produce:</p>
 <table>
 <thead>
 <tr>
@@ -426,45 +463,71 @@ describe activity <strong>outside</strong> the window, not gaps within it:</p>
 <tbody>
 <tr>
 <td>major_synmin</td>
-<td align="right">94.2%</td>
-<td align="right">99.5%</td>
-<td align="right">0.5%</td>
+<td align="right">72.2%</td>
+<td align="right">87.4%</td>
+<td align="right"><strong>10.6%</strong></td>
 <td align="right">2015</td>
 </tr>
 <tr>
 <td>electric</td>
-<td align="right">91.9%</td>
-<td align="right">99.6%</td>
-<td align="right">0.4%</td>
+<td align="right">82.3%</td>
+<td align="right">86.7%</td>
+<td align="right"><strong>10.5%</strong></td>
 <td align="right">2015</td>
 </tr>
 </tbody>
 </table>
-<p>The overwhelming majority of facilities in both panels are <strong>left-censored</strong> (existed before the observation
-window with an unknown/pre-window begin year) and <strong>right-censored</strong> (no confirmed exit, still active as of
-the last observed year) — expected for a continuity-screened panel of long-lived industrial facilities, and
-consistent with the entered-year median landing right at the window's start (2015) for both panels: most
-facilities' true entry predates what this panel can observe.</p>
+<p>Compare to the retired build: 94.2%/99.5%/0.5% (major_synmin), 91.9%/99.6%/0.4% (electric). Confirmed exits
+rose roughly twentyfold — this is the panel now actually containing the population of facilities that
+enforcement/penalty analysis needs to see, rather than conditioning them away. Left-censoring also dropped
+(72.2%/82.3% vs. 94.2%/91.9%), consistent with the broader population skewing toward facilities with more
+completely-observed lifecycles within the window, not just long-lived survivors.</p>
 <h2>9. The subset relationship</h2>
 <p>Electric is defined as major_synmin's filter <strong>plus</strong> NAICS 2211/SIC 4911 —
-confirmed directly: <strong>every one of the 1,913 electric facilities is also a major_synmin facility</strong> (checked
-every script run, not just asserted). Electric is 9.4% of major_synmin's facility count.</p>
+confirmed directly: <strong>every one of the 2,965 electric facilities is also a major_synmin facility</strong> (checked
+every script run, not just asserted). Electric is 6.5% of major_synmin's facility count (down from 9.4% under
+the retired build — the ≥1-year rule added proportionally more non-electric major/synmin facilities than
+electric ones).</p>
 <h2>Notable things to sanity-check before relying on these panels for a headline number</h2>
 <ul>
-<li><strong><code>OBS_SOURCE</code> composition drifts down in 2025 for both panels</strong> (§2) — plausibly a reporting-lag artifact
-in the most recent year rather than a real activity drop; don't treat 2025 as a clean trend endpoint without
-checking this on a later refresh once 2025 has had time to fully populate in ICIS.</li>
+<li><strong>2018 is a known, structural gap, not comparable to other years (§2, §4).</strong> <code>pct_unobserved</code> roughly
+doubles or triples in 2018 relative to the surrounding years in both panels, and the same pattern shows up
+in HPV-active coverage — caused by 2018 having no real Wayback snapshot at all (mislabeled duplicate of
+2019, removed from <code>data/raw/</code>; <code>code/02_cleaning/wayback/README.md</code>). This was invisible under the old
+continuity screen, which filtered out every facility that would have exposed it. Don't read a 2018 dip in
+any <code>ACTIVE_BROAD</code>-derived measure as a real activity change.</li>
+<li><strong><code>OBS_SOURCE</code>/HPV-active-rate levels are not comparable to the pre-2026-07-29 versions of this brief</strong> —
+the denominator population changed substantially (55,777-candidate-set pass rate 36.3% → 82.2%), so a
+lower observed rate here reflects a broader, less-selected population, not a real decline relative to the
+old numbers.</li>
 <li><strong><code>PENALTY_AMOUNT</code>'s NA-vs-exactly-$0 ambiguity</strong> (§5) is inherited, unresolved, and affects both the
 <code>pct_na</code> figures here and any downstream analysis that treats <code>PENALTY_AMOUNT</code> as &quot;amount, or genuinely
 none&quot; — it can't currently distinguish &quot;no formal action&quot; from &quot;formal action, zero dollar penalty.&quot;</li>
 <li><strong>Every dollar total here is naive</strong> (§5) — no dup-row or multi-facility-settlement broadcast correction,
 same caveat noted at the dataset layer.</li>
-<li><strong>The 2024–2025 HPV-active crossover between panels</strong> (§4) is based on small facility-year counts (74 vs.
-38 active facility-years) and shouldn't be read as a real reversal without confirming it persists on a later
-data refresh.</li>
 <li><strong>Electric's state/region composition is genuinely different from major_synmin's</strong>, not just scaled down
-(§6) — California and municipal ownership are both disproportionately represented in electric relative to
-the broader panel; don't assume electric is a uniform random subsample of major_synmin along any dimension
-other than the NAICS/SIC filter itself.</li>
+(§6) — don't assume electric is a uniform random subsample of major_synmin along any dimension other than
+the NAICS/SIC filter itself.</li>
 </ul>
-<h2>Summary-Statistics Tables</h2><p class='table-note'>Every figure below is computed directly from the underlying panel data — nothing here is hand-entered.</p><table class='stat-table'><caption>Panel overview</caption><tr><th></th><th>Major/SynMin</th><th>Electric</th></tr><tr><td>Facilities</td><td>20,261</td><td>1,913</td></tr><tr><td>Facility-years (rows)</td><td>222,871</td><td>21,043</td></tr><tr><td>Years</td><td>2015–2025</td><td>2015–2025</td></tr><tr><td>Balanced (= fac. × years)</td><td>yes</td><td>yes</td></tr><tr><td>Class: major</td><td>53.3%</td><td>85.4%</td></tr><tr><td>Class: synthetic minor</td><td>46.7%</td><td>14.6%</td></tr></table><table class='stat-table'><caption>Key outcome measures — mean per ICIS-observed facility-year</caption><tr><th></th><th>Major/SynMin</th><th>Electric</th></tr><tr><td>Inspections</td><td>1.85</td><td>2.49</td></tr><tr><td>Violations</td><td>0.17</td><td>0.13</td></tr><tr><td>— of which HPV</td><td>0.05</td><td>0.04</td></tr><tr><td>Enforcement (pooled)</td><td>0.42</td><td>0.26</td></tr><tr><td>— Formal</td><td>0.11</td><td>0.08</td></tr><tr><td>— Informal</td><td>0.31</td><td>0.19</td></tr><tr><td>Title V certifications</td><td>5.00</td><td>7.39</td></tr><tr><td>Stack tests</td><td>1.39</td><td>3.65</td></tr><tr><td>Penalty actions</td><td>0.10</td><td>0.07</td></tr></table><table class='stat-table'><caption>Coverage by year — share of facility-years with an ICIS event</caption><tr><th>Year</th><th>Major/SynMin</th><th>Electric</th></tr><tr><td>2015</td><td>81.0%</td><td>91.3%</td></tr><tr><td>2016</td><td>81.0%</td><td>90.6%</td></tr><tr><td>2017</td><td>79.9%</td><td>91.0%</td></tr><tr><td>2018</td><td>90.5%</td><td>96.4%</td></tr><tr><td>2019</td><td>78.5%</td><td>89.4%</td></tr><tr><td>2020</td><td>77.0%</td><td>87.9%</td></tr><tr><td>2021</td><td>76.7%</td><td>87.8%</td></tr><tr><td>2022</td><td>77.5%</td><td>87.0%</td></tr><tr><td>2023</td><td>77.4%</td><td>88.8%</td></tr><tr><td>2024</td><td>76.4%</td><td>85.8%</td></tr><tr><td>2025</td><td>72.5%</td><td>81.4%</td></tr></table><p class='table-note'>"Share with an ICIS event" = OBS_SOURCE == "event"; the remainder is OBS_SOURCE == "operating" (no ICIS event that year, but confirmed active another way). OBS_SOURCE is never "unobserved" in these continuity-screened panels (PB4), so the two shares are complementary and only one is shown here.</p><table class='stat-table'><caption>HPV-active rate by year</caption><tr><th>Year</th><th>Major/SynMin</th><th>Electric</th></tr><tr><td>2015</td><td>4.5%</td><td>5.0%</td></tr><tr><td>2016</td><td>4.3%</td><td>4.5%</td></tr><tr><td>2017</td><td>3.9%</td><td>4.0%</td></tr><tr><td>2018</td><td>4.0%</td><td>4.5%</td></tr><tr><td>2019</td><td>3.9%</td><td>4.8%</td></tr><tr><td>2020</td><td>3.8%</td><td>4.3%</td></tr><tr><td>2021</td><td>4.1%</td><td>4.4%</td></tr><tr><td>2022</td><td>4.0%</td><td>4.1%</td></tr><tr><td>2023</td><td>3.7%</td><td>3.9%</td></tr><tr><td>2024</td><td>3.1%</td><td>2.8%</td></tr><tr><td>2025</td><td>2.3%</td><td>2.0%</td></tr></table><table class='stat-table'><caption>Penalties — PENALTY_AMOUNT, non-NA facility-years</caption><tr><th></th><th>Major/SynMin</th><th>Electric</th></tr><tr><td>Facility-years w/ penalty</td><td>9,437</td><td>751</td></tr><tr><td>Facility-years, NA share</td><td>95.8%</td><td>96.4%</td></tr><tr><td>Median</td><td>$9,800</td><td>$8,000</td></tr><tr><td>P95</td><td>$298,196</td><td>$159,500</td></tr><tr><td>Max</td><td>$43.1M</td><td>$4.9M</td></tr><tr><td>Mean</td><td>$122,464</td><td>$77,682</td></tr><tr><td>Total</td><td>$1.156B</td><td>$58.3M</td></tr></table><p class='table-note'>Penalty amounts show NA if no formal action occurred that facility-year, or if it summed to exactly $0 (a documented, unresolved ambiguity in the underlying data); totals are naive -- no duplicate-row or multi-facility-settlement correction has been applied.</p><table class='stat-table'><caption>Coordinate coverage &amp; geocoding quality (facility-level)</caption><tr><th></th><th>Major/SynMin</th><th>Electric</th></tr><tr><td>Has coordinate</td><td>97.5%</td><td>98.7%</td></tr><tr><td>Gross error (of evaluable)</td><td>1.3%</td><td>0.8%</td></tr><tr><td>Coord.-to-county distance, median</td><td>0.0 km</td><td>0.0 km</td></tr><tr><td>Coord.-to-county distance, p95</td><td>0.0 km</td><td>0.0 km</td></tr><tr><td>Coord.-to-county distance, max</td><td>1617.8 km</td><td>336.9 km</td></tr></table><table class='stat-table'><caption>Entry/exit censoring (facility-level)</caption><tr><th></th><th>Major/SynMin</th><th>Electric</th></tr><tr><td>Left-censored (existed pre-2015)</td><td>94.2%</td><td>91.8%</td></tr><tr><td>Right-censored (no confirmed exit)</td><td>99.5%</td><td>99.6%</td></tr><tr><td>Confirmed exited</td><td>0.5%</td><td>0.4%</td></tr><tr><td>Entered-year, median</td><td>2015</td><td>2015</td></tr></table><table class='stat-table'><caption>Top 5 states by facility count</caption><tr><th>Rank</th><th>Major/SynMin</th><th>Electric</th></tr><tr><td>1</td><td>TX (6.0%)</td><td>CA (8.4%)</td></tr><tr><td>2</td><td>PA (5.6%)</td><td>TX (7.8%)</td></tr><tr><td>3</td><td>IN (4.8%)</td><td>NY (6.0%)</td></tr><tr><td>4</td><td>CA (4.6%)</td><td>KS (4.8%)</td></tr><tr><td>5</td><td>NC (4.1%)</td><td>IL (4.2%)</td></tr></table></div></main><footer class='site-footer'><p>Automatically generated from the underlying data — no figures are hand-entered. Part of the <a href='https://github.com/gracecarverr/caa-regdata'>caa-regdata</a> reproducible pipeline.</p></footer></body></html>
+<h2>Summary-Statistics Tables</h2><p class='table-note'>Every figure below is computed directly from the underlying panel data — nothing here is hand-entered.</p><table class='stat-table'><caption>Panel overview</caption><tr><th></th><th>Major/SynMin</th><th>Electric</th></tr><tr><td>Facilities</td><td>45,873</td><td>2,965</td></tr><tr><td>Facility-years (rows)</td><td>504,603</td><td>32,615</td></tr><tr><td>Years</td><td>2015–2025</td><td>2015–2025</td></tr><tr><td>Balanced (= fac. × years)</td><td>yes</td><td>yes</td></tr><tr><td>Class: major</td><td>33.0%</td><td>73.2%</td></tr><tr><td>Class: synthetic minor</td><td>67.0%</td><td>26.9%</td></tr></table><table class='stat-table'><caption>Key outcome measures — mean per ICIS-observed facility-year</caption><tr><th></th><th>Major/SynMin</th><th>Electric</th></tr><tr><td>Inspections</td><td>1.71</td><td>2.43</td></tr><tr><td>Violations</td><td>0.17</td><td>0.13</td></tr><tr><td>— of which HPV</td><td>0.04</td><td>0.04</td></tr><tr><td>Enforcement (pooled)</td><td>0.39</td><td>0.26</td></tr><tr><td>— Formal</td><td>0.10</td><td>0.07</td></tr><tr><td>— Informal</td><td>0.30</td><td>0.19</td></tr><tr><td>Title V certifications</td><td>4.18</td><td>6.87</td></tr><tr><td>Stack tests</td><td>1.22</td><td>3.47</td></tr><tr><td>Penalty actions</td><td>0.09</td><td>0.07</td></tr></table><table class='stat-table'><caption>Coverage by year — share of facility-years with an ICIS event</caption><tr><th>Year</th><th>Major/SynMin</th><th>Electric</th></tr><tr><td>2015</td><td>47.3%</td><td>71.0%</td></tr><tr><td>2016</td><td>47.0%</td><td>69.9%</td></tr><tr><td>2017</td><td>45.9%</td><td>68.9%</td></tr><tr><td>2018</td><td>45.8%</td><td>69.3%</td></tr><tr><td>2019</td><td>45.8%</td><td>67.2%</td></tr><tr><td>2020</td><td>44.5%</td><td>65.6%</td></tr><tr><td>2021</td><td>45.5%</td><td>65.1%</td></tr><tr><td>2022</td><td>45.5%</td><td>63.5%</td></tr><tr><td>2023</td><td>46.0%</td><td>64.5%</td></tr><tr><td>2024</td><td>45.9%</td><td>62.5%</td></tr><tr><td>2025</td><td>44.7%</td><td>60.5%</td></tr></table><p class='table-note'>"Share with an ICIS event" = OBS_SOURCE == "event". The remainder splits between OBS_SOURCE == "operating" (no ICIS event that year, but confirmed active another way) and "unobserved" (no confirmed activity that year — expected here, since each panel only requires a facility to be active in at least one of its 11 years, not every year).</p><table class='stat-table'><caption>HPV-active rate by year</caption><tr><th>Year</th><th>Major/SynMin</th><th>Electric</th></tr><tr><td>2015</td><td>3.0%</td><td>3.9%</td></tr><tr><td>2016</td><td>2.6%</td><td>3.6%</td></tr><tr><td>2017</td><td>2.3%</td><td>3.2%</td></tr><tr><td>2018</td><td>3.9%</td><td>4.4%</td></tr><tr><td>2019</td><td>2.4%</td><td>3.9%</td></tr><tr><td>2020</td><td>2.2%</td><td>3.6%</td></tr><tr><td>2021</td><td>2.4%</td><td>3.6%</td></tr><tr><td>2022</td><td>2.3%</td><td>3.3%</td></tr><tr><td>2023</td><td>2.1%</td><td>3.0%</td></tr><tr><td>2024</td><td>1.8%</td><td>2.2%</td></tr><tr><td>2025</td><td>1.4%</td><td>1.7%</td></tr></table><table class='stat-table'><caption>Penalties — PENALTY_AMOUNT, non-NA facility-years</caption><tr><th></th><th>Major/SynMin</th><th>Electric</th></tr><tr><td>Facility-years w/ penalty</td><td>12,014</td><td>871</td></tr><tr><td>Facility-years, NA share</td><td>97.6%</td><td>97.3%</td></tr><tr><td>Median</td><td>$9,000</td><td>$7,815</td></tr><tr><td>P95</td><td>$276,701</td><td>$166,500</td></tr><tr><td>Max</td><td>$47.8M</td><td>$4.9M</td></tr><tr><td>Mean</td><td>$144,604</td><td>$75,522</td></tr><tr><td>Total</td><td>$1.737B</td><td>$65.8M</td></tr></table><p class='table-note'>Penalty amounts show NA if no formal action occurred that facility-year, or if it summed to exactly $0 (a documented, unresolved ambiguity in the underlying data); totals are naive -- no duplicate-row or multi-facility-settlement correction has been applied.</p><table class='stat-table'><caption>Coordinate coverage &amp; geocoding quality (facility-level)</caption><tr><th></th><th>Major/SynMin</th><th>Electric</th></tr><tr><td>Has coordinate</td><td>90.4%</td><td>96.7%</td></tr><tr><td>Gross error (of evaluable)</td><td>2.1%</td><td>1.0%</td></tr><tr><td>Coord.-to-county distance, median</td><td>0.0 km</td><td>0.0 km</td></tr><tr><td>Coord.-to-county distance, p95</td><td>0.0 km</td><td>0.0 km</td></tr><tr><td>Coord.-to-county distance, max</td><td>1617.8 km</td><td>768.2 km</td></tr></table><table class='stat-table'><caption>Entry/exit censoring (facility-level)</caption><tr><th></th><th>Major/SynMin</th><th>Electric</th></tr><tr><td>Left-censored (existed pre-2015)</td><td>72.2%</td><td>82.3%</td></tr><tr><td>Right-censored (no confirmed exit)</td><td>87.4%</td><td>86.7%</td></tr><tr><td>Confirmed exited</td><td>10.6%</td><td>10.5%</td></tr><tr><td>Entered-year, median</td><td>2015</td><td>2015</td></tr></table><table class='stat-table'><caption>Top 5 states by facility count</caption><tr><th>Rank</th><th>Major/SynMin</th><th>Electric</th></tr><tr><td>1</td><td>NY (7.4%)</td><td>CA (8.5%)</td></tr><tr><td>2</td><td>OK (6.4%)</td><td>TX (7.7%)</td></tr><tr><td>3</td><td>TX (5.6%)</td><td>IA (7.4%)</td></tr><tr><td>4</td><td>CO (5.2%)</td><td>NY (6.0%)</td></tr><tr><td>5</td><td>IA (5.0%)</td><td>MI (4.2%)</td></tr></table></div></main><footer class='site-footer'><p>Automatically generated from the underlying data — no figures are hand-entered. Part of the <a href='https://github.com/gracecarverr/caa-regdata'>caa-regdata</a> reproducible pipeline.</p></footer><script>
+(function(){
+  document.querySelectorAll('.doc-nav').forEach(function(nav){
+    var links = nav.querySelectorAll('.doc-sidebar-link');
+    var panes = nav.querySelectorAll('.doc-pane');
+    function show(id){
+      links.forEach(function(l){ l.classList.toggle('active', l.dataset.target === id); });
+      panes.forEach(function(p){ p.hidden = (p.id !== id); });
+    }
+    links.forEach(function(l){
+      l.addEventListener('click', function(e){
+        e.preventDefault();
+        history.replaceState(null, '', '#' + l.dataset.target);
+        show(l.dataset.target);
+      });
+    });
+    var initial = (location.hash || '').slice(1);
+    if (!initial || !nav.querySelector("[id='" + initial + "']")) initial = links.length ? links[0].dataset.target : null;
+    if (initial) show(initial);
+  });
+})();
+</script></body></html>

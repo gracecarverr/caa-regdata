@@ -1,48 +1,66 @@
 # =========================================================================================================
-# code/diagnostics/build_databases_page.R \u2014 assembles docs/databases.html, the site's "Databases" page:
-#   what each database (ICIS-Air, AFS, Emissions, Pipeline) contains, what's missing, and how the files
-#   join. Content is narrative, not computed \u2014 it renders briefs/database_overviews.md (transcribed
-#   verbatim from the project's Google Doc) via commonmark. No numbers are retyped here.
-#   briefs/database_overviews.md -> docs/databases.html
+# code/diagnostics/build_databases_page.R — assembles docs/databases.html, the site's "Datasets" page (nav
+#   label renamed from "Databases"; see site_shell.R's NAV_ITEMS): what each of the eight datasets this
+#   pipeline BUILDS (data/datasets/) contains, the decisions behind it, and its headline finding/caveat —
+#   as a docs-site-style sidebar + content pane (site_shell.R's doc_nav()), one pane per dataset, same
+#   pattern as build_home.R and build_site.R.
+#   This replaces the page's old content (briefs/database_overviews.md, a description of the RAW EPA
+#   source files transcribed from the project's Google Doc) -- that was redundant with the "Raw Data" page,
+#   which already covers the raw sources with live-computed stat tables. briefs/database_overviews.md is
+#   NOT deleted (still accurate as an internal reference) -- it just no longer has a public nav page.
+#   briefs/datasets/datasets_overview.md -> docs/databases.html
 # =========================================================================================================
 library(here)
 library(commonmark)
 source(here("code", "diagnostics", "tables", "_html.R"))
 source(here("code", "diagnostics", "site_shell.R"))
 
-md_path <- here("briefs", "database_overviews.md")
+md_path <- here("briefs", "datasets", "datasets_overview.md")
 lines   <- enc2utf8(readLines(md_path, warn = FALSE, encoding = "UTF-8"))
 
-# drop the leading HTML provenance comment (<!-- ... -->) and the brief's own H1 (the hero supplies the
-# page title)
-c_start <- grep("<!--", lines)
-c_end   <- grep("-->", lines)
-if (length(c_start) && length(c_end)) lines <- lines[-(c_start[1]:c_end[1])]
-while (length(lines) && !nzchar(trimws(lines[1]))) lines <- lines[-1]
+# drop the brief's own H1 (the hero supplies the page title)
 if (length(lines) && grepl("^# ", lines[1])) lines <- lines[-1]
 
-databases_html <- commonmark::markdown_html(paste(lines, collapse = "\n"), extensions = TRUE)
+# split into one chunk per top-level "## " section (title + its body, up to the next "## " or end of file)
+# -- each chunk becomes its own sidebar entry + content pane (site_shell.R's doc_nav()), same
+# split-then-slugify approach as build_home.R's institutional-overview sections.
+slugify <- function(x) {
+  x <- gsub("[^a-z0-9]+", "-", tolower(x))
+  gsub("^-|-$", "", x)
+}
+h2_idx <- grep("^## ", lines)
+if (length(h2_idx) == 0) stop("build_databases_page.R: no '## ' sections found in datasets_overview.md after stripping -- doc_nav split has nothing to split.")
+section_ends <- c(h2_idx[-1] - 1L, length(lines))
+dataset_sections <- Map(function(start, end) {
+  title <- sub("^## +", "", lines[start])
+  body  <- if (start < end) lines[(start + 1):end] else character(0)
+  list(id = slugify(title), title = title,
+       body_html = commonmark::markdown_html(paste(body, collapse = "\n"), extensions = TRUE))
+}, h2_idx, section_ends)
+
+nav_html <- doc_nav(dataset_sections)
 
 body <- paste0(
   hero(
-    title   = "Database Overviews",
+    title   = "Datasets",
     desc    = paste(
-      "What each database contains, what's missing, and how the files join \u2014 ICIS-Air (current), AFS",
-      "(legacy, frozen 2014), the combined emissions dataset, and the compliance-and-enforcement",
-      "pipeline."),
-    eyebrow = "Sources"
+      "The eight datasets this pipeline builds — one row per facility × year (or, for Penalties and HPV",
+      "Spells, one row per action/spell) — with the construction decisions behind each, its headline",
+      "finding, and the one caveat that matters most before you use it."),
+    eyebrow = "The Eight Datasets"
   ),
   page_main(
-    "<div class='section-note'>For column-by-column definitions of every field, see the ",
-    "<a href='data_dictionary.md'>full data dictionary</a>. For live-computed variable coverage and ",
-    "frequent values per file, see <a href='raw_data.html'>Raw Data</a>.</div>",
-    "<div class='prose'>", databases_html, "</div>"
+    "<div class='section-note'>These are the built datasets in <code>data/datasets/</code> — for the raw ",
+    "EPA source files they're built from, see <a href='raw_data.html'>Raw Data</a>; for column-by-column ",
+    "definitions of every field below, see the ",
+    "<a href='data_dictionary_derived.md'>derived data dictionary</a>.</div>",
+    "<div class='prose'>", nav_html, "</div>"
   )
 )
 
 html <- site_shell(
-  title       = "Databases",
-  description = "What each CAA regulatory database (ICIS-Air, AFS, emissions, pipeline) contains, what's missing, and how the files join.",
+  title       = "Datasets",
+  description = "The eight datasets this pipeline builds from raw EPA data: what each contains, the construction decisions behind it, and its headline finding and caveat.",
   active      = "databases",
   body_html   = body
 )

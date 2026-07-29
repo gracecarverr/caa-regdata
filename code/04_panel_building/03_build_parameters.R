@@ -2,19 +2,19 @@
 # code/04_panel_building/03_build_parameters.R -- window + the two panel specs this pipeline ships.
 #
 #   PANEL_SPECS lists the two panels to build. Both start from 00_spine.R's `spine` (already CONUS +
-#   Major/Synthetic-Minor class, with CONTINUOUSLY_ACTIVE precomputed) -- electric adds the NAICS/SIC filter
+#   Major/Synthetic-Minor class, with EVER_ACTIVE precomputed) -- electric adds the NAICS/SIC filter
 #   on top. 03_build.R applies each spec's `filter`, calls build_panel(), and writes
 #   data/panels/<name>.csv.gz.
 #
 #   This is a from-scratch rewrite, NOT the old code/03_panel_building/03_build_parameters.R renamed -- the
 #   archived version (archive/panel_building_legacy/code/03_panel_building/03_build_parameters.R) shipped
 #   THREE levels (universe/major_synmin/electric) with continuity as an optional add-on family; this
-#   pipeline ships ONLY the two continuous panels, per explicit project decision -- see
+#   pipeline ships ONLY these two panels, per explicit project decision -- see
 #   briefs/panel/panel_construction_decisions.md.
 # =========================================================================================================
 
 YEARS <- 2015:2025   # this pipeline's window -- NOT the repo-wide 2005:2025 (00_setup.R). Both panels are
-                      # continuity-screened over exactly this span (00_spine.R's CONTINUITY_YEARS), so
+                      # eligibility-screened over exactly this span (00_spine.R's SCREEN_YEARS), so
                       # there's no reason to carry a wider, mostly-irrelevant pre-2015 window here.
 
 # Electric utilities among the major/synthetic-minor sources: NAICS 2211 OR SIC 4911. Identical regex logic
@@ -30,14 +30,15 @@ electric_filter <- function(s) dplyr::filter(s,
 
 PANEL_SPECS <- list(
 
-  # Major/Synthetic-Minor sources, continuously active every year 2015-2025 (ACTIVE_BROAD == 1 all 11 years).
-  # `spine` is already CONUS + major/synmin-class filtered (00_spine.R) -- just apply the continuity screen.
-  list(name = "major_synmin_continuous_2015_2025",
-       filter = function(s) dplyr::filter(s, CONTINUOUSLY_ACTIVE)),
+  # Major/Synthetic-Minor sources, active in at least one year 2015-2025 (ACTIVE_BROAD == 1 in >=1 of 11
+  # years). `spine` is already CONUS + major/synmin-class filtered (00_spine.R) -- just apply the eligibility
+  # screen.
+  list(name = "major_synmin_2015_2025",
+       filter = function(s) dplyr::filter(s, EVER_ACTIVE)),
 
-  # Electric utilities within that same continuously-active major/synmin population.
-  list(name = "electric_continuous_2015_2025",
-       filter = function(s) electric_filter(dplyr::filter(s, CONTINUOUSLY_ACTIVE)))
+  # Electric utilities within that same eligible major/synmin population.
+  list(name = "electric_2015_2025",
+       filter = function(s) electric_filter(dplyr::filter(s, EVER_ACTIVE)))
 )
 
 # =========================================================================================================

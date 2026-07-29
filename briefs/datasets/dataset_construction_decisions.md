@@ -23,11 +23,13 @@
 > code, its 2026-07-28 data outputs, and its docs — to `archive/panel_building_legacy/` (see that
 > directory's README for why archived rather than converted in place). It's replaced by
 > `code/04_panel_building/`, which builds exactly two panels
-> (`major_synmin_continuous_2015_2025`/`electric_continuous_2015_2025`) **from this datasets layer**
+> (originally `major_synmin_continuous_2015_2025`/`electric_continuous_2015_2025`; renamed
+> `major_synmin_2015_2025`/`electric_2015_2025` on 2026-07-29 when the eligibility rule was revised — see
+> `PB2` in `briefs/panel/panel_construction_decisions.md`) **from this datasets layer**
 > instead of `data/processed/` directly — the dependency direction this scope note used to describe as
 > one-way is now genuinely one-way in the opposite sense: this layer still depends on nothing downstream,
 > but panel-building now depends on *this layer's* `regulatory`/`operating`/`hpv_active`/`coordinates`
-> outputs, in particular the `ACTIVE_BROAD` signal (`O6`) for its continuity screen. See
+> outputs, in particular the `ACTIVE_BROAD` signal (`O6`) for its eligibility screen. See
 > `briefs/panel/panel_construction_decisions.md` (the new, short version) for what's specific to those two
 > panels; every construction decision upstream of them — including everything this file documents — is
 > unchanged by that rebuild.
