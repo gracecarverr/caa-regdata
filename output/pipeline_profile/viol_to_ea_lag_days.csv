@@ -1,2 +1,2 @@
-n,min,p25,median,p75,p90,max,mean
-36921,0,0,64,217,489,4054,175.6
+n,n_excluded_bad_order,min,p25,median,p75,p90,max,mean
+36921,3192,0,0,64,217,489,4054,175.6

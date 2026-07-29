@@ -1,49 +1,66 @@
-# data/panels — derived spine and sample panels
+# data/panels — the two continuous panels
 
-Built by [`code/03_panel_building`](../../code/03_panel_building/README.md) from the processed assets. All
-files are gzip-compressed CSV, **gitignored**, rebuilt from code. This is where sample selection and
-aggregation happen (cleaning did none of that).
+Built by [`code/04_panel_building`](../../code/04_panel_building/README.md) from `data/datasets/` (the
+eight-dataset layer, `code/03_datasets/`) — **not** from `data/processed/` directly. All files are
+gzip-compressed CSV, **gitignored**, rebuilt from code.
+
+> **2026-07-28:** this pipeline replaced a larger one that built a general facility spine plus three sample
+> panels (`universe`/`major_synmin`/`electric`) directly from `data/processed/`. That system, its outputs as
+> of 2026-07-28, and its docs are archived in full at
+> [`archive/panel_building_legacy/`](../../archive/panel_building_legacy/README.md) — see that README for
+> why it was archived rather than converted in place (the short version: the source ICIS-AIR/Wayback/FRS
+> data is live-refreshed, so preserving both the old code *and* a frozen data snapshot was the only way to
+> keep the old numbers reproducible, not just the old logic).
 
 | file | grain | what | built by |
 |------|-------|------|----------|
-| `spine.csv.gz` | one row per facility | the **facility spine**: ever-active universe + coordinates + county + current-snapshot attributes + static `emits_*`/`prog_*` profiles + reconstructed entry/exit spells | `00_spine.R` |
-| `universe.csv.gz` | facility × year | all ever-active facilities (CONUS) — 111 cols | `03_build.R` |
-| `major_synmin.csv.gz` | facility × year | + Major / Synthetic Minor class — 111 cols | `03_build.R` |
-| `electric.csv.gz` | facility × year | + electric utilities (NAICS 2211 / SIC 4911) — 111 cols | `03_build.R` |
-| `_preview/` | — | first-N-row plain-CSV previews for eyeballing (gitignored scratch, from `code/diagnostics/preview_panels.R`) | — |
+| `major_synmin_continuous_2015_2025.csv.gz` | facility × year (2015–2025) | CONUS, Major/Synthetic-Minor emissions class, **continuously `ACTIVE_BROAD == 1` every year 2015–2025** — 116 cols, 20,261 facilities, 222,871 rows | `03_build.R` |
+| `electric_continuous_2015_2025.csv.gz` | facility × year (2015–2025) | the above **+** electric utilities (NAICS 2211 / SIC 4911) — 116 cols, 1,913 facilities, 21,043 rows | `03_build.R` |
 
-> A PM2.5-attainment treatment block used to be attached to `electric.csv.gz` (`pm25_status`, `pm25_area`,
-> `naa_pm25_2012`, `any_naa`, via `01_attainment.R`). That code was removed from this repo entirely on
-> 2026-07-27 — already synced to the sibling `CAA_Project` repo — so `electric.csv.gz` no longer carries
-> those columns; see decision W10 in `briefs/panel/panel_construction_decisions.md`.
+Figures as of the 2026-07-28 rebuild — will drift with each live ICIS-AIR/Wayback refresh.
 
-## The sample panels
+There is no longer a separate `spine.csv.gz`, `universe.csv.gz`, or non-continuous `major_synmin.csv.gz` /
+`electric.csv.gz` — this pipeline ships only the two panels above (see
+[`code/04_panel_building/README.md`](../../code/04_panel_building/README.md) for why: both target panels
+share the same CONUS + class filter, computed once as an in-memory candidate set rather than a general
+persisted spine, and there was no request for the broader non-continuous or full-universe samples the old
+system shipped).
 
-All are the **same recipe** over a different facility filter — column blocks, count semantics
-(all-row counts + `_dup` / `_dup_exact` duplicate-load indicators), and the load-bearing **zero-vs-NA**
-convention (`obs_source ∈ {event, operating, unobserved}`) are documented once in
-[`code/03_panel_building/README.md`](../../code/03_panel_building/README.md). Construction rationale is in
-[`briefs/panel/panel_construction_decisions.md`](../../briefs/panel/panel_construction_decisions.md) (Part C, decisions
-P1–P8); open caveats in [`briefs/panel/panel_open_questions.md`](../../briefs/panel/panel_open_questions.md).
-**Column-by-column definitions** for every built field in the spine and the three sample panels:
-[`docs/data_dictionary_derived.md`](../../docs/data_dictionary_derived.md).
+## The continuity rule (what's new here)
+
+Both panels require **`ACTIVE_BROAD == 1` in every one of the 11 years, 2015–2025** — no partial credit, no
+imputation across a gap. `ACTIVE_BROAD` (from `data/datasets/operating.csv.gz`, decision `O6` in
+[`briefs/datasets/dataset_construction_decisions.md`](../../briefs/datasets/dataset_construction_decisions.md))
+is itself a union of three activity signals for that specific year: Wayback-confirmed operating status, an
+ICIS regulatory event, or emissions/GHG reporting. This replaces the old (archived) system's continuity
+concept, which was never actually shipped as a built file — it existed only as an ad hoc diagnostic count,
+defined as "≥1 regulatory event in every year" (see `PR2` in the archived
+`briefs/panel/panel_construction_decisions.md`).
 
 ## Key things to remember when using a panel
 
-- **`0` ≠ `NA`.** Within an *observed* facility-year (`obs_source ∈ {event, operating}`) a zero count is a
-  true zero; an *unobserved* facility-year is `NA` (includes closed/CLS and all pre-2015 years). Don't treat
-  `NA` as `0`.
-- **`n_*` count all rows — nothing is deduped.** Duplicate load is surfaced by `_dup` (event-key repeats)
-  and `_dup_exact` (byte-identical) on inspections, enforcement (+ formal/informal), and certs; recover
-  event-distinct counts as `n_x − n_x_dup`. `penalty_amount` sums all formal rows, with `penalty_amount_dup`
-  giving the duplicate dollars; `n_penalties` is the **count** of formal rows carrying a positive `$` penalty
-  (with `n_penalties_dup` for the duplicate rows) — the count companion to `penalty_amount`'s dollar sum.
-  Note the coding differs by design: `n_penalties` is a count, so it follows `0`≠`NA` (observed-no-penalty
-  → `0`, unobserved → `NA`), whereas `penalty_amount` is `NA`-when-none — an observed facility-year with a
-  formal action but no penalty dollars reads `n_penalties = 0` **and** `penalty_amount = NA`. (`hpv_active` is
-  the lone `dup==0` exception — a status flag, not a count.)
-- **Wayback status columns are 2015–2025 only** (`NA` for 2005–2014).
-- **Facility class/industry are the current snapshot** applied to all years; program `prog_*` flags are
-  ever-enrolled and undated (F6/N7). `program_begin_year` (facility-level, time-invariant) dates the
-  *earliest* program enrollment from `ICIS-AIR_PROGRAMS.BEGIN_DATE`; `NA` where no program record. No close
-  date exists, so this dates entry only.
+- **`0` ≠ `NA`.** `OBS_SOURCE ∈ {event, operating}` for every row in these two panels — by construction,
+  every facility here has `ACTIVE_BROAD == 1` in every panel year, so `OBS_SOURCE` can never be
+  `"unobserved"` here (unlike the archived system's broader, non-continuity-screened panels, where it could
+  be). `"event"` = an ICIS record exists that year (counts are real); `"operating"` = no ICIS event, but
+  confirmed active some other way (event counts are a true `0`, not missing).
+- **`N_*` count all rows — nothing is deduped.** Duplicate load is surfaced by `_DUP` (event-key repeats)
+  and `_DUP_EXACT` (byte-identical) on inspections, enforcement (+ formal/informal), and certs; recover
+  event-distinct counts as `N_X − N_X_DUP`. `PENALTY_AMOUNT` sums all formal rows (`NA` if no formal action
+  or if it summed to exactly `$0` — both read the same); `PENALTY_AMOUNT_DUP` gives the duplicate-row
+  dollars. `HPV_ACTIVE` is a binary status flag (no `HPV_ACTIVE_1MO` variant — not shipped).
+- **`ACTIVE`/`ACTIVE_BROAD`, `ICIS_OBSERVED`, `EMISSIONS_OBSERVED`/`GHG_OBSERVED` ride along as their own
+  columns** — the constituent evidence behind `OBS_SOURCE` and the continuity screen is visible in place,
+  not hidden inside a derived flag.
+- **`PROG_GACT`/`PROG_CFC` don't exist in these columns** — `data/datasets/regulatory.csv.gz`/
+  `operating.csv.gz` never carry them (dataset-layer decisions `R6`/`O3`).
+- **`N_PROGRAMS` is `NA`-able**, never coalesced to `0` — a facility with no program record at all reads
+  `NA`, distinct from a `0` on any individual `PROG_*` flag.
+- **Wayback-derived columns (`OP_STATUS_CODE`, `OPERATING`, `PROG_*_ACTIVE`) are 2015–2025 only** — moot for
+  these two panels specifically, since the panel window itself is already 2015–2025.
+- **Facility class/industry are the current ICIS snapshot** applied to all years; `PROG_*` (static) flags
+  are ever-enrolled and undated. `EARLIEST_PROGRAM_BEGIN_YEAR`/`_RAW` (facility-level) date the *earliest*
+  program enrollment; `NA` where no program record or no in-range date.
+
+Column-by-column definitions: [`docs/data_dictionary_derived.md`](../../docs/data_dictionary_derived.md).
+Construction rationale: [`briefs/panel/panel_construction_decisions.md`](../../briefs/panel/panel_construction_decisions.md).

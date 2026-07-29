@@ -9,18 +9,17 @@ viol_to_ea_lag_distribution}.png`.*
 
 *Refreshed 2026-07-27 — this is the first refresh since the CAA Pipeline raw source was automated (see
 `01_download.R`); previously `data/raw/PIPELINE_CAA_00_COMPLETE.csv` was a one-time manual add from
-2026-07-23 that was already stale by the time of this pass. "was X" notes give the previously-documented
-value. A.3's central finding (exact-zero pre-2015 eval-linkage) was re-verified against the exact
-placeholder-exclusion methodology in `07_pipeline.R`, not just re-stated — it still holds.*
+2026-07-23 that was already stale by the time of this pass. A.3's central finding (exact-zero pre-2015
+eval-linkage) was re-verified against the exact placeholder-exclusion methodology in `07_pipeline.R`, not
+just re-stated — it still holds.*
 
 ---
 
-## Part A — row-level source, real (non-placeholder) violations, 2005–2025 (57,197 rows, was 57,838)
+## Part A — row-level source, real (non-placeholder) violations, 2005–2025 (57,197 rows)
 
-**Scale**: of the raw file's 66,723 rows (was 66,655), 7,218 are EPA-generated placeholders (was 7,193; PL1,
-no `VIOL_START_DATE`), leaving 59,505 real violations (was 59,462); 57,197 of those fall in the 2005–2025
-window (was 57,838 — a modest *decrease* despite the larger raw file, meaning more non-placeholder rows now
-fall outside the window), across **18,334 facilities** (was 18,529).
+**Scale**: of the raw file's 66,723 rows, 7,218 are EPA-generated placeholders (PL1,
+no `VIOL_START_DATE`), leaving 59,505 real violations; 57,197 of those fall in the 2005–2025
+window, across **18,334 facilities**.
 
 ### A.1 HPV / FRV split
 
@@ -29,7 +28,7 @@ fall outside the window), across **18,334 facilities** (was 18,529).
 | FRV | 39,987 | 69.9% |
 | HPV | 17,210 | 30.1% |
 
-*(As of 2026-07-27; was FRV 40,708/70.4%, HPV 17,130/29.6%.)*
+*(As of 2026-07-27.)*
 
 FRV outnumbers HPV more than 2:1 — this is the population `hpv_spells` (dataset 2) excludes entirely by
 design (H1).
@@ -42,9 +41,9 @@ design (H1).
 | Linked to an enforcement action | 40,449 | 70.7% |
 | — of which, discovered via self-disclosure | 3,213 | 14.0% of linked evals |
 
-*(As of 2026-07-27; was 22,707/39.3%, 40,486/70.0%, 3,243/14.3%.)*
+*(As of 2026-07-27.)*
 
-**Most violations (59.8%) have no recorded originating evaluation** (was 60.7%) — either genuinely found some
+**Most violations (59.8%) have no recorded originating evaluation** — either genuinely found some
 other way (self-disclosure, a citizen complaint, a data-completeness gap in the source, etc.), or the
 eval-linkage field itself is a recent addition (see A.3 — this is the more likely story). Enforcement linkage
 is much higher (70.7%): most violations in this source do eventually connect to a recorded enforcement action.
@@ -52,11 +51,10 @@ is much higher (70.7%): most violations in this source do eventually connect to 
 ### A.3 ⚠ Evaluation linkage is essentially absent before 2015 — a real pattern, not a bug
 
 Checked directly against the row-level source (not an artifact of the facility-year collapse): `EVAL_FLAG`
-is **`Y` on exactly 0 of 553 real violations dated 2005–2014** (was 0 of 449 — re-verified 2026-07-27 against
+is **`Y` on exactly 0 of 553 real violations dated 2005–2014** (re-verified 2026-07-27 against
 the exact `VIOL_START_DATE`-based placeholder-exclusion logic in `07_pipeline.R`, not a rough approximation;
-the exact-zero result **still holds**), then 6 of 75 in 2015 (was 6 of 103 — same numerator, smaller
-denominator), jumping to 473 of 2,228 in 2016 (was 573 of 3,317) and climbing through the thousands every
-year after. Enforcement-action linkage (`EA_FLAG`)
+the exact-zero result **still holds**), then 6 of 75 in 2015, jumping to 473 of 2,228 in 2016 and climbing
+through the thousands every year after. Enforcement-action linkage (`EA_FLAG`)
 shows no comparable cliff. This lines up with this repo's own Wayback coverage (2015–2025 only, dataset 1)
 and looks like the same institutional fact: ECHO's evaluation↔violation linkage tracking only becomes
 reliable from roughly 2015–2016 on. **Any analysis using `N_VIOL_WITH_EVAL` (or the eval-linkage share)
@@ -64,7 +62,7 @@ before 2015 will read as a true zero when it is actually "not tracked yet"** —
 limit, not a `pipeline_observed`-style unknown, since the rows are present and `EVAL_FLAG` is well-formed
 `Y`/`N` throughout; it's the underlying source data that appears to a genuinely change character in 2015.
 
-### A.4 `EVAL_TYPE_DESC` (of violations with a linked evaluation, n = 23,018, was 22,707)
+### A.4 `EVAL_TYPE_DESC` (of violations with a linked evaluation, n = 23,018)
 
 | type | n | % |
 |---|--:|--:|
@@ -77,11 +75,9 @@ limit, not a `pipeline_observed`-style unknown, since the rows are present and `
 | Applicability Determination | 1,104 | 4.8% |
 | Investigation | 926 | 4.0% |
 
-*(As of 2026-07-27; was PCE Off-Site 5,055/22.3%, FCE On-Site 4,035/17.8%, Self-Disclosure 3,243/14.3%,
-PCE On-Site 2,715/12.0%, Enforcement Action Monitoring 2,226/9.8%, PCE Stack Test 1,805/8.0%,
-Applicability Determination 1,111/4.9%, Investigation 900/4.0%.)*
+*(As of 2026-07-27.)*
 
-### A.5 `EA_TYPE` (of violations with a linked enforcement action, n = 40,449, was 40,486)
+### A.5 `EA_TYPE` (of violations with a linked enforcement action, n = 40,449)
 
 | type | n | % |
 |---|--:|--:|
@@ -93,9 +89,8 @@ Applicability Determination 1,111/4.9%, Investigation 900/4.0%.)*
 | State/local Action | 212 | 0.5% |
 | Other (no further action / letter) | 12 | 0.03% |
 
-*(As of 2026-07-27; was Notice of Violation 22,348/55.2%, Administrative–Formal 15,305/37.8%, Warning Letter
-2,038/5.0%, Judicial 285/0.7%, State/local Action 206/0.5% — the small residual not itemized in the prior
-pass, ~304 rows, is now broken out above as Date Out of Range / Judicial / State-local / Other.)*
+*(As of 2026-07-27; the small residual not itemized in earlier passes, ~304 rows, is broken out above as
+Date Out of Range / Judicial / State-local / Other.)*
 
 The large majority of linked enforcement is informal/administrative (NOV + Warning Letter ≈ 60%), not
 judicial — judicial action is under 1% of linked rows.
@@ -107,7 +102,7 @@ judicial — judicial action is under 1% of linked rows.
 | Eval → violation | 21,531 | 0 | 0 | 14 | 90 | 125 | 7,387 | 59.2 |
 | Violation → enforcement | 36,921 | 0 | 0 | 64 | 217 | 489 | 4,054 | 175.6 |
 
-*(As of 2026-07-27; was 21,244/.../59.3 and 36,586/.../171.1 — both distributions moved only slightly.)*
+*(As of 2026-07-27.)*
 
 Both distributions are heavily right-skewed (median far below mean) with a long tail — the eval→violation
 lag is usually fast (median 2 weeks: an inspection that finds a violation typically reports it quickly), the
@@ -118,28 +113,27 @@ years; 4,054 days ≈ 11 years) are plausible for very old, slow-moving cases bu
 
 ### A.7 `EA_PENALTY_AMT` among real violations
 
-n = 57,197 real violations (was 57,838); **13,536 (23.7%) carry a positive linked penalty** (was
-13,339/23.1%), min \$1, median \$7,000 (was \$6,600), p90 \$60,847 (was \$54,775), max \$47.8M (unchanged),
-**total \$1,102,269,474** (was \$1,048,237,359).
+n = 57,197 real violations; **13,536 (23.7%) carry a positive linked penalty**,
+min \$1, median \$7,000, p90 \$60,847, max \$47.8M,
+**total \$1,102,269,474**.
 
 **⚠ Do not add this to ds 3's penalty total.** `penalties.csv.gz`'s in-window (2005–2025) sum is
-**\$4,605,435,066** (was \$4,603,442,510) — pipeline's \$1.10B is about 24% of that figure (was 23%),
-consistent with pipeline being a *partial* view (its own 20,222-facility source coverage, was 20,251, plus
+**\$4,605,435,066** — pipeline's \$1.10B is about 24% of that figure,
+consistent with pipeline being a *partial* view (its own 20,222-facility source coverage, plus
 the pre-2015 linkage gap in A.3) rather than a second, independent ledger of enforcement dollars. Per PL4,
 reconciling the two (matching `EA_ACTIVITY_ID`/`EA_FEA_ACTIVITY_ID` against ds 3's `ENF_IDENTIFIER`) is left
 undone.
 
 ---
 
-## Part B — `pipeline.csv.gz` (dataset 6, facility × year, 5,872,965 rows, was 5,863,431)
+## Part B — `pipeline.csv.gz` (dataset 6, facility × year, 5,872,965 rows)
 
-**Zero/NA breakdown** (mirrors dataset 0's discipline, PL3): 31,279 observed facility-years (was 31,796;
-0.53% of the full 279,665 × 21 rectangle, was 0.54%), 5,841,686 unobserved (`NA` throughout, was 5,831,635)
-— **18,334 facilities are ever pipeline-observed** (was 18,529). This is a much lower observation rate than
+**Zero/NA breakdown** (mirrors dataset 0's discipline, PL3): 31,279 observed facility-years
+(0.53% of the full 279,665 × 21 rectangle), 5,841,686 unobserved (`NA` throughout)
+— **18,334 facilities are ever pipeline-observed**. This is a much lower observation rate than
 `regulatory` (12.6%) or `hpv_active` (12.1% non-`NA`) — the pipeline source covers a narrower slice of the
-full ICIS universe (20,222 of 279,665 facilities even have one pipeline row at all, was 20,251/279,211 — now
-a **100% match to the current ICIS universe**, up from 99.99%, since the 2026-07-26 roster growth absorbed
-the last orphan facilities; see PL3).
+full ICIS universe (20,222 of 279,665 facilities even have one pipeline row at all — a **100% match to the
+current ICIS universe**, since the 2026-07-26 roster growth absorbed the last orphan facilities; see PL3).
 
 ### B.1 Prevalence, across all observed facility-years
 
@@ -148,7 +142,7 @@ the last orphan facilities; see PL3).
 | Self-disclosed | 3,213 | 5.6% |
 | Carries a positive linked EA penalty | 13,536 | 23.7% |
 
-*(As of 2026-07-27; was 3,243/5.6% and 13,339/23.1%.)*
+*(As of 2026-07-27.)*
 
 ### B.2 By-year pattern (full table: `output/pipeline_profile/by_year_summary.csv`)
 
@@ -161,10 +155,8 @@ the last orphan facilities; see PL3).
 | 2020 | 2,821 | 28.5% | 43.8% | 69.1% |
 | 2025 | 3,149 | 18.0% | 43.9% | 59.6% |
 
-*(As of 2026-07-27; was 2005 23/66.7%/0.0%/81.8%, 2010 24/90.6%/0.0%/84.4%, 2015 52/92.2%/5.8%/64.1%, 2016
-1,872/32.2%/17.3%/79.0%, 2020 2,824/27.8%/43.6%/68.0%, 2025 3,053/17.6%/42.3%/57.5%. 2015's jump in %
-linked-to-EA (64.1%→90.7%) is the largest single move, but n=30 is small enough that this is consistent with
-sampling volatility on a thin year, not a new pattern.)*
+*(As of 2026-07-27. 2015's % linked-to-EA (90.7%) is notably high, but n=30 is small enough that this is
+consistent with sampling volatility on a thin year, not a stable pattern.)*
 
 Two things jump out, both real (A.3, confirmed at the row level, not an aggregation artifact):
 
@@ -186,6 +178,5 @@ Two things jump out, both real (A.3, confirmed at the row level, not an aggregat
   share as violations becoming less severe over time.
 - **`EA_PENALTY_AMT_SUM` (A.7) is NOT additional money on top of `penalties.csv.gz`** — it is very likely the
   same underlying dollars, seen through a narrower, partially-overlapping lens (PL4). Never sum both.
-- **Only 20,222 of 279,665 facilities (7.2%) ever appear in the raw pipeline source at all** (was
-  20,251/279,211/7.3%) — this dataset is far sparser than `regulatory`/`hpv_active`; don't expect broad
-  facility coverage from it.
+- **Only 20,222 of 279,665 facilities (7.2%) ever appear in the raw pipeline source at all** — this dataset
+  is far sparser than `regulatory`/`hpv_active`; don't expect broad facility coverage from it.

@@ -131,9 +131,11 @@ pre2015 <- fac |> filter(!is.na(EARLIEST_PROGRAM_BEGIN_YEAR), EARLIEST_PROGRAM_B
     !is.na(ENTERED_YEAR) & ENTERED_YEAR > 2015           ~ "B: first observed OPERATING after 2015 (gap between claimed begin-year and observed entry)",  # discrepancy: wayback didn't see it operating until later than claimed
     is.na(ENTERED_YEAR) & ever_wayback_observed          ~ "C: never observed operating, but present in wayback (e.g. already CLS by 2015 -- consistent with existing, then closing, pre-2015)",  # ambiguous but plausible
     is.na(ENTERED_YEAR) & !ever_wayback_observed         ~ "D: never appears in ANY real wayback snapshot 2015-2025 (no corroboration at all)",  # weakest case: zero wayback evidence either way
-    TRUE ~ "other"))  # FLAG: catch-all for rows outside A-D (e.g. ENTERED_YEAR==2015 without LEFT_CENSORED==1, or NA LEFT_CENSORED) -- check this bucket's size before treating A-D as exhaustive
+    TRUE ~ "other"))  # catch-all for rows outside A-D (e.g. ENTERED_YEAR==2015 without LEFT_CENSORED==1, or NA LEFT_CENSORED)
 pre2015_corroboration <- pre2015 |> count(corroboration, name = "n_facilities") |>  # tally facilities per corroboration category
   mutate(pct = round(100 * n_facilities / sum(n_facilities), 1)) |> arrange(corroboration)  # convert to %, sort by category label (A-D order, alphabetical prefix)
+n_other <- sum(pre2015$corroboration == "other")  # canary: A-D is exhaustive as of 2026-07-28 (0 facilities land here) -- print so a future refresh can't silently populate this bucket unnoticed
+cat(sprintf("  [canary] pre2015 corroboration 'other' catch-all (outside A-D): %d facilities\n", n_other))
 write_csv(pre2015_corroboration, file.path(OUT, "pre2015_single_year_corroboration.csv"))  # write category tallies
 write_csv(pre2015 |> select(PGM_SYS_ID, EARLIEST_PROGRAM_BEGIN_YEAR, LEFT_CENSORED, ENTERED_YEAR,  # also write facility-level detail (not just tallies) for auditing individual cases
                             EXITED_YEAR, EXIT_SOURCE, ever_wayback_observed, corroboration),
@@ -199,7 +201,7 @@ cat(sprintf("   mean=%.2f | q25=%.0f | median=%.0f | q75=%.0f | begin-year AFTER
             lag_summary$mean_lag, lag_summary$q25, lag_summary$median_lag, lag_summary$q75, lag_summary$pct_begin_after_entry))  # print lag five-number summary
 cat("\n3b. LAG BUCKETS\n"); print(as.data.frame(lag_bucketed), row.names = FALSE)  # print bucketed lag table
 cat("\n3c. FULL LAG HISTOGRAM (every distinct lag value)\n"); print(as.data.frame(lag_hist), row.names = FALSE)  # print full histogram
-cat("\n4. POST-EXIT FALSE POSITIVES (proxy=1 in years strictly after a confirmed exit)\n")  # FLAG: header says "confirmed exit" but EXIT_SOURCE also includes "dropout" (an inferred upper-bound estimate, per 02_operating.R) -- those rows aren't confirmed exits, so this banner overstates certainty for that subset even though the post_exit table itself breaks out by EXIT_SOURCE
+cat("\n4. POST-EXIT FALSE POSITIVES (proxy=1 in years strictly after exit; EXIT_SOURCE: cls=confirmed closure, dropout=inferred)\n")  # wording matches what EXIT_SOURCE actually distinguishes -- the table below breaks out by EXIT_SOURCE
 print(as.data.frame(post_exit), row.names = FALSE)  # print post-exit false-positive table by exit source
 cat("\n4b. POST-EXIT FALSE POSITIVE RATE BY YEARS-SINCE-EXIT (does it decay?)\n")  # section header
 print(as.data.frame(post_exit_by_gap), row.names = FALSE)  # print false-positive rate by gap
@@ -227,10 +229,8 @@ print(as.data.frame(prog_lag_by_group), row.names = FALSE)  # print program-type
 # 4. Line ~101 (specificity in agreement_by_year): per-year specificity is expected to erode over time as
 #    more facilities cross their exit year -- that's the same structural mechanism as flag 1, not a new or
 #    independent data-quality signal, and shouldn't be read as the proxy "getting worse" over time.
-# 5. Line ~119 (TRUE ~ "other" in the pre2015 case_when): catch-all bucket for rows not matching categories
-#    A-D (e.g. ENTERED_YEAR == 2015 without LEFT_CENSORED == 1, or NA LEFT_CENSORED) -- worth checking this
-#    bucket's size before treating A-D as an exhaustive partition of the pre-2015 population.
-# 6. Line ~187 (console header "POST-EXIT FALSE POSITIVES ... after a confirmed exit"): EXIT_SOURCE includes
-#    "dropout" (an inferred, upper-bound exit estimate per 02_operating.R), not just confirmed closures
-#    ("cls") -- the console banner's "confirmed exit" wording overstates certainty for that subset, even
-#    though the underlying post_exit table correctly breaks results out by EXIT_SOURCE.
+# 5. RESOLVED 2026-07-28: added a `[canary]` console print of the "other" catch-all bucket's size (0 of
+#    171,161 as of this pass -- A-D is exhaustive today) so a future data refresh can't silently populate it
+#    unnoticed.
+# 6. RESOLVED 2026-07-28: console banner reworded from "after a confirmed exit" to name both EXIT_SOURCE
+#    values it actually covers (cls=confirmed closure, dropout=inferred), matching the table's own breakout.

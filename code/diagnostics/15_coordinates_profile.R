@@ -19,6 +19,7 @@
 suppressPackageStartupMessages({library(data.table); library(ggplot2); library(scales)})  # data.table/ggplot2/scales only; quietly (suppress load-time banners)
 options(scipen = 999)                                                 # disable scientific notation in printed/console output
 
+GROSS_ERROR_KM <- 5                                                   # mirrors the constant of the same name in code/04_datasets/coord_county_flag.R (the rule that built COORD_GROSS_ERROR) -- kept as a single named literal here so FIGURE 2's threshold line/label can't drift from the pipeline's own definition without at least this one place needing an edit too
 DATASETS <- here::here("data/datasets")                               # source dir for the built datasets layer (input)
 OUT      <- here::here("output/coordinates_profile")                  # destination dir for this script's CSV outputs
 OUT_FIG  <- here::here("output/figures/datasets/coordinates")         # destination dir for this script's figure outputs
@@ -63,10 +64,12 @@ fwrite(funnel, file.path(OUT, "coverage_funnel.csv"))                 # write CS
 # CSV 2 -- coord_county_dist_km five-number summary (checkable facilities only)
 # =========================================================================================================
 dist_km <- co[!is.na(COORD_COUNTY_DIST_KM), COORD_COUNTY_DIST_KM]     # restrict to checkable facilities only -- the HAS_COORDINATE gate propagates here via COORD_COUNTY_DIST_KM's own NA pattern
-dist_summary <- data.table(n_checkable = length(dist_km), pct_zero = round(mean(dist_km == 0), 4),  # five-number summary computed on the FULL checkable distribution, not the p99-truncated version used later for FIGURE 2's plot
-                           median = median(dist_km), p90 = quantile(dist_km, .90), p99 = quantile(dist_km, .99),  # FLAG: median/p90/p99 are NOT rounded (unlike pct_zero/pct_gross_error below) -- written to CSV at full floating-point precision; fwrite_rounded() above was apparently meant to standardize this but is never called
-                           max = max(dist_km), pct_gross_error = round(mean(dist_km > 5), 4))  # FLAG: max likewise unrounded; pct_gross_error hardcodes ">5" instead of reading the stored COORD_GROSS_ERROR column (used correctly with na.rm=TRUE elsewhere in this file) or the GROSS_ERROR_KM constant in coord_county_flag.R -- currently guaranteed consistent only by a stopifnot invariant enforced at build time in 06_coordinates.R; would silently drift if that threshold ever changed without a matching edit here (and at the geom_vline/annotate/subtitle "5km" text in FIGURE 2 below)
-fwrite(dist_summary, file.path(OUT, "coord_county_dist_summary.csv")) # write CSV 2
+dist_summary <- data.table(n_checkable = length(dist_km), pct_zero = mean(dist_km == 0),  # five-number summary computed on the FULL checkable distribution, not the p99-truncated version used later for FIGURE 2's plot
+                           median = median(dist_km), p90 = quantile(dist_km, .90), p99 = quantile(dist_km, .99),
+                           max = max(dist_km),
+                           pct_gross_error = mean(co[!is.na(COORD_COUNTY_DIST_KM), COORD_GROSS_ERROR]))  # reads the stored COORD_GROSS_ERROR column (same checkable population as dist_km) instead of re-hardcoding the >5km threshold
+fwrite_rounded(dist_summary, file.path(OUT, "coord_county_dist_summary.csv"),  # write CSV 2, now actually using fwrite_rounded (previously defined but unused, leaving median/p90/p99/max at full float precision)
+               prop_cols = c("pct_zero", "pct_gross_error"), num_cols = c("median", "p90", "p99", "max"))
 
 # =========================================================================================================
 # CSV 3 -- coverage by state
@@ -126,14 +129,14 @@ p99 <- quantile(dist_km, .99)                                         # 99th per
 dd <- data.table(dist = dist_km[dist_km > 0 & dist_km <= p99])        # FLAG: this truncation (nonzero, <= p99) is PLOT-ONLY -- dist_summary's median/p90/p99/max/pct_gross_error (CSV2, above) were already computed on the untruncated dist_km before this line, so nothing printed/written to CSV is biased by it; it affects only this histogram's visual range
 fig2 <- ggplot(dd, aes(dist)) +                                       # start figure 2: histogram of coordinate-to-claimed-county distance
   geom_histogram(binwidth = p99 / 60, fill = PAL[["blue"]], color = "white", linewidth = 0.1, boundary = 0) +  # ~60 bins spanning the truncated range (see comment above for why binwidth is fixed on pre-filtered data)
-  geom_vline(xintercept = 5, color = PAL[["red"]], linewidth = 0.6, linetype = "dashed") +  # FLAG: "5" is the gross-error threshold, hardcoded again here (see the pct_gross_error FLAG at dist_summary above) rather than read from GROSS_ERROR_KM in coord_county_flag.R
-  annotate("text", x = 5, y = Inf, label = "  5km gross-error threshold", color = PAL[["red"]],  # label the threshold line directly on the plot
+  geom_vline(xintercept = GROSS_ERROR_KM, color = PAL[["red"]], linewidth = 0.6, linetype = "dashed") +  # threshold line now reads the named constant (mirrors coord_county_flag.R) instead of a bare "5"
+  annotate("text", x = GROSS_ERROR_KM, y = Inf, label = sprintf("  %dkm gross-error threshold", GROSS_ERROR_KM), color = PAL[["red"]],  # label the threshold line directly on the plot
            hjust = 0, vjust = 1.5, size = 3.1, fontface = "bold") +
   scale_x_continuous(labels = label_comma()) + scale_y_continuous(labels = label_comma()) +  # thousands separators on both axes
   labs(title = "Coordinate-to-ICIS-county distance (nonzero, checkable facilities)",
-       subtitle = sprintf("n = %s facilities with dist > 0 (of %s checkable, %s land exactly in the ICIS-claimed county);\nx-axis truncated at the 99th percentile (%.0f km); %.1f%% exceed the 5km gross-error threshold",  # subtitle numbers are drawn from the untruncated dist_km/dist_summary computed earlier, so it correctly describes the full checkable population even though the histogram itself is truncated
+       subtitle = sprintf("n = %s facilities with dist > 0 (of %s checkable, %s land exactly in the ICIS-claimed county);\nx-axis truncated at the 99th percentile (%.0f km); %.1f%% exceed the %dkm gross-error threshold",  # subtitle numbers are drawn from the untruncated dist_km/dist_summary computed earlier, so it correctly describes the full checkable population even though the histogram itself is truncated
                           format(sum(dist_km > 0), big.mark = ","), format(length(dist_km), big.mark = ","),
-                          format(sum(dist_km == 0), big.mark = ","), p99, 100 * dist_summary$pct_gross_error),
+                          format(sum(dist_km == 0), big.mark = ","), p99, 100 * dist_summary$pct_gross_error, GROSS_ERROR_KM),
        x = "Distance (km)", y = "Facilities", caption = "Source: data/datasets/coordinates.csv.gz (dataset 4).") +
   theme_journal + theme(plot.subtitle = element_text(color = INK_SECONDARY, size = 8.3, lineheight = 1.15))  # shared theme + smaller/tighter subtitle text to fit the two-line sprintf above
 save_fig("coord_county_dist_distribution.png", fig2)                  # write PNG at default size/dpi
@@ -171,16 +174,13 @@ cat(sprintf("\n3 figures written to %s\n", OUT_FIG))
 # 1. (line ~32, fread colClasses) COUNTY_FIPS and ICIS_COUNTY_FIPS are correctly forced to character --
 #    avoids the leading-zero-drop bug flagged in 13_regulatory_profile.R for REGISTRY_ID/ZIP_CODE. The CSV4
 #    agreement comparison (line ~78) relies on this being done right.
-# 2. (line ~34, fwrite_rounded()) Defined but never called anywhere in this script -- every CSV's rounding
-#    is instead done ad hoc with inline round() calls at the point of computation (inconsistently: some
-#    proportions rounded to 3dp, others 4dp). See #3 for the concrete consequence.
-# 3. (line ~57-58, dist_summary) median/p90/p99/max are written to coord_county_dist_summary.csv at full
-#    floating-point precision -- not rounded at all, unlike pct_zero/pct_gross_error in the same table.
-# 4. (line ~58, pct_gross_error) Hardcodes ">5" rather than reading the stored COORD_GROSS_ERROR column
-#    (used correctly with na.rm=TRUE elsewhere, e.g. lines ~49/~65) or the GROSS_ERROR_KM constant in
-#    coord_county_flag.R. Currently consistent only because of a stopifnot invariant enforced at build time
-#    in 06_coordinates.R -- would silently drift if that threshold ever changed without a matching edit here
-#    and at every other hardcoded "5" in this file (FIGURE 2's geom_vline/annotate/subtitle, ~lines 119-124).
+# 2+3. RESOLVED 2026-07-28: dist_summary now actually passes through fwrite_rounded() (median/p90/p99/max
+#    rounded via num_cols, pct_zero/pct_gross_error via prop_cols) instead of a bare fwrite() at full
+#    floating-point precision.
+# 4. RESOLVED 2026-07-28: pct_gross_error now reads the stored COORD_GROSS_ERROR column directly (same
+#    checkable population as dist_km) instead of re-deriving ">5"; FIGURE 2's geom_vline/annotate/subtitle
+#    now reference a local GROSS_ERROR_KM <- 5 constant (mirroring coord_county_flag.R's constant of the same
+#    name) instead of bare "5" literals in three places.
 # 5. (line ~49, funnel$n_gross_error) Correctly uses na.rm=TRUE on COORD_GROSS_ERROR, honoring the 0-vs-NA
 #    convention documented in the file header.
 # 6. (line ~65, by_state$pct_gross_error) Same -- na.rm=TRUE used correctly on the stored column.

@@ -23,9 +23,6 @@ library(readr); library(dplyr); library(tidyr); library(lubridate)  # readr I/O,
 source(here::here("code/04_datasets/00_parameters.R"))  # provides CLEAN (processed-data path) and YEARS (2005:2025 analysis window)
 OUT <- here::here("output/hpv_spell_diagnostics"); dir.create(OUT, showWarnings = FALSE, recursive = TRUE)  # this diagnostic's output dir; idempotent create
 
-nz <- function(x) !is.na(x) & x != ""
-# FLAG: nz() is defined but never called anywhere in this script (grep confirms zero other uses) -- vestigial,
-# carried over from 08_hpv_spell_diagnostics.R's identical helper. No effect on any number produced below.
 h0 <- read_csv(file.path(CLEAN, "violations.csv.gz"),
                col_types = cols(PGM_SYS_ID = col_character(), .default = col_character()), show_col_types = FALSE) |>  # force every column to character (avoid silent numeric-guessing on ID-like fields)
   filter(ENF_RESPONSE_POLICY_CODE == "HPV") |>                # HPV universe = enforcement-response tier (matches 08's filter)
@@ -129,6 +126,6 @@ print(as.data.frame(by_year), row.names = FALSE)               # print the year 
 #      HPV records for the same facility-year are unioned, not double-counted. Worth flagging because a bug
 #      here (double-counting) would have silently inflated union_days and shifted which facility-years cross
 #      the >30-day threshold; verified correct as written.
-#   5. line ~26 (nz <- function...): dead code -- defined but never called anywhere in this script (confirmed
-#      via grep), left over from 08_hpv_spell_diagnostics.R. No effect on output.
+#   5. RESOLVED 2026-07-28: removed the dead nz() helper (defined but never called, leftover from
+#      08_hpv_spell_diagnostics.R).
 # =========================================================================================================

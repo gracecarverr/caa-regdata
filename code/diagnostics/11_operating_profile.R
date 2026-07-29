@@ -138,10 +138,12 @@ entries_by_year <- fac1[!is.na(ENTERED_YEAR), .(n_entered = .N), by = .(YEAR = E
 exits_by_year   <- fac1[!is.na(EXITED_YEAR),  .(n_exited  = .N), by = .(YEAR = EXITED_YEAR)]   # count of facilities exiting in each year, same facility-level basis
 entry_exit_by_year <- merge(entries_by_year, exits_by_year, by = "YEAR", all = TRUE)[order(YEAR)]  # full outer join so a year with entries but no exits (or vice versa) still appears
 entry_exit_by_year[is.na(entry_exit_by_year)] <- 0L  # merge-induced NAs (a year absent from one side) become an explicit 0 count, not a missing value
-# FLAG: unlike Figure 2 below, this CSV is NOT filtered to exclude 2015 -- 2015's ~155,230 "entries" are wayback
-# left-censoring (every facility already present at the first snapshot), not real entry events. A reader of
-# entry_exit_by_year.csv directly (rather than the figure, whose caption explains the exclusion) could easily
-# mistake that 2015 spike for genuine entry activity.
+# NOTE: unlike Figure 2 below, this CSV is NOT filtered to exclude 2015 -- 2015's ~155,230 "entries" are wayback
+# left-censoring (every facility already present at the first snapshot), not real entry events. Kept unfiltered
+# here so the raw by-year counts are available to the user un-decided; the console caveat below (printed
+# whenever this diagnostic runs) is the CSV-side equivalent of the figure's caption explanation.
+cat(sprintf("  [note] entry_exit_by_year.csv includes 2015 (n_entered=%s) unfiltered -- this is wayback left-censoring (facilities already present at the first snapshot), not genuine entries; Figure 2 excludes 2015 for this reason, this CSV does not.\n",
+            format(entry_exit_by_year[YEAR == 2015, n_entered], big.mark = ",")))
 fwrite(entry_exit_by_year, file.path(OUT, "entry_exit_by_year.csv"))
 
 # =========================================================================================================
@@ -287,12 +289,15 @@ cat("\nO5 SCREEN EFFECT\n"); print(as.data.frame(screen_effect), row.names = FAL
 #       wayback-observed but never coded operating (e.g. closed pre-2015), and ~14,482 facilities with NO wayback
 #       observation at all (no evidence either way). Labeling the combined bucket "never operating" overstates
 #       what's known for the latter group.
-#   6.  (~line 112) entry_exit_by_year.csv includes 2015 unfiltered, while Figure 2 explicitly excludes 2015 as a
-#       left-censoring artifact (155,230 facilities already present at the first snapshot, not real entries). The
-#       CSV and figure disagree, and only the figure documents why.
+#   6.  RESOLVED 2026-07-28: entry_exit_by_year.csv is kept unfiltered (2015 included, by design -- raw counts
+#       available to the user un-decided), but now prints a console caveat every run explaining the 2015
+#       left-censoring artifact, mirroring the explanation Figure 2's caption already gives on the figure side.
 #   7.  (~line 132) n_below_1970 / n_above_2025 hard-code the O5 plausibility-screen bounds as literals, duplicating
 #       BEGIN_YEAR_MIN/BEGIN_YEAR_MAX defined in code/04_datasets/02_operating.R with no reference back to them --
-#       if the parameters change upstream, this breakdown goes stale silently.
+#       if the parameters change upstream, this breakdown goes stale silently. Reviewed 2026-07-28: left as-is --
+#       fixing properly means moving the constants into the shared 00_parameters.R and touching pipeline code
+#       (02_operating.R), out of scope for a diagnostics-only pass; both bounds are effectively frozen in practice
+#       (1970 = Clean Air Act, 2025 = analysis window end).
 #   8.  (~line 176) Figure 2 excludes 2015 from the entries/exits plot for the reason above; flagged here as the
 #       figure-vs-CSV split point referenced in item 6.
 # =========================================================================================================

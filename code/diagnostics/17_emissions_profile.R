@@ -64,31 +64,31 @@ fwrite(by_program_year, file.path(OUT, "coverage_by_program_year.csv"))  # write
 # here, but only because the label says "Rows" -- don't repurpose this table for a facility-year coverage claim.
 
 # ---- CSV 3: pollutant totals, raw-file-wide (exact POLLUTANT_NAME match, before the ICIS-match restriction) -
+# NOTE: total_lbs sums ANNUAL_EMISSION across every row matching POLLUTANT_NAME regardless of PGM_SYS_ACRNM --
+# i.e. across ALL reporting programs pooled together (EIS/TRIS/E-GGRT/CAMDBS). If the same physical emission
+# event is reported by a facility under more than one program in the same year, this sum double-counts it.
+# n_multiprogram_fac_years below reports the size of this population directly (confirmed 2026-07-28: ~0.5% of
+# NOX/SO2 facility-years, 0% of VOC/PM10/PM25/CO) -- the dc_check below (CSV 4) validates a DIFFERENT risk
+# (exact vs. naive substring name-matching) and does not catch this cross-program case.
 pollutant_totals_raw <- rbindlist(lapply(names(POLLUTANT_MAP), function(nm) {  # one row per pollutant in POLLUTANT_MAP
-  v <- raw[POLLUTANT_NAME == POLLUTANT_MAP[[nm]], ANNUAL_EMISSION]  # exact-match extraction of that pollutant's annual emission values, ALL programs pooled
-  data.table(pollutant = nm, n_rows = length(v), n_nonzero = sum(v > 0, na.rm = TRUE),  # n_nonzero counts strictly-positive values only (see FLAG below)
-            total_lbs = sum(v, na.rm = TRUE), median_nonzero = median(v[v > 0], na.rm = TRUE),  # total_lbs sums ALL values incl. negatives; median_nonzero excludes them
-            max = max(v, na.rm = TRUE))
+  sub <- raw[POLLUTANT_NAME == POLLUTANT_MAP[[nm]]]        # exact-match rows for this pollutant, ALL programs pooled
+  v <- sub$ANNUAL_EMISSION
+  n_multi <- sub[, uniqueN(PGM_SYS_ACRNM), by = .(REGISTRY_ID, REPORTING_YEAR)][V1 > 1, .N]  # facility-years reported under >1 program -- the population double-counted by total_lbs below
+  data.table(pollutant = nm, n_rows = length(v), n_positive = sum(v > 0, na.rm = TRUE),  # n_positive counts strictly-positive values (renamed from n_nonzero -- see NOTE below)
+            total_lbs = sum(v, na.rm = TRUE), median_positive = median(v[v > 0], na.rm = TRUE),  # total_lbs sums ALL values incl. negatives; median_positive excludes them
+            max = max(v, na.rm = TRUE), n_multiprogram_fac_years = n_multi)
 }))
 fwrite(pollutant_totals_raw, file.path(OUT, "pollutant_totals_raw.csv"))  # write CSV 3
-# FLAG: total_lbs sums ANNUAL_EMISSION across every row matching POLLUTANT_NAME regardless of PGM_SYS_ACRNM
-# -- i.e. across ALL reporting programs pooled together (EIS/TRIS/E-GGRT/CAMDBS). If the same physical
-# emission event is reported by a facility under more than one program in the same year (e.g. EIS's
-# triennial NEI inventory and an annual TRIS report both covering VOC for the same facility-year), this sum
-# double-counts it. The double-count check below (CSV 4 / dc_check) validates a DIFFERENT risk -- exact vs.
-# naive substring name-matching -- not this cross-program duplication, so it does not catch this case.
-# FLAG: n_nonzero/median_nonzero use `v > 0` (strictly positive), so a negative ANNUAL_EMISSION value (EPA
-# correction/revision rows do occur) is excluded from both the nonzero count and the median, but its
-# negative value is still included in total_lbs via sum(v, na.rm = TRUE). "Nonzero" here effectively means
-# "positive," and total_lbs can therefore be slightly lower than sum of the values counted as "nonzero."
+# NOTE: n_positive/median_positive use `v > 0` (strictly positive) -- a negative ANNUAL_EMISSION value (EPA
+# correction/revision rows do occur) is excluded from both, but its negative value is still included in
+# total_lbs via sum(v, na.rm = TRUE). Renamed from n_nonzero/median_nonzero (2026-07-28) since "nonzero"
+# previously implied `!= 0`, not `> 0` -- the columns always meant "positive" in practice.
 
 hap_v <- raw[NEI_TYPE == "HAP", ANNUAL_EMISSION]           # all HAP-flagged rows, all programs pooled, raw-file-wide
+n_hap_multi <- raw[NEI_TYPE == "HAP", uniqueN(PGM_SYS_ACRNM), by = .(REGISTRY_ID, REPORTING_YEAR)][V1 > 1, .N]  # same cross-program overlap check as pollutant_totals_raw above
 hap_total_raw <- data.table(n_rows = length(hap_v), n_distinct_hap_names = uniqueN(raw[NEI_TYPE == "HAP", POLLUTANT_NAME]),  # count of rows + distinct HAP pollutant names
-                            total_lbs = sum(hap_v, na.rm = TRUE))  # summed lbs, same cross-program pooling caveat as pollutant_totals_raw above
-fwrite(hap_total_raw, file.path(OUT, "hap_total_raw.csv"))  # write CSV 4 (HAP total)
-# FLAG: same cross-program double-counting risk as pollutant_totals_raw above applies here -- NEI_TYPE ==
-# "HAP" is not restricted to a single PGM_SYS_ACRNM, so a HAP compound reported under more than one program
-# for the same facility-year would be summed twice into total_lbs.
+                            total_lbs = sum(hap_v, na.rm = TRUE), n_multiprogram_fac_years = n_hap_multi)  # summed lbs; n_multiprogram_fac_years reports the cross-program double-counting risk directly
+fwrite(hap_total_raw, file.path(OUT, "hap_total_raw.csv"))  # write CSV 4 (HAP total); n_multiprogram_fac_years reports the same cross-program overlap risk as pollutant_totals_raw above, directly rather than only in a comment
 
 ghg_v <- raw[PGM_SYS_ACRNM == "E-GGRT", ANNUAL_EMISSION]   # GHG rows restricted to the single program that reports them (E-GGRT) -- no cross-program pooling risk here
 ghg_total_raw <- data.table(n_rows = length(ghg_v), n_distinct_registry = uniqueN(raw[PGM_SYS_ACRNM == "E-GGRT", REGISTRY_ID]),  # row count + distinct facilities reporting GHG
@@ -244,16 +244,15 @@ cat("\nBY-YEAR SUMMARY (head)\n"); print(as.data.frame(head(by_year_ds, 10)), ro
 # 2.  (~line 51)  by_program_year / coverage_by_program_year.csv counts raw ROWS per program-year, not
 #     facilities or facility-years -- correctly labeled "Rows" in figure 1, but easy to misread as a
 #     facility-year coverage rate if reused elsewhere.
-# 3.  (~line 63)  pollutant_totals_raw: total_lbs sums ANNUAL_EMISSION across ALL reporting programs pooled
-#     together (no PGM_SYS_ACRNM restriction) -- a facility-year's emission reported under more than one
-#     program would be double-counted. The dc_check below (CSV 4) validates a different risk (exact vs.
-#     naive name matching) and does not catch this.
-# 4.  (~line 65)  pollutant_totals_raw: n_nonzero/median_nonzero use strictly-positive (`v > 0`) filtering,
-#     so negative ANNUAL_EMISSION values (corrections) are excluded from both, while total_lbs still sums
-#     them via na.rm = TRUE -- "nonzero" here means "positive," not "!= 0."
-# 5.  (~line 72)  hap_total_raw: same cross-program pooling risk as item 3 -- NEI_TYPE == "HAP" spans
-#     multiple PGM_SYS_ACRNM values, unrestricted, so a HAP compound reported under more than one program
-#     could be summed twice.
+# 3.  RESOLVED 2026-07-28: pollutant_totals_raw now includes n_multiprogram_fac_years, an explicit count of
+#     facility-years reported under >1 PGM_SYS_ACRNM for that pollutant -- confirmed ~0.5% of NOX/SO2
+#     facility-years, 0% of VOC/PM10/PM25/CO. total_lbs itself is unchanged (still pools all programs, by
+#     design for this raw-file-wide comparison table); the new column surfaces the double-counting risk
+#     with a real number instead of leaving it as an unquantified caveat.
+# 4.  RESOLVED 2026-07-28: renamed n_nonzero/median_nonzero to n_positive/median_positive -- the columns
+#     always meant "positive" (`v > 0`) in practice, not "!= 0"; total_lbs still sums negative correction
+#     values via na.rm = TRUE, unchanged.
+# 5.  RESOLVED 2026-07-28: hap_total_raw now includes the same n_multiprogram_fac_years diagnostic as item 3.
 # 6.  (~line 87)  dc_check / inflation_factor: clarifies that this table validates exact-vs-naive
 #     POLLUTANT_NAME matching (EM4), a different double-counting risk from the cross-program pooling in
 #     items 3 and 5 -- don't read a clean dc_check as clearing the cross-program risk too.

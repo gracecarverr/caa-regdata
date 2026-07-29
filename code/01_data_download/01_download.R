@@ -25,13 +25,6 @@
 #   (code/02_cleaning/wayback/17-19_*.R) read specific named files only, never list.files()-glob the
 #   directory, so extra tables are simply never read.
 #
-#   FRS note: the URL previously tried here (ordsext.epa.gov/FLA/www3/state_files/national_combined.zip,
-#   ~1.26 GB) is a real, working download (confirmed 2026-07-27 -- the earlier "truncated connections" finding
-#   was a transient issue with that specific transfer, not a dead endpoint) but it is the WRONG product: a
-#   33-column multi-table FRS export, not the 10-column FRS_FACILITIES.csv this pipeline actually uses. The
-#   real source is echo.epa.gov/files/echodownloads/frs_downloads.zip (confirmed schema- and content-identical
-#   to the staged file, same bulk-download pattern as ICIS-Air/AFS above) -- that's what's automated below.
-#
 #   Green Book / PM2.5 attainment data is NOT fetched here: the attainment layer (data/raw/greenbook/,
 #   code/03_panel_building/01_attainment.R, data/panels/attainment.csv.gz) was removed from this repo
 #   2026-07-27 -- that code was already synced to the CAA_Project repo (2026-07-23) and lives there now.
@@ -120,14 +113,21 @@ curlGetHeaders_impl <- function(url) {
     # but is a stray, slightly odd entry if this vector is ever inspected directly.
 }
 
+# the full 10-table set every ICIS-Air zip (live ECHO or Wayback) contains -- confirmed via MANIFEST.csv
+# provenance rows and code/diagnostics/wayback_verify/wayback_verify.R; also every table code/02_cleaning
+# actually reads (see 02_cleaning_parameters.R). Shared by the bulk fetch below and the Wayback loop.
+ICIS_AIR_TABLES <- c(
+  "ICIS-AIR_FACILITIES.csv", "ICIS-AIR_FCES_PCES.csv", "ICIS-AIR_FORMAL_ACTIONS.csv",
+  "ICIS-AIR_INFORMAL_ACTIONS.csv", "ICIS-AIR_POLLUTANTS.csv", "ICIS-AIR_PROGRAMS.csv",
+  "ICIS-AIR_PROGRAM_SUBPARTS.csv", "ICIS-AIR_STACK_TESTS.csv", "ICIS-AIR_TITLEV_CERTS.csv",
+  "ICIS-AIR_VIOLATION_HISTORY.csv"
+)
+
 # ---- ICIS-Air (current bulk download) ---------------------------------------------------------------
 ICIS_URL <- "https://echo.epa.gov/files/echodownloads/ICIS-AIR_downloads.zip"
 out_dir <- file.path(RAW, "ICIS-AIR_downloads")
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
-if (length(list.files(out_dir, pattern = "[.]csv$"))) {
-  # REVIEW(design): idempotency check is "does at least one .csv already exist here", not "does the expected
-  # set of files exist". A previous run that was interrupted mid-unzip (leaving a subset of the 10 ICIS-Air
-  # tables) would be silently treated as fully downloaded on every future run and never retried/completed.
+if (all(file.exists(file.path(out_dir, ICIS_AIR_TABLES)))) {
   message("  ICIS-Air already present in ", out_dir, " -- skipping download.")  # idempotent no-op branch
 } else {
   zip <- file.path(RAW, "ICIS-AIR_downloads.zip")    # download to RAW/ first, not directly into out_dir
@@ -140,10 +140,13 @@ if (length(list.files(out_dir, pattern = "[.]csv$"))) {
 
 # ---- AFS (legacy Air Facility System) -- same ECHO bulk directory as ICIS-Air -------------------------
 AFS_URL <- "https://echo.epa.gov/files/echodownloads/afs_downloads.zip"
+# the 5 tables this zip contains -- matches every AFS_* / AIR_PROGRAM.csv reference in code/02_cleaning
+AFS_TABLES <- c("AFS_ACTIONS.csv", "AFS_AIR_PRG_HIST_COMPLIANCE.csv", "AFS_FACILITIES.csv",
+                 "AFS_HPV_HISTORY.csv", "AIR_PROGRAM.csv")
 afs_dir <- file.path(RAW, "afs_downloads")
 dir.create(afs_dir, showWarnings = FALSE, recursive = TRUE)
-if (length(list.files(afs_dir, pattern = "[.]csv$"))) {
-  message("  AFS already present in ", afs_dir, " -- skipping download.")  # same shallow idempotency caveat as ICIS-Air above
+if (all(file.exists(file.path(afs_dir, AFS_TABLES)))) {
+  message("  AFS already present in ", afs_dir, " -- skipping download.")
 } else {
   zip <- file.path(RAW, "afs_downloads.zip")
   message("  downloading ", AFS_URL)
@@ -183,10 +186,13 @@ if (file.exists(pipeline_csv)) {
 # directory as ICIS-Air/AFS above. NOT ordsext.epa.gov/.../national_combined.zip (see file header) -- that
 # is a different, larger FRS export with a different schema.
 FRS_URL <- "https://echo.epa.gov/files/echodownloads/frs_downloads.zip"
+# the 2 tables this pipeline uses (facility coordinates + program linkages); the zip also bundles
+# FRS_SIC_CODES.csv/FRS_NAICS_CODES.csv, not currently read by anything downstream -- see stage README
+FRS_TABLES <- c("FRS_FACILITIES.csv", "FRS_PROGRAM_LINKS.csv")
 frs_dir <- file.path(RAW, "frs")
 dir.create(frs_dir, showWarnings = FALSE, recursive = TRUE)
-if (length(list.files(frs_dir, pattern = "[.]csv$"))) {
-  message("  FRS already present in ", frs_dir, " -- skipping download.")  # same shallow idempotency caveat as ICIS-Air/AFS above
+if (all(file.exists(file.path(frs_dir, FRS_TABLES)))) {
+  message("  FRS already present in ", frs_dir, " -- skipping download.")
 } else {
   zip <- file.path(RAW, "frs_downloads.zip")
   message("  downloading ", FRS_URL)
@@ -240,11 +246,9 @@ WAYBACK_TIMESTAMPS <- c(                               # one pinned capture ID (
 for (yr in names(WAYBACK_TIMESTAMPS)) {                # one iteration per pinned year (2018 has no entry, so is skipped)
   yr_dir <- file.path(RAW, "ICIS_AIR_WAYBACK", paste0("ICIS-AIR_downloads_", yr))
   dir.create(yr_dir, showWarnings = FALSE, recursive = TRUE)
-  if (length(list.files(yr_dir, pattern = "[.]csv$"))) {
-    # same shallow "any .csv present" idempotency caveat as ICIS-Air/AFS/FRS above -- doubly relevant here
-    # given the file header's own note that 4 of these years (2022-2025) currently have FEWER files staged
-    # than a fresh download would produce; this check would treat that trimmed set as "already present" and
-    # never top it up to the full 10-table set
+  if (all(file.exists(file.path(yr_dir, ICIS_AIR_TABLES)))) {
+    # exact-set check (not "any .csv present") -- catches the 2022/2023-2025 trimmed folders noted in the
+    # file header and re-fetches them to the full 10-table set, rather than treating the trimmed set as done
     message("  Wayback ", yr, " already present in ", yr_dir, " -- skipping download.")
   } else {
     ts <- WAYBACK_TIMESTAMPS[[yr]]                     # this year's pinned capture timestamp

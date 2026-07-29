@@ -1,2 +1,2 @@
-n_rows_raw,n_placeholder,n_real_in_window,n_facilities
-66723,7218,57197,18334
+n_rows_raw,n_placeholder,n_out_of_window,n_real_in_window,n_facilities
+66723,7218,2308,57197,18334

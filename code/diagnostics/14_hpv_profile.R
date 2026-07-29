@@ -59,7 +59,8 @@ fwrite(spell_duration, file.path(OUT, "spell_duration_closed.csv"))  # write CSV
 
 # ---- CSV 3: spells by day-zero year (time trend; note DAYZERO_YEAR is unscreened here, per H4 -- includes
 #   the 218/2026 outliers the collapse layer screens out, see hpv_active section below) --------------------
-by_dayzero_year <- sp[!is.na(DAYZERO_YEAR), .N, by = DAYZERO_YEAR][order(DAYZERO_YEAR)]  # FLAG: DAYZERO_YEAR is raw/unscreened here (only NA is dropped) -- known outlier years like 218 and 2026 (per the header note above) still appear in this CSV, unlike the hpv_active collapse which screens them out; a reader taking spells_by_dayzero_year.csv at face value could misread the true year range
+by_dayzero_year <- sp[!is.na(DAYZERO_YEAR), .N, by = DAYZERO_YEAR][order(DAYZERO_YEAR)]  # kept unscreened (raw record-level diagnostic, not the construction layer) -- known outlier years like 218/2026 still appear
+by_dayzero_year[, in_range := DAYZERO_YEAR >= 1970 & DAYZERO_YEAR <= 2025]  # mirrors DZ_MIN/DZ_MAX (H4 screen) in code/04_datasets/04_hpv_active.R -- flags rows the hpv_active collapse layer screens out, so a reader isn't misled by the raw year range without having to drop them from this file
 fwrite(by_dayzero_year, file.path(OUT, "spells_by_dayzero_year.csv"))  # write CSV 3
 
 # ---- CSV 4: implicated program codes (PROGRAM_CODES is a whitespace-joined multi-value field per record).
@@ -125,14 +126,23 @@ overview_active <- data.table(  # one row: hpv_active overview including the zer
 fwrite(overview_active, file.path(OUT, "overview_active.csv"))  # write CSV 7
 
 # ---- CSV 8: active rate by year (denominator = non-NA only, so the rate isn't diluted by structural NA) ----
-by_year_active <- ha[!is.na(HPV_ACTIVE), .(n_known = .N, n_active = sum(HPV_ACTIVE == 1)), by = YEAR][order(YEAR)]  # FLAG: correctly restricts to the non-NA subset per H6, but this table does NOT report the NA count/share BY YEAR -- only the file-wide total (n_na in overview_active above) is available, so a reader can't tell whether NA is concentrated in specific years (e.g. right-censored recent years), despite the header's claim that "every rate below reports the NA share"
-by_year_active[, pct_active := round(n_active / n_known, 4)]  # active rate among known-status facility-years that year
+n_by_year <- ha[, .N, by = YEAR]  # total facility-years per year, ALL rows (denominator for pct_na below)
+by_year_active <- ha[!is.na(HPV_ACTIVE), .(n_known = .N, n_active = sum(HPV_ACTIVE == 1)), by = YEAR][order(YEAR)]  # restricted to the non-NA subset per H6
+by_year_active <- merge(by_year_active, n_by_year, by = "YEAR")  # bring in the full-panel per-year total so NA share can be computed (n_known alone can't recover it)
+by_year_active[, `:=`(n_na = N - n_known, pct_active = round(n_active / n_known, 4))]  # n_na fills the per-year gap the header claims every rate reports; active rate stays on the known-status denominator (H6)
+by_year_active[, pct_na := round(n_na / N, 4)]
+by_year_active[, N := NULL]  # drop the merge helper column, keep n_known/n_na/n_active/pct_active/pct_na
 fwrite(by_year_active, file.path(OUT, "active_rate_by_year.csv"))  # write CSV 8
 
 # ---- CSV 9: "spell wins" cases -- HPV_ACTIVE==1 in a year the facility had NO other ICIS record that year
 #   (H6's stated rationale in practice: 2,370 fac-yrs expected per the decision doc) --------------------------
 reg_obs <- fread(file.path(DATASETS, "regulatory.csv.gz"), select = c("PGM_SYS_ID", "YEAR", "ICIS_OBSERVED"))  # dataset 0, just the join keys + observed flag
-spell_wins <- merge(ha[HPV_ACTIVE == 1], reg_obs, by = c("PGM_SYS_ID", "YEAR"))  # FLAG: merge() defaults to an inner join (all=FALSE both sides) on facility+year -- any HPV_ACTIVE==1 facility-year with no matching row in regulatory (spine mismatch between the two datasets) is silently dropped rather than surfaced, which would understate n_active_fac_years below; there is no row-count check confirming nrow(spell_wins) == nrow(ha[HPV_ACTIVE==1])
+active_ha  <- ha[HPV_ACTIVE == 1]
+spell_wins <- merge(active_ha, reg_obs, by = c("PGM_SYS_ID", "YEAR"))  # inner join (merge()'s default) on facility+year
+n_unmatched <- nrow(active_ha) - nrow(spell_wins)  # any HPV_ACTIVE==1 facility-year absent from regulatory.csv.gz (a spine mismatch) would silently drop out of the inner join above -- surfaced explicitly here instead of assumed away
+cat(sprintf("  [check] spell_wins join: %d of %d HPV_ACTIVE==1 facility-years matched to regulatory.csv.gz (%d unmatched)\n",
+            nrow(spell_wins), nrow(active_ha), n_unmatched))
+if (n_unmatched > 0) warning(sprintf("14_hpv_profile.R: %d HPV_ACTIVE==1 facility-years had no regulatory.csv.gz match and were dropped from spell_wins_cases.csv -- investigate the spine mismatch before trusting n_active_fac_years", n_unmatched))
 spell_wins_summary <- data.table(  # of active facility-years, how many had ICIS_OBSERVED==0 (no other ICIS record that year) -- the "spell wins" cases motivating H6
   n_active_fac_years = nrow(spell_wins),  # denominator: active facility-years that matched to regulatory
   n_active_icis_unobserved = spell_wins[ICIS_OBSERVED == 0, .N],  # of those, how many had no other ICIS record that year
@@ -217,27 +227,21 @@ print(as.data.frame(spell_wins_summary), row.names = FALSE)  # print spell-wins 
 # =========================================================================================================
 # FLAGGED ISSUES
 # =========================================================================================================
-#   1. Line ~53 (closed_days): duration stats (CSV 2 / spell_duration_closed.csv, and FIGURE 2) are computed
-#      on CLOSED spells only -- open/unresolved spells are excluded entirely rather than censored or given a
-#      documented fallback end date. This biases the duration distribution toward shorter, resolved spells;
-#      a still-open spell that eventually runs long is invisible to this summary until it closes.
-#   2. Line ~62 (by_dayzero_year): DAYZERO_YEAR is used unscreened here (only NA dropped) -- known outlier
-#      years such as 218 and 2026 (per the file header's H4 note) still appear in spells_by_dayzero_year.csv,
-#      unlike the hpv_active collapse layer which screens them out. A reader relying on this CSV alone could
-#      get a misleading year range.
+#   1. (closed_days) Duration stats (CSV 2 / spell_duration_closed.csv, and FIGURE 2) are computed on CLOSED
+#      spells only -- open/unresolved spells are excluded entirely rather than censored or given a documented
+#      fallback end date. This biases the duration distribution toward shorter, resolved spells. Reviewed
+#      2026-07-28: left as-is -- matches H3's decision that SPELL_DAYS is only defined for closed spells.
+#   2. RESOLVED 2026-07-28: added an in_range column (DAYZERO_YEAR in [1970,2025], mirroring 04_hpv_active.R's
+#      DZ_MIN/DZ_MAX H4 screen) to spells_by_dayzero_year.csv -- rows stay unfiltered (raw record-level
+#      diagnostic) but a reader can now see/filter which years are implausible.
 #   3. Line ~69 (prog_tokens): strsplit() is deliberately called on the plain character vector, OUTSIDE
 #      sp[i, j]. This is load-bearing, not stylistic -- calling strsplit() inside a bare data.table j-expression
 #      silently corrupts the multi-value program-code counts (verified regression: ~5x inflation, e.g. CAATVP
 #      143,323 vs. the correct 25,555). A future refactor that "simplifies" this into one chained data.table
 #      call would reintroduce the bug silently.
-#   4. Line ~128 (by_year_active): correctly restricts the active rate to the non-NA subset per year (H6),
-#      but the resulting table/CSV (active_rate_by_year.csv) does not report the NA count or share BY YEAR --
-#      only the file-wide total (overview_active$n_na) is available anywhere in this script's output. A reader
-#      cannot tell from this file's outputs whether NA is concentrated in particular years (e.g. right-censored
-#      recent years, or facilities not yet in ICIS), even though the file header states "every rate below
-#      reports the NA share."
-#   5. Line ~135 (spell_wins merge): merge(ha[HPV_ACTIVE == 1], reg_obs, by = c("PGM_SYS_ID", "YEAR")) is an
-#      inner join by default (data.table merge() defaults to all.x = FALSE, all.y = FALSE). Any HPV_ACTIVE==1
-#      facility-year that has no matching row in regulatory.csv.gz (e.g. a spine mismatch between the two
-#      datasets) is silently dropped rather than surfaced, which would understate n_active_fac_years and the
-#      "spell wins" counts downstream. No row-count check verifies nrow(spell_wins) == nrow(ha[HPV_ACTIVE==1]).
+#   4. RESOLVED 2026-07-28: active_rate_by_year.csv now includes n_na/pct_na per year (computed against the
+#      full per-year facility-year count, not just the non-NA subset), bringing the table in line with the
+#      file header's claim that every rate reports its NA share.
+#   5. RESOLVED 2026-07-28: added an explicit unmatched-row check around the spell_wins inner join -- prints
+#      the match count every run and throws a warning() if any HPV_ACTIVE==1 facility-year fails to match
+#      regulatory.csv.gz, instead of silently understating n_active_fac_years.

@@ -109,18 +109,17 @@ reg[, classification := fifelse(AIR_POLLUTANT_CLASS_DESC %in% names(CLASS_MAP),
 CLASS_LEVELS <- c("Major", "Synthetic Minor", "Minor", "Other/Unknown")
 reg[, classification := factor(classification, levels = CLASS_LEVELS)]  # fix the display/plot order of the 4 classification levels
 observed <- reg[ICIS_OBSERVED == 1]                      # rebuild now that `classification` exists
-# FLAG: `observed` was already built once (near the top of the file, before `classification` existed) and is
-# now rebuilt here so that classification_activity below can group by it. This is handled correctly (the
-# comment says so explicitly), but it's a real trap: every computation between the first `observed <-` and
-# this line (CSVs 1-5) used the OLD `observed`, which is fine since none of them reference `classification`
-# -- but if a future edit inserts a new CSV between CSV 5 and this rebuild that both uses `observed` AND
-# needs `classification`, it would silently get a `classification`-less error or, worse if classification
-# were added earlier by mistake, a stale/inconsistent `observed`. The dependency (classification must exist
-# before this rebuild, and any classification-aware use of `observed` must come after it) is enforced only
-# by code order, not by structure.
+stopifnot("classification" %in% names(observed))          # structural guard for the CSV5/rebuild ordering dependency noted below -- fails loudly instead of silently if a future edit reorders this
+# NOTE: `observed` was already built once (near the top of the file, before `classification` existed) and is
+# now rebuilt here so that classification_activity below can group by it. Every computation between the first
+# `observed <-` and this line (CSVs 1-5) used the OLD `observed`, which is fine since none of them reference
+# `classification` -- the stopifnot above is a cheap tripwire in case a future CSV inserted between CSV 5 and
+# this rebuild assumes classification exists on `observed` before it actually does.
 
+n_class_switchers <- reg[, uniqueN(AIR_POLLUTANT_CLASS_DESC), by = PGM_SYS_ID][V1 > 1, .N]  # canary for classification_coverage's time-invariance assumption below -- confirmed 0/279,665 facilities as of 2026-07-28
+cat(sprintf("  [canary] facilities with a classification that changes across years: %d\n", n_class_switchers))
 classification_coverage <- reg[, .(n_facilities = uniqueN(PGM_SYS_ID), n_facility_years = .N,
-                                   pct_observed = mean(ICIS_OBSERVED == 1)), by = classification][order(classification)]  # n_facilities here counts facility-YEAR rows' distinct PGM_SYS_ID within each classification group -- since classification is treated as time-invariant per the header note, this is equivalent to per-facility counts, but relies on that invariant holding (a facility whose classification changed across years would be double-counted across two classification buckets)
+                                   pct_observed = mean(ICIS_OBSERVED == 1)), by = classification][order(classification)]  # n_facilities here counts facility-YEAR rows' distinct PGM_SYS_ID within each classification group -- equivalent to a per-facility count only because classification is time-invariant per facility (see canary above)
 fwrite_rounded(classification_coverage, file.path(OUT_CSV, "classification_coverage.csv"), prop_cols = "pct_observed")
 
 CLASS_MEAS <- c("N_INSPECTIONS", "N_VIOLATIONS", "N_ENFORCEMENT", "N_CERTS", "N_STACK_TESTS")  # the 5 measures compared by classification, a subset of the 9 in COUNT_COLS above
@@ -224,14 +223,15 @@ fig2 <- ggplot(by_year_meas, aes(YEAR, mean_count, color = measure)) +
 save_fig("reg_activity_over_time.png", fig2, w = 8.3, h = 4.8)
 
 # ---- FIGURE 3: distribution of inspections per observed facility-year (heavy right skew) ---------------
-insp <- observed[!is.na(N_INSPECTIONS), .(N_INSPECTIONS)]             # observed subset, explicit NA-drop on N_INSPECTIONS (defensive, same as summarise_measure() above)
+insp <- observed[!is.na(N_INSPECTIONS), .(N_INSPECTIONS)]             # still needed for the histogram itself (geom_histogram needs the raw values)
+sc_insp <- summary_counts[measure == "N_INSPECTIONS"]                 # reuse CSV 3's already-computed n_obs/p99/pct_zero instead of a second independent computation, so the subtitle can't silently drift from the CSV
 fig3 <- ggplot(insp, aes(N_INSPECTIONS)) +
   geom_histogram(binwidth = 1, fill = PAL["blue"], color = "white", linewidth = 0.15, boundary = -0.5) +  # 1-count-wide bins, boundary=-0.5 so bins align on integers (0, 1, 2, ...) rather than straddling them
-  coord_cartesian(xlim = c(0, quantile(insp$N_INSPECTIONS, .99))) +   # x-axis visually truncated at the 99th percentile -- this only clips the DISPLAY (coord_cartesian, not scale_x_continuous with limits), so all data still contributes to the histogram bin heights, it's just that high-count bins beyond p99 aren't shown
+  coord_cartesian(xlim = c(0, sc_insp$p99)) +                         # x-axis visually truncated at the 99th percentile -- this only clips the DISPLAY (coord_cartesian, not scale_x_continuous with limits), so all data still contributes to the histogram bin heights, it's just that high-count bins beyond p99 aren't shown
   scale_y_continuous(labels = label_comma()) +
   labs(title = "Inspections per observed facility-year",
        subtitle = sprintf("n = %s observed facility-years; x-axis truncated at the 99th percentile (%.0f); %.1f%% are zero",
-                          format(nrow(insp), big.mark = ","), quantile(insp$N_INSPECTIONS, .99), 100*mean(insp$N_INSPECTIONS==0)),  # subtitle recomputes n / p99 / pct-zero directly from `insp`, independent of summary_counts.csv above -- consistent as long as both draw from the same `observed` table, but a second independent computation of the same numbers rather than reading them back from CSV 3
+                          format(sc_insp$n_obs, big.mark = ","), sc_insp$p99, 100*sc_insp$pct_zero),
        x = "Inspections (N_INSPECTIONS)", y = "Facility-years",
        caption = "Source: data/datasets/regulatory.csv.gz (dataset 0).") +
   theme_journal
@@ -310,26 +310,19 @@ cat(sprintf("\n5 figures written to %s:\n  reg_coverage_over_time.png, reg_activ
 #    (NA/"" rows are dropped from both numerator and denominator) -- a DIFFERENT NA convention than CSV 6's
 #    "Other/Unknown" classification bucket, which folds NA into the denominator as a residual category. Two
 #    different "pct" conventions coexist in this file; check which one applies before comparing across CSVs.
-# 3. (`observed` rebuild, ~line 111) `observed` is built once early (before `classification` exists), used
-#    for CSVs 1-5, then rebuilt after `classification` is added so CSV 6/Figures can group by it. Correctly
-#    commented and currently safe (nothing between the two definitions needs classification), but the
-#    dependency ordering is enforced only by code position, not by structure -- a future insertion between
-#    CSV 5 and the rebuild that assumes classification exists would break silently.
-# 4. (classification_coverage, ~line 118) n_facilities is a distinct-PGM_SYS_ID count WITHIN each
-#    classification bucket, computed on facility-YEAR rows -- correct only under the (stated, but here
-#    unverified) assumption that a facility's classification never changes across its observed years. A
-#    facility whose class changed would be counted in more than one bucket's n_facilities.
+# 3. RESOLVED 2026-07-28: added stopifnot("classification" %in% names(observed)) right after the rebuild --
+#    fails loudly instead of silently if a future edit breaks the CSV5/rebuild ordering dependency.
+# 4. RESOLVED 2026-07-28: added a console canary counting facilities whose AIR_POLLUTANT_CLASS_DESC changes
+#    across years (confirmed 0 of 279,665 as of this pass) so classification_coverage's time-invariance
+#    assumption is checked on every run, not just asserted in a comment.
 # 5. (facility_level_overview, ~line 137) n_facility_years_no_programs is a facility-YEAR count, unlike every
 #    other field in the same table (which are facility-level counts/shares) -- a grain switch within one row
 #    that's easy to misread as comparable in scale to its neighbors.
 # 6. (fac_naics$is_missing_class, ~line 150) Deliberately a STRICT NA-only check, narrower than
 #    `classification`'s "Other/Unknown" (NA + 3 named residual labels) -- this is the intended fine-vs-coarse
 #    contrast the CSV exists to show, not a bug, but worth flagging as the load-bearing distinction for S5.
-# 7. (Figure 3 subtitle, ~line 226) Recomputes n / p99 / pct-zero directly from `insp` rather than reading
-#    them back from summary_counts.csv (CSV 3) -- a second independent computation of the same numbers. Both
-#    draw from the same underlying `observed` table so they should always agree, but if CSV 3's computation
-#    ever changes (e.g. a different NA-handling tweak in summarise_measure), this subtitle would silently
-#    drift out of sync with the CSV rather than erroring.
+# 7. RESOLVED 2026-07-28: Figure 3's subtitle now reads n_obs/p99/pct_zero back from summary_counts (CSV 3)
+#    instead of an independent second computation from `insp` -- can no longer silently drift from the CSV.
 # 8. (pal4 vs. pal5, ~line 201 & 232) Figure 4/5's 4-color palette reuses "aqua" in a different category slot
 #    than Figure 2's 5-color palette does -- not a bug (each figure has its own self-contained legend/labels),
 #    but the same color does not mean the same category across figures 2 and 4/5.

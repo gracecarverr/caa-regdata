@@ -57,12 +57,8 @@ local({                                                    # local() so `out` do
   out <- here::here("output")                              # global env -- output/ dir, project-root-relative
   dir.create(out, showWarnings = FALSE, recursive = TRUE)  # create if absent; silent if it already exists
   writeLines(capture.output(sessionInfo()), file.path(out, "sessionInfo.txt"))  # dump R version + attached/
-})                                                          # loaded package versions to a plain-text file --
-                                                             # REVIEW(design): this OVERWRITES on every run
-                                                             # with no timestamp or run ID in the filename, so
-                                                             # it only ever reflects the *last* run's session,
-                                                             # not a per-run provenance trail (unlike MANIFEST.csv
-                                                             # in 01_download.R, which appends one row per file)
+})                                                          # loaded package versions to a plain-text file
+                                                             
 
 cat("00_setup: environment OK (", length(REQUIRED_PKGS), " packages present); session recorded to output/sessionInfo.txt\n", sep = "")
 # final confirmation line -- note the count reflects length(REQUIRED_PKGS), i.e. "all packages we checked for",

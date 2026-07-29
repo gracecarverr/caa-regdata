@@ -1,0 +1,144 @@
+panel,variable,level,n,pct
+major_synmin,STATE,TX,1226,0.0605
+major_synmin,STATE,PA,1141,0.0563
+major_synmin,STATE,IN,972,0.048
+major_synmin,STATE,CA,939,0.0463
+major_synmin,STATE,NC,834,0.0412
+major_synmin,STATE,OH,817,0.0403
+major_synmin,STATE,OK,761,0.0376
+major_synmin,STATE,VA,744,0.0367
+major_synmin,STATE,GA,743,0.0367
+major_synmin,STATE,MI,726,0.0358
+major_synmin,STATE,NY,692,0.0342
+major_synmin,STATE,KS,673,0.0332
+major_synmin,STATE,TN,673,0.0332
+major_synmin,STATE,FL,635,0.0313
+major_synmin,STATE,IA,607,0.03
+major_synmin,STATE,AL,564,0.0278
+major_synmin,STATE,IL,529,0.0261
+major_synmin,STATE,AR,515,0.0254
+major_synmin,STATE,NJ,494,0.0244
+major_synmin,STATE,WI,448,0.0221
+major_synmin,STATE,LA,447,0.0221
+major_synmin,STATE,SC,441,0.0218
+major_synmin,STATE,KY,431,0.0213
+major_synmin,STATE,CO,410,0.0202
+major_synmin,STATE,MA,376,0.0186
+major_synmin,STATE,MO,319,0.0157
+major_synmin,STATE,MN,287,0.0142
+major_synmin,STATE,MS,285,0.0141
+major_synmin,STATE,MD,250,0.0123
+major_synmin,STATE,WA,230,0.0114
+major_synmin,STATE,WV,194,0.0096
+major_synmin,STATE,NE,190,0.0094
+major_synmin,STATE,NM,170,0.0084
+major_synmin,STATE,CT,140,0.0069
+major_synmin,STATE,OR,137,0.0068
+major_synmin,STATE,AZ,135,0.0067
+major_synmin,STATE,ME,131,0.0065
+major_synmin,STATE,NH,106,0.0052
+major_synmin,STATE,ID,103,0.0051
+major_synmin,STATE,WY,95,0.0047
+major_synmin,STATE,UT,94,0.0046
+major_synmin,STATE,SD,94,0.0046
+major_synmin,STATE,DE,84,0.0041
+major_synmin,STATE,VT,80,0.0039
+major_synmin,STATE,ND,77,0.0038
+major_synmin,STATE,NV,69,0.0034
+major_synmin,STATE,MT,63,0.0031
+major_synmin,STATE,RI,53,0.0026
+major_synmin,STATE,DC,37,0.0018
+major_synmin,EPA_REGION,4,4606,0.2273
+major_synmin,EPA_REGION,5,3779,0.1865
+major_synmin,EPA_REGION,6,3118,0.1539
+major_synmin,EPA_REGION,3,2450,0.1209
+major_synmin,EPA_REGION,7,1789,0.0883
+major_synmin,EPA_REGION,2,1186,0.0585
+major_synmin,EPA_REGION,9,1144,0.0565
+major_synmin,EPA_REGION,1,886,0.0437
+major_synmin,EPA_REGION,8,833,0.0411
+major_synmin,EPA_REGION,10,470,0.0232
+major_synmin,AIR_POLLUTANT_CLASS_DESC,Major Emissions,10798,0.5329
+major_synmin,AIR_POLLUTANT_CLASS_DESC,Synthetic Minor Emissions,9463,0.4671
+major_synmin,FACILITY_TYPE,Privately owned,10056,0.7672
+major_synmin,FACILITY_TYPE,Non-government,1506,0.1149
+major_synmin,FACILITY_TYPE,Corporation,604,0.0461
+major_synmin,FACILITY_TYPE,Municipality,273,0.0208
+major_synmin,FACILITY_TYPE,Federal facility,241,0.0184
+major_synmin,FACILITY_TYPE,County government,203,0.0155
+major_synmin,FACILITY_TYPE,State facility,154,0.0117
+major_synmin,FACILITY_TYPE,District,25,0.0019
+major_synmin,FACILITY_TYPE,Municipal or water district,24,0.0018
+major_synmin,FACILITY_TYPE,Tribal government,20,0.0015
+major_synmin,FACILITY_TYPE,Mixed ownership (public/private),1,0.0001
+electric,STATE,CA,160,0.0836
+electric,STATE,TX,149,0.0779
+electric,STATE,NY,114,0.0596
+electric,STATE,KS,91,0.0476
+electric,STATE,IL,81,0.0423
+electric,STATE,PA,79,0.0413
+electric,STATE,IA,70,0.0366
+electric,STATE,FL,62,0.0324
+electric,STATE,MO,61,0.0319
+electric,STATE,MI,58,0.0303
+electric,STATE,MN,58,0.0303
+electric,STATE,OH,55,0.0288
+electric,STATE,GA,53,0.0277
+electric,STATE,VA,52,0.0272
+electric,STATE,NE,48,0.0251
+electric,STATE,WI,45,0.0235
+electric,STATE,NC,43,0.0225
+electric,STATE,IN,42,0.022
+electric,STATE,MA,41,0.0214
+electric,STATE,NJ,41,0.0214
+electric,STATE,SC,36,0.0188
+electric,STATE,CO,33,0.0173
+electric,STATE,OK,29,0.0152
+electric,STATE,KY,28,0.0146
+electric,STATE,LA,28,0.0146
+electric,STATE,AZ,27,0.0141
+electric,STATE,AL,27,0.0141
+electric,STATE,MS,25,0.0131
+electric,STATE,MD,21,0.011
+electric,STATE,NV,20,0.0105
+electric,STATE,WA,20,0.0105
+electric,STATE,AR,19,0.0099
+electric,STATE,CT,19,0.0099
+electric,STATE,NM,17,0.0089
+electric,STATE,TN,17,0.0089
+electric,STATE,WV,16,0.0084
+electric,STATE,UT,15,0.0078
+electric,STATE,SD,15,0.0078
+electric,STATE,OR,14,0.0073
+electric,STATE,WY,13,0.0068
+electric,STATE,DE,12,0.0063
+electric,STATE,NH,12,0.0063
+electric,STATE,ME,10,0.0052
+electric,STATE,MT,10,0.0052
+electric,STATE,ND,10,0.0052
+electric,STATE,ID,8,0.0042
+electric,STATE,RI,5,0.0026
+electric,STATE,VT,3,0.0016
+electric,STATE,DC,1,0.0005
+electric,EPA_REGION,5,339,0.1772
+electric,EPA_REGION,4,291,0.1521
+electric,EPA_REGION,7,270,0.1411
+electric,EPA_REGION,6,241,0.126
+electric,EPA_REGION,9,208,0.1087
+electric,EPA_REGION,3,181,0.0946
+electric,EPA_REGION,2,155,0.081
+electric,EPA_REGION,8,96,0.0502
+electric,EPA_REGION,1,90,0.047
+electric,EPA_REGION,10,42,0.022
+electric,AIR_POLLUTANT_CLASS_DESC,Major Emissions,1633,0.8536
+electric,AIR_POLLUTANT_CLASS_DESC,Synthetic Minor Emissions,280,0.1464
+electric,FACILITY_TYPE,Privately owned,883,0.7173
+electric,FACILITY_TYPE,Non-government,142,0.1154
+electric,FACILITY_TYPE,Municipality,134,0.1089
+electric,FACILITY_TYPE,Corporation,27,0.0219
+electric,FACILITY_TYPE,Federal facility,21,0.0171
+electric,FACILITY_TYPE,State facility,9,0.0073
+electric,FACILITY_TYPE,County government,7,0.0057
+electric,FACILITY_TYPE,Municipal or water district,4,0.0032
+electric,FACILITY_TYPE,Tribal government,2,0.0016
+electric,FACILITY_TYPE,District,2,0.0016

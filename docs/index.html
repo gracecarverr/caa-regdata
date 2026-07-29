@@ -1,61 +1,87 @@
-<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Home — CAA Regulatory Data</title><meta name='description' content="A reproducible EPA Clean Air Act stationary-source regulatory data pipeline: raw data, database overviews, facility-year panels, and six deliverable datasets."><style>
+<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Home — CAA Regulatory Data</title><meta name='description' content="A reproducible EPA Clean Air Act stationary-source regulatory data pipeline: raw data, database overviews, facility-year panels, and six deliverable datasets."><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=Merriweather:wght@300;700&family=Merriweather+Sans:wght@300;600;700&display=swap' rel='stylesheet'><style>
 :root{
-  --navy:#1c2b4a; --navy-dark:#12192e; --accent:#7a2530; --gold:#b5793a;
-  --bg:#f7f5f1; --ink:#1f2328; --muted:#57606a; --border:#e2ddd3;
+  --navy:#003349; --navy-dark:#001f2e; --accent:#933f71; --accent-dark:#612141;
+  --bg:#ffffff; --bg-alt:#f2f4f7; --ink:#0f131f; --text:#333333; --muted:#727f9f; --border:#e3e7f0;
 }
 *{box-sizing:border-box;}
-body{margin:0;font-family:Calibri,'Segoe UI',system-ui,sans-serif;color:var(--ink);background:var(--bg);}
+body{margin:0;font-family:'Merriweather Sans',system-ui,sans-serif;font-weight:300;color:var(--text);
+  background:var(--bg);}
 a{color:var(--accent);}
 
 .site-header{background:#fff;border-bottom:1px solid var(--border);}
 .site-header-inner{max-width:1100px;margin:0 auto;padding:.9rem 1.2rem;display:flex;align-items:center;
   justify-content:space-between;flex-wrap:wrap;gap:.5rem 1.2rem;}
-.site-brand{font-family:Georgia,'Iowan Old Style','Palatino Linotype',serif;font-weight:700;font-size:1.2rem;
+.site-brand{font-family:'Merriweather',Georgia,serif;font-weight:300;font-size:1.2rem;
   color:var(--navy);text-decoration:none;letter-spacing:.01em;}
 .site-nav{display:flex;gap:1.5rem;font-weight:600;font-size:.92rem;flex-wrap:wrap;}
 .site-nav a{color:var(--accent);text-decoration:none;padding:.15rem 0;border-bottom:2px solid transparent;}
-.site-nav a:hover{border-bottom-color:var(--accent);}
-.site-nav a.active{color:var(--navy);border-bottom-color:var(--gold);}
+.site-nav a:hover{color:var(--accent-dark);border-bottom-color:var(--accent-dark);}
+.site-nav a.active{color:var(--navy);border-bottom-color:var(--accent-dark);}
 
 .hero{background:linear-gradient(160deg,var(--navy) 0%,var(--navy-dark) 100%);color:#fff;
   padding:3rem 1.2rem 2.4rem;}
-.hero-inner{max-width:1100px;margin:0 auto;}
-.hero .eyebrow{text-transform:uppercase;letter-spacing:.13em;font-size:.76rem;color:#cba867;font-weight:700;
-  margin:0 0 .7rem;}
-.hero h1{font-family:Georgia,'Iowan Old Style','Palatino Linotype',serif;font-weight:500;font-size:2.5rem;
+.hero-photo{background-size:cover;background-position:center 30%;padding:5rem 1.2rem 3.2rem;}
+.hero-inner{max-width:1100px;margin:0 auto;position:relative;}
+.hero .eyebrow{text-transform:uppercase;letter-spacing:.13em;font-size:.76rem;color:rgba(255,255,255,.66);
+  font-weight:700;margin:0 0 .7rem;}
+.hero h1{font-family:'Merriweather',Georgia,serif;font-weight:300;font-size:2.5rem;
   line-height:1.18;margin:0 0 .7rem;}
 .hero p{font-size:1.05rem;max-width:760px;color:#dde1ec;margin:0;line-height:1.55;}
+.hero .photo-credit{font-size:.7rem;color:rgba(255,255,255,.55);max-width:none;margin:1.6rem 0 0;
+  font-style:italic;}
 
 main{max-width:1100px;margin:0 auto;padding:2.4rem 1.2rem 3rem;}
 
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1.1rem;margin:1.6rem 0 2.4rem;}
 .card{border:1px solid var(--border);border-top:3px solid var(--navy);background:#fff;padding:1.2rem 1.3rem;}
-.card h3{font-family:Georgia,'Iowan Old Style',serif;margin:.1rem 0 .4rem;font-size:1.15rem;color:var(--navy);}
+.card h3{font-family:'Merriweather',Georgia,serif;font-weight:300;margin:.1rem 0 .4rem;font-size:1.15rem;
+  color:var(--navy);}
 .card p{font-size:.92rem;color:var(--muted);margin:0 0 .8rem;line-height:1.45;}
 .card a{color:var(--accent);font-weight:600;font-size:.88rem;text-decoration:none;}
-.card a:hover{text-decoration:underline;}
+.card a:hover{color:var(--accent-dark);text-decoration:underline;}
 
-.prose h2{font-family:Georgia,'Iowan Old Style',serif;color:var(--navy);border-top:1px solid var(--border);
-  padding-top:1.6rem;margin-top:2.4rem;font-size:1.5rem;text-align:left;}
+.prose h2{font-family:'Merriweather',Georgia,serif;font-weight:300;color:var(--navy);
+  border-top:1px solid var(--border);padding-top:1.6rem;margin-top:2.4rem;font-size:1.5rem;text-align:left;}
 .prose h2:first-child{border-top:none;padding-top:0;margin-top:0;}
-.prose h3{font-family:Georgia,'Iowan Old Style',serif;color:var(--navy);margin-top:1.7rem;font-size:1.18rem;}
+.prose h3{font-family:'Merriweather',Georgia,serif;font-weight:300;color:var(--navy);margin-top:1.7rem;
+  font-size:1.18rem;}
 .prose p,.prose li{line-height:1.62;}
-.prose blockquote{border-left:3px solid var(--gold);margin:1.1rem 0;padding:.35rem 1.1rem;color:var(--muted);
-  background:#fbf8f2;}
+.prose blockquote{border-left:3px solid var(--accent);margin:1.1rem 0;padding:.35rem 1.1rem;color:var(--muted);
+  background:var(--bg-alt);}
 .prose table{border-collapse:collapse;width:100%;margin:1rem 0;font-size:.92em;}
 .prose th,.prose td{border:1px solid var(--border);padding:.5rem .7rem;text-align:left;vertical-align:top;}
-.prose th{background:#eef0f4;}
-.prose code{font-family:ui-monospace,Menlo,monospace;background:#eef0f4;padding:.05rem .3rem;font-size:.9em;}
+.prose th{background:var(--bg-alt);}
+.prose code{font-family:ui-monospace,Menlo,monospace;background:var(--bg-alt);padding:.05rem .3rem;font-size:.9em;}
 
-.section-note{background:#fbf8f2;border:1px solid var(--border);border-left:3px solid var(--gold);
+/* ---- doc-nav (Home's institutional-overview sections, Raw Data's per-source sections): docs-site-style
+   sidebar + content pane. One title list on the left (sticky), one pane visible at a time on the right.
+   Needs doc_nav_script (below) to switch panes and support #hash deep-linking -- everything else on this
+   site is plain HTML/CSS with no JS, but a click-to-switch sidebar has no static-HTML equivalent. ------- */
+.doc-nav{display:flex;gap:2.2rem;align-items:flex-start;margin-top:.4rem;}
+.doc-sidebar{flex:0 0 230px;display:flex;flex-direction:column;gap:.1rem;position:sticky;top:1rem;
+  border-right:1px solid var(--border);padding-right:1.1rem;}
+.doc-sidebar-link{display:block;padding:.6rem .7rem;color:var(--text);text-decoration:none;font-size:.93rem;
+  border-left:3px solid transparent;transition:background-color .15s ease,color .15s ease,border-color .15s ease;}
+.doc-sidebar-link:hover{background:var(--bg-alt);color:var(--navy);}
+.doc-sidebar-link.active{background:var(--bg-alt);color:var(--accent);border-left-color:var(--accent);font-weight:600;}
+.doc-content{flex:1;min-width:0;overflow-x:auto;}
+@media (max-width:820px){
+  .doc-nav{flex-direction:column;gap:0;}
+  .doc-sidebar{flex:none;position:static;top:auto;flex-direction:row;flex-wrap:wrap;gap:.3rem;
+    border-right:none;border-bottom:1px solid var(--border);padding:0 0 .8rem;margin-bottom:1rem;}
+  .doc-sidebar-link{border-left:none;border-bottom:3px solid transparent;padding:.4rem .6rem;}
+  .doc-sidebar-link.active{border-left-color:transparent;border-bottom-color:var(--accent);}
+}
+
+.section-note{background:var(--bg-alt);border:1px solid var(--border);border-left:3px solid var(--accent);
   padding:.9rem 1.1rem;margin:1.4rem 0;font-size:.92em;line-height:1.55;}
 
 .stat-table{border-collapse:collapse;width:100%;margin:.6rem 0 .5rem;font-size:.9em;}
 .stat-table th,.stat-table td{border:1px solid var(--border);padding:.45rem .7rem;text-align:right;}
 .stat-table th{background:var(--navy);color:#fff;font-weight:600;text-align:right;}
 .stat-table td:first-child,.stat-table th:first-child{text-align:left;}
-.stat-table caption{caption-side:top;text-align:left;font-weight:700;color:var(--navy);
-  font-family:Georgia,'Iowan Old Style',serif;font-size:1.15rem;margin:2rem 0 .4rem;}
+.stat-table caption{caption-side:top;text-align:left;font-weight:300;color:var(--navy);
+  font-family:'Merriweather',Georgia,serif;font-size:1.15rem;margin:2rem 0 .4rem;}
 .stat-table caption:first-of-type{margin-top:.4rem;}
 .table-note{font-size:.85em;color:var(--muted);margin:-.1rem 0 1.8rem;line-height:1.5;}
 
@@ -63,24 +89,19 @@ main{max-width:1100px;margin:0 auto;padding:2.4rem 1.2rem 3rem;}
   color:var(--muted);font-size:.82rem;}
 .site-footer code{font-family:ui-monospace,Menlo,monospace;background:#eef0f4;padding:.1rem .35rem;}
 
-/* ---- raw-data page: scoped table styling (unchanged rules from the original docs/index.html) -------- */
-.raw-data h1{text-align:center;margin-bottom:.2rem;font-family:Georgia,'Iowan Old Style',serif;}
-.raw-data .lead{text-align:center;color:var(--muted);margin-top:0;}
-.raw-data .section-toc{display:flex;flex-wrap:wrap;gap:.4rem .9rem;justify-content:center;margin:1.4rem 0 2rem;
-  font-weight:bold;}
-.raw-data .section-toc a{color:#0969da;text-decoration:none;}
-.raw-data .section-toc a:hover{text-decoration:underline;}
-.raw-data section{margin:2.6rem 0;padding-top:1rem;border-top:1px solid var(--border);overflow-x:auto;}
-.raw-data h2{margin-bottom:.1rem;text-align:center;font-family:Georgia,'Iowan Old Style',serif;color:var(--navy);}
-.raw-data .src{text-align:center;color:#8a8f98;font-size:.85em;margin:.1rem 0;font-family:ui-monospace,Menlo,monospace;}
-.raw-data .desc{text-align:center;margin:.4rem auto .6rem;max-width:860px;}
-.raw-data .obs{text-align:center;font-weight:bold;margin:.3rem 0;}
-.raw-data .inv{text-align:center;color:var(--muted);font-size:.84em;margin:.2rem auto 1rem;max-width:920px;}
+/* ---- raw-data page: scoped table styling -------------------------------------------------------------- */
+.raw-data h2{margin:0 0 .3rem;font-family:'Merriweather',Georgia,serif;font-weight:300;color:var(--navy);
+  font-size:1.5rem;}
+.raw-data .src{color:var(--muted);font-size:.85em;margin:.1rem 0;font-family:ui-monospace,Menlo,monospace;}
+.raw-data .desc{margin:.4rem 0 .6rem;max-width:860px;}
+.raw-data .obs{font-weight:bold;margin:.3rem 0;}
+.raw-data .inv{color:var(--muted);font-size:.84em;margin:.2rem 0 1rem;max-width:920px;}
 .raw-data table{border-collapse:collapse;width:100%;margin:.5rem 0 1rem;font-size:.9em;}
-.raw-data th,.raw-data td{border:1px solid #9aa0a6;padding:5px 8px;text-align:center;vertical-align:middle;}
-.raw-data td.l{text-align:left;} .raw-data .var{text-align:left;}
+.raw-data th{text-align:left;border:1px solid var(--border);padding:5px 8px;vertical-align:middle;}
+.raw-data td{text-align:right;border:1px solid var(--border);padding:5px 8px;vertical-align:middle;}
+.raw-data td.l,.raw-data .var{text-align:left;}
 .raw-data .vd{font-weight:normal;color:var(--muted);font-size:.92em;}
-.raw-data table.cat th{background:#C6EFCE;} .raw-data table.num th{background:#F4B084;}
+.raw-data table.cat th{background:var(--navy);color:#fff;} .raw-data table.num th{background:var(--accent);color:#fff;}
 .raw-data .note{font-size:.86em;color:#3d444d;margin:.35rem 0;line-height:1.4;}
 .raw-data .dupes{font-size:.9em;margin:1rem 0 .3rem;line-height:1.4;}
 
@@ -89,15 +110,13 @@ main{max-width:1100px;margin:0 auto;padding:2.4rem 1.2rem 3rem;}
   .site-header-inner{flex-direction:column;align-items:flex-start;}
   .site-nav{gap:.9rem;font-size:.85rem;}
 }
-</style></head><body><header class='site-header'><div class='site-header-inner'><a class='site-brand' href='index.html'>CAA Regulatory Data</a><nav class='site-nav'><a href='index.html' class='active'>Home</a><a href='raw_data.html'>Raw Data</a><a href='databases.html'>Databases</a><a href='panels.html'>Panels</a></nav></div></header><div class='hero'><div class='hero-inner'><p class='eyebrow'>Clean Air Act · Stationary Sources</p><h1>CAA Regulatory Data Infrastructure</h1><p>A reproducible pipeline of EPA enforcement, compliance, and permitting data on stationary sources of air pollution under the Clean Air Act — built for empirical research on regulation and compliance.</p></div></div><main><div class='cards'><div class='card'><h3>Raw Data</h3><p>Per-source summary tables for all 15 raw ICIS-Air, AFS, and emissions files — variable coverage, frequent values, and missingness, computed directly from the raw downloads.</p><a href='raw_data.html'>View →</a></div><div class='card'><h3>Databases</h3><p>What each database contains, what's missing, and how the files join — ICIS-Air, AFS, the combined emissions dataset, and the compliance-and-enforcement pipeline.</p><a href='databases.html'>View →</a></div><div class='card'><h3>Panels</h3><p>Facility × year panels built for empirical work: construction decisions, coverage, and summary statistics across the Universe, Major/Synthetic Minor, and Electric panels.</p><a href='panels.html'>View →</a></div></div><div class='prose'><h2>General Information</h2>
-<p>Comprehensive federal law that regulates air emissions from stationary and mobile sources. Authorizes the EPA to establish National Ambient Air Quality Standards (NAAQS).</p>
+</style></head><body><header class='site-header'><div class='site-header-inner'><a class='site-brand' href='index.html'>CAA Regulatory Data</a><nav class='site-nav'><a href='index.html' class='active'>Home</a><a href='raw_data.html'>Raw Data</a><a href='databases.html'>Databases</a><a href='panels.html'>Panels</a></nav></div></header><div class='hero hero-photo' style="background-image:linear-gradient(160deg,rgba(0,51,73,.88) 0%,rgba(0,31,46,.92) 100%),url('images/hero-smokestack.jpg')"><div class='hero-inner'><p class='eyebrow'>Clean Air Act · Stationary Sources</p><h1>CAA Regulatory Data Infrastructure</h1><p>A reproducible pipeline of U.S. Environmental Protection Agency (EPA) enforcement, compliance, and permitting data on stationary sources of air pollution under the Clean Air Act — built for empirical research on regulation and compliance.</p><p class='photo-credit'>Photo: John Messina, March 1973 — EPA Documerica Project / U.S. National Archives. Public domain.</p></div></div><main><div class='cards'><div class='card'><h3>Raw Data</h3><p>Per-source summary tables for all 16 raw ICIS-Air, AFS, and emissions files — variable coverage, frequent values, and missingness, computed directly from the raw downloads.</p><a href='raw_data.html'>View →</a></div><div class='card'><h3>Databases</h3><p>What each database contains, what's missing, and how the files join — ICIS-Air, AFS, the combined emissions dataset, and the compliance-and-enforcement pipeline.</p><a href='databases.html'>View →</a></div><div class='card'><h3>Panels</h3><p>Two continuous facility × year panels built for empirical work on enforcement and compliance, 2015–2025: construction decisions, coverage, and summary statistics.</p><a href='panels.html'>View →</a></div></div><div class='prose'><div class='doc-nav'><nav class='doc-sidebar'><a href='#general-information' class='doc-sidebar-link' data-target='general-information'>General Information</a><a href='#naaqs' class='doc-sidebar-link' data-target='naaqs'>NAAQS</a><a href='#state-implementation-plans-sips' class='doc-sidebar-link' data-target='state-implementation-plans-sips'>State Implementation Plans (SIPs)</a><a href='#stationary-source-programs' class='doc-sidebar-link' data-target='stationary-source-programs'>Stationary Source Programs</a><a href='#psd-and-nsr' class='doc-sidebar-link' data-target='psd-and-nsr'>PSD and NSR</a><a href='#title-v-operating-permits-compliance-backbone' class='doc-sidebar-link' data-target='title-v-operating-permits-compliance-backbone'>Title V: Operating Permits (compliance backbone)</a><a href='#layers-of-caa-regulation' class='doc-sidebar-link' data-target='layers-of-caa-regulation'>Layers of CAA Regulation</a><a href='#facility-classification' class='doc-sidebar-link' data-target='facility-classification'>Facility Classification</a><a href='#the-enforcement-process' class='doc-sidebar-link' data-target='the-enforcement-process'>The Enforcement Process</a></nav><div class='doc-content'><div class='doc-pane' id='general-information'><h2>General Information</h2><p>Comprehensive federal law that regulates air emissions from stationary and mobile sources. Authorizes the EPA to establish National Ambient Air Quality Standards (NAAQS).</p>
 <ul>
 <li>First passed in 1963, but the operative version was created by the 1970 amendments (same year EPA was established). Substantial expansions in 1977 and 1990.</li>
 <li>Cooperative federalism: the federal EPA sets standards, and the states do most of the implementation and enforcement, subject to federal approval/backstop.</li>
 <li>Distinguishes between mobile sources (cars, trucks, planes) and stationary sources (power plants, factories, refineries).</li>
 </ul>
-<h2>NAAQS</h2>
-<p>Foundation of the CAA. Set under section 108, EPA designates a set of &quot;criteria pollutants&quot; (currently ozone, particulate matter (PM2.5 and PM10), sulfur dioxide, nitrogen dioxide, carbon monoxide, and lead). Under section 109, NAAQS are set for each.</p>
+</div><div class='doc-pane' id='naaqs'><h2>NAAQS</h2><p>The National Ambient Air Quality Standards (NAAQS) are the foundation of the CAA. Set under section 108, EPA designates a set of &quot;criteria pollutants&quot; (currently ozone, particulate matter (PM2.5 and PM10), sulfur dioxide, nitrogen dioxide, carbon monoxide, and lead). Under section 109, NAAQS are set for each.</p>
 <ul>
 <li>Primary standards: protect public health. Secondary standards: protect welfare (crops, visibility, materials).</li>
 <li>NAAQS are about ambient air quality in a geographic area, not about any individual stack.</li>
@@ -108,13 +127,11 @@ main{max-width:1100px;margin:0 auto;padding:2.4rem 1.2rem 3rem;}
 </ul>
 </li>
 </ul>
-<h2>State Implementation Plans (SIPs)</h2>
-<p>Section 110. Each state writes a plan showing how it will achieve and maintain the NAAQS.</p>
+</div><div class='doc-pane' id='state-implementation-plans-sips'><h2>State Implementation Plans (SIPs)</h2><p>Section 110. Each state writes a plan showing how it will achieve and maintain the National Ambient Air Quality Standards (NAAQS).</p>
 <ul>
 <li>If a state fails to produce an adequate plan, EPA can impose a Federal Implementation Plan.</li>
 </ul>
-<h2>Stationary Source Programs</h2>
-<p>Stationary-source regulation runs on: standard-setting programs that say how clean a source must be (NSPS, NESHAP/MACT, SIP limits), and permitting programs that bind those standards onto a specific facility and make them federally enforceable (NSR/PSD at construction, Title V during operation).</p>
+</div><div class='doc-pane' id='stationary-source-programs'><h2>Stationary Source Programs</h2><p>Stationary-source regulation runs on: standard-setting programs that say how clean a source must be (NSPS, NESHAP/MACT, SIP limits), and permitting programs that bind those standards onto a specific facility and make them federally enforceable (NSR/PSD at construction, Title V during operation).</p>
 <ul>
 <li>
 <p>Section 111: New Source Performance Standards (NSPS). Technology-based, nationally uniform emissions standards set by source category (power plants, cement kilns, etc).</p>
@@ -151,8 +168,7 @@ major sources and certain area sources.</p>
 </ul>
 </li>
 </ul>
-<h2>PSD and NSR</h2>
-<p>Preconstruction (New Source Review Permitting). Permitting half of the new source track. NSR splits geographically by attainment status:</p>
+</div><div class='doc-pane' id='psd-and-nsr'><h2>PSD and NSR</h2><p>Preconstruction permitting (New Source Review, NSR). Permitting half of the new source track. NSR splits geographically by attainment status:</p>
 <ul>
 <li>PSD (Prevention of Significant Deterioration): applies in attainment/unclassifiable areas. New or modified major sources must install Best Available Control Technology (BACT) and show their emissions won't deteriorate air quality beyond allowed increments. Major-source thresholds here are 100 tons/year for 28 source categories and 250 tons/year otherwise.</li>
 <li>Nonattainment NSR (NNSR) applies in nonattainment areas and is stricter: new/modified major sources must meet the Lowest Achievable Emissions Rate (LAER) and obtain emission offsets from existing sources, so net area emissions do not rise.
@@ -161,8 +177,7 @@ major sources and certain area sources.</p>
 </ul>
 </li>
 </ul>
-<h2>Title V: Operating Permits (compliance backbone)</h2>
-<ul>
+</div><div class='doc-pane' id='title-v-operating-permits-compliance-backbone'><h2>Title V: Operating Permits (compliance backbone)</h2><ul>
 <li>Title V does not set new emission limits, but it consolidates all of a major source's existing obligations (NSPS, NESHAP/MACT, SIP, NSR/PSD terms) into one enforceable operating permit.
 <ul>
 <li>Threshold: 100 tons per year potential-to-emit of a regulated pollutant, lower in nonattainment areas and for HAPs.</li>
@@ -171,8 +186,7 @@ major sources and certain area sources.</p>
 <li>Required annual compliance certification: source attests to its own compliance.</li>
 <li>Failure to apply for a Title V permit or failure to submit the annual compliance certification is itself a federally reportable violation.</li>
 </ul>
-<h2>Layers of CAA Regulation</h2>
-<h3>Layer 1: Two Logics of CAA Regulation</h3>
+</div><div class='doc-pane' id='layers-of-caa-regulation'><h2>Layers of CAA Regulation</h2><h3>Layer 1: Two Logics of CAA Regulation</h3>
 <ol>
 <li>Ambient-based (NAAQS -&gt; SIPS). &quot;The air in this area must be clean.&quot; EPA sets the standard, states figure out how to meet it. The SIP is the vehicle. Geographically driven, the same factory faces different requirements depending on whether it is located in an attainment or nonattainment area.</li>
 <li>Source-based (technology standards). &quot;This type of facility must control emissions this much.&quot; Doesn't matter where you are; if you are a cement plant, you meet the cement standard. NSPS, NESHAP/MACT, and the preconstruction permits (PSD/NSR) all work this way.</li>
@@ -190,7 +204,7 @@ major sources and certain area sources.</p>
 </li>
 <li>Once it's operating: what ongoing standards apply?
 <ul>
-<li>SIPS: applies to essentially everyone. The state's plan for meeting NAAQS. Federally enforceable.
+<li>SIPs (State Implementation Plans): applies to essentially everyone. The state's plan for meeting the National Ambient Air Quality Standards (NAAQS). Federally enforceable.
 <ul>
 <li>The state figures out which facilities need to do what (might set emission limits on specific plants, require certain control technologies, monitoring requirements). Different facilities in the same state can face very different SIP obligations depending on their size, industry, and location.</li>
 </ul>
@@ -217,8 +231,7 @@ major sources and certain area sources.</p>
 </ul>
 </li>
 </ul>
-<h2>Facility Classification</h2>
-<h3>What the Classifications Mean</h3>
+</div><div class='doc-pane' id='facility-classification'><h2>Facility Classification</h2><h3>What the Classifications Mean</h3>
 <p>Some basic terms:</p>
 <ul>
 <li>SIC (Standard Industrial Classification): older system (1930s-1990s). 4-digit codes (e.g. 2911 is petroleum refining, 4911 is electric services).</li>
@@ -231,22 +244,22 @@ major sources and certain area sources.</p>
 <p><strong>Major source.</strong> A facility whose actual or potential emissions exceed the threshold for at least one pollutant. Potential is key, it means what the facility could emit if it ran at full capacity, 24/7, 365 days per year, with no controls.</p>
 <p>The threshold depends on the program:</p>
 <ul>
-<li>SIP/Title V (criteria pollutants): 100 tons/year of any single criteria pollutant in attainment areas. In nonattainment areas, the threshold drops to 50, 25, or even 10 tons/year depending on how badly the area misses the NAAQS.</li>
-<li>HAPs (Section 112): 10 tons/year of any single HAP or 25 tons/year of all HAPs combined.</li>
-<li>PSD: 100 tons/year for sources in 28 listed industrial categories, 250 tons/year for everything else.</li>
+<li>SIP (State Implementation Plan) / Title V (criteria pollutants): 100 tons/year of any single criteria pollutant in attainment areas. In nonattainment areas, the threshold drops to 50, 25, or even 10 tons/year depending on how badly the area misses the National Ambient Air Quality Standards (NAAQS).</li>
+<li>HAPs (hazardous air pollutants, Section 112): 10 tons/year of any single HAP or 25 tons/year of all HAPs combined.</li>
+<li>PSD (Prevention of Significant Deterioration): 100 tons/year for sources in 28 listed industrial categories, 250 tons/year for everything else.</li>
 <li>Acid Rain: specific to electric utilities based on capacity and fuel type.</li>
 </ul>
 <p>A facility can be major under one program's threshold and not another. Facility-level classification reflects the highest classification across all applicable programs and pollutants.</p>
 <p>What being major means:</p>
 <ul>
 <li>Subject to Title V permitting, must hold a comprehensive operating permit, pay permit fees, and submit annual compliance certifications</li>
-<li>Higher inspection priority, EPA policy targets FCEs every 2 years for major sources</li>
+<li>Higher inspection priority, EPA policy targets FCEs (Full Compliance Evaluations) every 2 years for major sources</li>
 <li>More likely to trigger PSD/NSR review for modifications</li>
 <li>More extensive monitoring, recordkeeping, and reporting requirements</li>
 <li>More likely to face formal enforcement if violations are found</li>
 <li>Subject to MACT standards for applicable HAP categories</li>
 </ul>
-<p><strong>Synthetic Minor.</strong> A facility whose uncontrolled potential emissions would exceed the major source threshold, but which has accepted legally binding, federally enforceable limits on its operations or emissions that keep it below the threshold. The facility voluntarily constrains itself (through a FESOP or an SIP permit with enforceable conditions) in exchange for a lighter regulatory treatment.</p>
+<p><strong>Synthetic Minor.</strong> A facility whose uncontrolled potential emissions would exceed the major source threshold, but which has accepted legally binding, federally enforceable limits on its operations or emissions that keep it below the threshold. The facility voluntarily constrains itself (through a FESOP — Federally Enforceable State Operating Permit — or an SIP permit with enforceable conditions) in exchange for a lighter regulatory treatment.</p>
 <ul>
 <li>This is a deliberate regulatory choice by the facility. Limits might cap production hours, restrict fuel types, require specific control equipment, or directly cap emission rates.</li>
 <li>Limits must be federally enforceable, not just a promise, but a binding permit condition that EPA or state can act on.</li>
@@ -272,8 +285,7 @@ major sources and certain area sources.</p>
 </ul>
 <p>&quot;AIR_POLLUTANT_CLASSIFICATION_CODE&quot; in Facilities table gives facility-level &quot;worst case.&quot; In the Pollutants table, the same field is the pollutant-specific classification. In AFS, the equivalent is &quot;EPA_CLASSIFICATION_CODE.&quot; A1 (actual or potential controlled &gt;100 tons/year), A2 (actual &lt;100, potential &gt;100), B (potential uncontrolled &lt;100), SM (synthetic minor).</p>
 <p>Classifications dependent on potential to emit are interesting.</p>
-<h2>The Enforcement Process</h2>
-<h3>Who Enforces?</h3>
+</div><div class='doc-pane' id='the-enforcement-process'><h2>The Enforcement Process</h2><h3>Who Enforces?</h3>
 <p>States do most enforcement. When the EPA &quot;delegates&quot; a program to a state, the state takes the primary responsibility for permitting, inspecting, and enforcing the program. EPA retains oversight and backstop authority (it can step in if the state isn't doing its job).</p>
 <ul>
 <li>In the data, this is the &quot;STATE_EPA_FLAG.&quot;</li>
@@ -320,4 +332,25 @@ major sources and certain area sources.</p>
 <p>This is the Formal Actions Table.</p>
 <p><strong>Step 5: Resolution.</strong> The violation is resolved, the facility returns to compliance, pays the penalty, and implements the required controls. The &quot;HPV_RESOLVED_DATE&quot; marks this.</p>
 <p>Most compliance happens through the threat of enforcement, not enforcement itself. Idea of 'marginal deterrence,' where the regulator underpenalizes small violations to create strong marginal incentives to avoid large violations.</p>
-</div></main><footer class='site-footer'><p>Generated by <code>code/diagnostics/build_home.R</code> — part of the <a href='https://github.com/gracecarverr/caa-regdata'>caa-regdata</a> reproducible pipeline.</p></footer></body></html>
+</div></div></div></div></main><footer class='site-footer'><p>Automatically generated from the underlying data — no figures are hand-entered. Part of the <a href='https://github.com/gracecarverr/caa-regdata'>caa-regdata</a> reproducible pipeline.</p></footer><script>
+(function(){
+  document.querySelectorAll('.doc-nav').forEach(function(nav){
+    var links = nav.querySelectorAll('.doc-sidebar-link');
+    var panes = nav.querySelectorAll('.doc-pane');
+    function show(id){
+      links.forEach(function(l){ l.classList.toggle('active', l.dataset.target === id); });
+      panes.forEach(function(p){ p.hidden = (p.id !== id); });
+    }
+    links.forEach(function(l){
+      l.addEventListener('click', function(e){
+        e.preventDefault();
+        history.replaceState(null, '', '#' + l.dataset.target);
+        show(l.dataset.target);
+      });
+    });
+    var initial = (location.hash || '').slice(1);
+    if (!initial || !nav.querySelector("[id='" + initial + "']")) initial = links.length ? links[0].dataset.target : null;
+    if (initial) show(initial);
+  });
+})();
+</script></body></html>

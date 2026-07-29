@@ -12,9 +12,10 @@
 #        viol_to_ea_lag_distribution}.png
 #
 #   DISCIPLINE: pipeline.csv.gz (dataset 6) mirrors ds 0's zero-vs-NA gate (PL3) -- NA is unknown, never a
-#   false 0; every rate below reports the NA share. The row-level source excludes the 7,193 EPA-generated
-#   placeholder rows (PL1, no VIOL_START_DATE) exactly as 07_pipeline.R does. No numbers are hand-entered;
-#   every cell is computed here. Hand-run (not part of RUN_ALL.R). No stochastic step.
+#   false 0; every rate below reports the NA share. The row-level source excludes EPA-generated placeholder
+#   rows (PL1, no VIOL_START_DATE) exactly as 07_pipeline.R does; the exact count is computed fresh every run
+#   (see overview_raw.csv) rather than quoted here, since it moves with each ICIS-AIR snapshot refresh. No
+#   numbers are hand-entered; every cell is computed here. Hand-run (not part of RUN_ALL.R). No stochastic step.
 #
 #   FIGURE DESIGN: same print-ready convention as 13_regulatory_profile.R / 14_hpv_profile.R (dataviz skill,
 #   validated categorical palette, direct end-of-line labels in place of a legend, 300dpi).
@@ -48,16 +49,8 @@ real <- raw[!is.na(viol_year) & viol_year %in% YEARS]   # drop placeholders (PL1
 
 # ---- CSV 1: overview + VIOL_TYPE breakdown ----------------------------------------------------------------
 overview_raw <- data.table(n_rows_raw = nrow(raw), n_placeholder = raw[is.na(viol_year), .N],   # n_rows_raw: every row incl. placeholders + out-of-window; n_placeholder: rows with no parseable VIOL_START_DATE
+                           n_out_of_window = raw[!is.na(viol_year) & !(viol_year %in% YEARS), .N],  # rows with a parseable date outside 2005-2025 -- previously only recoverable by subtraction
                            n_real_in_window = nrow(real), n_facilities = uniqueN(real$SOURCE_ID))  # n_real_in_window: rows passing BOTH filters; n_facilities: distinct SOURCE_ID among them
-# FLAG: n_placeholder here counts only rows with no parseable VIOL_START_DATE (is.na(viol_year)); the
-# additional rows dropped for being outside the 2005-2025 window (viol_year %in% YEARS) are NOT broken out
-# anywhere -- their count is only recoverable as n_rows_raw - n_placeholder - n_real_in_window, not labeled.
-# Also: recomputing n_placeholder against the current data/processed/pipeline.csv.gz gives 7,218 (of 66,723
-# raw rows), not the "7,193 (of 66,655)" figure quoted in this script's own header and in 07_pipeline.R's
-# header -- the row-level source has been refreshed (2026-07-27 ICIS-AIR snapshot, per git history) since
-# those header figures were written. This script computes its own count fresh every run (no hand-entry), so
-# overview_raw.csv itself is correct; the stale prose count is a docs-drift risk for a reader cross-checking
-# the printed CSV against the header.
 fwrite(overview_raw, file.path(OUT, "overview_raw.csv"))  # write row-level overview
 
 # ---- PL2 check: does SORT_DATE = coalesce(eval_date, viol_date, ea_date)? -----------------------------------
@@ -70,14 +63,10 @@ fwrite(overview_raw, file.path(OUT, "overview_raw.csv"))  # write row-level over
 # only on "real" violations would be looking at a different (smaller) universe than what was actually tested.
 sort_nonblank <- raw[!is.na(sort_date)]                  # all rows (real + placeholder) with a non-blank SORT_DATE
 sort_expected <- fcoalesce(sort_nonblank$eval_date, sort_nonblank$viol_date, sort_nonblank$ea_date)  # first non-NA of eval_date, viol_date, ea_date, in that priority order, row by row
+n_no_coalesce_source <- sum(is.na(sort_expected))  # canary: rows with a non-blank SORT_DATE but eval_date/viol_date/ea_date ALL NA -- these have nothing to compare against, so na.rm=TRUE below would silently exclude them from n_exceptions rather than count or report them; printed every run instead of just asserted in a comment
+cat(sprintf("  [canary] PL2 check: %d of %d non-blank-SORT_DATE rows have no coalesce source to compare against\n", n_no_coalesce_source, nrow(sort_nonblank)))
 pl2_check <- data.table(n_nonblank_sort_date = nrow(sort_nonblank),   # size of the checked scope defined above
-                        # FLAG: na.rm = TRUE below silently excludes rows where sort_expected is itself NA --
-                        # i.e. SORT_DATE is non-blank but eval_date, viol_date, AND ea_date are ALL NA, so
-                        # there is nothing to compare SORT_DATE against. Such rows are neither counted as
-                        # exceptions nor reported separately; if any existed they would inflate confidence in
-                        # "0 exceptions" without being visible. Verified against the current snapshot: 0 such
-                        # rows today (all 66,699 non-blank-SORT_DATE rows have at least one coalesce source),
-                        # so this is a latent edge case, not an active one.
+                        n_no_coalesce_source = n_no_coalesce_source,   # see canary above -- reported explicitly rather than only recoverable via na.rm
                         n_exceptions = sum(sort_nonblank$sort_date != sort_expected, na.rm = TRUE))  # count of rows where observed SORT_DATE disagrees with the coalesce prediction
 fwrite(pl2_check, file.path(OUT, "pl2_sort_date_check.csv"))  # write the PL2 check result
 
@@ -105,30 +94,30 @@ ea_type_freq[, pct := round(N / sum(N), 4)]                # each type's share o
 fwrite(ea_type_freq, file.path(OUT, "ea_type_frequency.csv"))  # write EA_TYPE frequencies
 
 # ---- CSV 5: eval->violation lag (days), only rows with both dates and a non-negative lag -------------------
-# FLAG: the viol_date >= eval_date guard below recodes any row where the violation is dated BEFORE its own
-# linked evaluation to NA -- silently dropped from the lag distribution, not counted as a negative lag or
-# reported separately. This matches 07_pipeline.R's own eval_to_viol_lag convention exactly (same guard), but
-# it is a real exclusion: on the current snapshot, ~1,487 of ~23,018 EVAL_FLAG=="Y" rows with a parseable
-# eval_date have viol_date < eval_date (~6.5%) and are dropped this way. eval_to_viol_lag_days.csv below
-# reports only survivors (n = count that passed the guard); the exclusion count itself is nowhere in the output.
+# NOTE: the viol_date >= eval_date guard below recodes any row where the violation is dated BEFORE its own
+# linked evaluation to NA -- dropped from the lag distribution, not counted as a negative lag. This matches
+# 07_pipeline.R's own eval_to_viol_lag convention exactly (same guard); n_excluded_bad_order below reports
+# the drop explicitly instead of leaving it recoverable only by comparing against EVAL_FLAG=="Y" counts elsewhere.
 real[, eval_to_viol_lag := fifelse(EVAL_FLAG == "Y" & !is.na(eval_date) & viol_date >= eval_date,   # lag only defined where EVAL_FLAG=="Y", eval_date known, and the violation isn't dated before the eval
                                    as.integer(viol_date - eval_date), NA_integer_)]                  # integer day count when the guard holds, else NA
 etv <- real[!is.na(eval_to_viol_lag), eval_to_viol_lag]    # vector of valid (non-NA) eval->violation lags
-eval_to_viol_lag_summary <- data.table(n = length(etv), min = min(etv), p25 = quantile(etv, .25),   # n (survivors), min, 25th pctile...
+n_etv_eligible <- real[EVAL_FLAG == "Y" & !is.na(eval_date), .N]  # rows with EVAL_FLAG=="Y" and a parseable eval_date -- the population the bad-order guard is applied to
+eval_to_viol_lag_summary <- data.table(n = length(etv), n_excluded_bad_order = n_etv_eligible - length(etv),  # n (survivors); n_excluded_bad_order = eligible rows dropped for viol_date < eval_date
+                                       min = min(etv), p25 = quantile(etv, .25),   # min, 25th pctile...
                                        median = median(etv), p75 = quantile(etv, .75), p90 = quantile(etv, .90),  # ...median, 75th and 90th pctiles...
                                        max = max(etv), mean = round(mean(etv), 1))                   # ...max, and mean (rounded to 1 decimal)
 fwrite(eval_to_viol_lag_summary, file.path(OUT, "eval_to_viol_lag_days.csv"))  # write eval->violation lag summary
 
 # ---- CSV 6: violation->enforcement lag (days), only rows with both dates and a non-negative lag ------------
-# FLAG: same silent-exclusion pattern as eval_to_viol_lag above, mirroring 07_pipeline.R's viol_to_ea_lag
-# guard -- rows where the enforcement action predates the violation (ea_date < viol_date) are recoded NA and
-# dropped from every stat below. On the current snapshot ~3,192 of ~40,113 EA_FLAG=="Y" rows with a parseable
-# ea_date (~8%) are excluded this way; this feeds directly into FIGURE 3's histogram and the "n = ..." count
-# in its subtitle, and the exclusion count is not reported anywhere in the output.
+# NOTE: same exclusion pattern as eval_to_viol_lag above, mirroring 07_pipeline.R's viol_to_ea_lag guard --
+# rows where the enforcement action predates the violation (ea_date < viol_date) are recoded NA and dropped
+# from every stat below and from FIGURE 3; n_excluded_bad_order reports the drop explicitly.
 real[, viol_to_ea_lag := fifelse(EA_FLAG == "Y" & !is.na(ea_date) & ea_date >= viol_date,   # lag only defined where EA_FLAG=="Y", ea_date known, and the EA isn't dated before the violation
                                  as.integer(ea_date - viol_date), NA_integer_)]              # integer day count when the guard holds, else NA
 vte <- real[!is.na(viol_to_ea_lag), viol_to_ea_lag]        # vector of valid (non-NA) violation->enforcement lags -- reused by FIGURE 3 below
-viol_to_ea_lag_summary <- data.table(n = length(vte), min = min(vte), p25 = quantile(vte, .25),    # n (survivors), min, 25th pctile...
+n_vte_eligible <- real[EA_FLAG == "Y" & !is.na(ea_date), .N]  # rows with EA_FLAG=="Y" and a parseable ea_date -- the population the bad-order guard is applied to
+viol_to_ea_lag_summary <- data.table(n = length(vte), n_excluded_bad_order = n_vte_eligible - length(vte),  # n (survivors); n_excluded_bad_order = eligible rows dropped for ea_date < viol_date
+                                     min = min(vte), p25 = quantile(vte, .25),    # min, 25th pctile...
                                      median = median(vte), p75 = quantile(vte, .75), p90 = quantile(vte, .90),  # ...median, 75th and 90th pctiles...
                                      max = max(vte), mean = round(mean(vte), 1))                    # ...max, and mean (rounded to 1 decimal)
 fwrite(viol_to_ea_lag_summary, file.path(OUT, "viol_to_ea_lag_days.csv"))  # write violation->enforcement lag summary
@@ -254,25 +243,18 @@ cat("\nBY-YEAR SUMMARY (head)\n"); print(as.data.frame(head(by_year, 10)), row.n
 # =========================================================================================================
 # FLAGGED ISSUES
 # =========================================================================================================
-# 1. ~L46-48 (overview_raw / n_placeholder): the header's "7,193 placeholder rows (of 66,655)" figure is
-#    stale -- recomputing against the current data/processed/pipeline.csv.gz gives 7,218 placeholder rows of
-#    66,723 total, reflecting a data refresh (2026-07-27 ICIS-AIR snapshot) since that count was written. The
-#    script itself computes fresh, so its output is correct; the header prose is what's out of date. Also,
-#    the ~2,308 rows dropped for being out-of-window (not placeholders) are not broken out anywhere in
-#    overview_raw.csv, only recoverable by subtraction.
+# 1. RESOLVED 2026-07-28: header prose no longer quotes a specific placeholder-row count (it moves with each
+#    ICIS-AIR refresh; overview_raw.csv is the source of truth). Also added an explicit n_out_of_window column
+#    to overview_raw.csv, previously only recoverable by subtraction.
 # 2. ~L53-55 (PL2 check scope): the sort_nonblank scope is built from `raw` (includes placeholder rows), not
 #    `real` -- a deliberate, documented choice ("matching how this check has always been run") but a
 #    different universe than Part A's other checks; worth a reader's notice.
-# 3. ~L57-58 (pl2_check n_exceptions): na.rm = TRUE silently excludes rows where SORT_DATE is present but
-#    eval_date/viol_date/ea_date are ALL NA (nothing to compare against) -- such rows would neither count as
-#    an exception nor be reported separately. Verified 0 such rows exist in the current snapshot, so this is
-#    a latent, not active, risk.
-# 4. ~L85-86 (eval_to_viol_lag): rows where the violation predates its own linked evaluation are recoded NA
-#    and silently dropped from the lag distribution -- ~1,487 of ~23,018 EVAL_FLAG=="Y" rows (~6.5%) on the
-#    current snapshot. Matches 07_pipeline.R's convention, but the exclusion count is not reported anywhere.
-# 5. ~L94-95 (viol_to_ea_lag): same pattern -- rows where the enforcement action predates the violation are
-#    recoded NA and dropped -- ~3,192 of ~40,113 EA_FLAG=="Y" rows (~8%) on the current snapshot, feeding
-#    directly into FIGURE 3's histogram and its "n = ..." subtitle count without the exclusion being reported.
+# 3. RESOLVED 2026-07-28: added a [canary] console print + n_no_coalesce_source column to pl2_sort_date_check.csv
+#    reporting rows na.rm=TRUE would otherwise silently exclude from n_exceptions (0 on the current snapshot).
+# 4. RESOLVED 2026-07-28: eval_to_viol_lag_days.csv now includes n_excluded_bad_order (eligible rows dropped
+#    for viol_date < eval_date), instead of leaving the exclusion count unreported.
+# 5. RESOLVED 2026-07-28: viol_to_ea_lag_days.csv now includes n_excluded_bad_order (eligible rows dropped
+#    for ea_date < viol_date), same fix as #4.
 # 6. ~L123-125 (CSV 9 / by_year HPV-FRV split) and ~L175 (FIGURE 2 subtitle): this dataset's HPV/FRV split
 #    comes from the pipeline source's own VIOL_TYPE field (VIOL_TYPE == "HPV"/"FRV", per 07_pipeline.R), a
 #    DIFFERENT field on a different source table than dataset 2 (hpv_spells)'s HPV convention
