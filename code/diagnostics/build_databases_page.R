@@ -44,8 +44,7 @@ html <- site_shell(
   title       = "Databases",
   description = "What each CAA regulatory database (ICIS-Air, AFS, emissions, pipeline) contains, what's missing, and how the files join.",
   active      = "databases",
-  body_html   = body,
-  script      = "code/diagnostics/build_databases_page.R"
+  body_html   = body
 )
 
 OUT <- here("docs", "databases.html")

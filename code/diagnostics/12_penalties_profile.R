@@ -123,8 +123,8 @@ dollars_for <- function(ids) {                                        # given a 
   data.table(n_settlements = length(ids), naive_sum = sum(x$naive), distinct_sum = sum(x$distinct))  # aggregate across all settlements in this population
 }
 settlement_dollars <- rbindlist(list(
-  cbind(population = "all 588 multi-facility", dollars_for(multi_ids)),  # FLAG: "588" is a hand-typed literal in the label string, not computed -- if the underlying settlements table changes on a data refresh (length(multi_ids) != 588), this label goes silently stale even though n_settlements (the actual computed column) stays correct; contradicts the header's "no numbers are hand-entered" claim for this one string
-  cbind(population = "72 differing-amount",     dollars_for(differ_ids))))  # FLAG: same issue -- "72" is hand-typed, not derived from length(differ_ids)
+  cbind(population = sprintf("all %d multi-facility", length(multi_ids)),  dollars_for(multi_ids)),   # label built from length(multi_ids), not hand-typed -- stays accurate on any data refresh
+  cbind(population = sprintf("%d differing-amount", length(differ_ids)),   dollars_for(differ_ids))))
 fwrite(settlement_dollars, file.path(OUT, "settlement_dollars_by_population.csv"))  # write settlement-dollars-by-population CSV
 
 # per-settlement spread (max-min) for the 72 differing ones, DUP==0 basis
@@ -132,8 +132,15 @@ differ_detail <- d0[ENF_IDENTIFIER %in% differ_ids,
                     .(min_amt = min(PENALTY_AMOUNT), max_amt = max(PENALTY_AMOUNT),  # per-settlement min/max facility amount
                       naive = sum(PENALTY_AMOUNT), distinct = sum(unique(PENALTY_AMOUNT))), by = ENF_IDENTIFIER]  # same naive/distinct pair as dollars_for(), per settlement rather than aggregated
 differ_detail[, spread := max_amt - min_amt]                          # dollar gap between the largest and smallest facility amount within the settlement
-differ_detail[, trivial := spread <= 5]                               # FLAG: $5 is a hand-picked threshold distinguishing "rounding-level" differences from genuinely differing settlement amounts -- a defensible judgment call, but arbitrary, and it directly determines the trivial/large split reported in differ_summary below
-differ_detail[, is_texas := grepl("^TX", ENF_IDENTIFIER)]             # FLAG: assumes ENF_IDENTIFIER is prefixed with a 2-letter state postal code -- if that format isn't universal across states/programs, is_texas (and n_texas below) could mis-tag some settlements
+differ_detail[, trivial := spread <= 5]                               # $5 threshold distinguishes "rounding-level" differences from genuinely differing settlement amounts -- a defensible but arbitrary judgment call; documented, not changed
+# is_texas: joined from each settlement's facility STATE (coordinates.csv.gz, facility-grain), NOT parsed from
+# ENF_IDENTIFIER -- confirmed only ~85% of ENF_IDENTIFIERs are 2-letter-state-prefixed (the rest use numeric
+# EPA-region prefixes, e.g. "01-2025-1018"), so a text-prefix match would miss Texas settlements filed under a
+# region-numbered ID. A settlement is "is_texas" if ANY of its named facilities is in TX (settlements can span states).
+fac_state   <- fread(file.path(DATASETS, "coordinates.csv.gz"), select = c("PGM_SYS_ID", "STATE"))
+differ_ids_state <- merge(d0[ENF_IDENTIFIER %in% differ_ids, .(ENF_IDENTIFIER, PGM_SYS_ID)], fac_state, by = "PGM_SYS_ID", all.x = TRUE)
+texas_by_settlement <- differ_ids_state[, .(is_texas = any(STATE == "TX", na.rm = TRUE)), by = ENF_IDENTIFIER]
+differ_detail <- merge(differ_detail, texas_by_settlement, by = "ENF_IDENTIFIER", all.x = TRUE)
 fwrite(differ_detail, file.path(OUT, "differing_settlements_detail.csv"))  # write per-settlement detail for the 72 differing-amount settlements
 
 differ_summary <- differ_detail[, .(n_settlements = .N, naive_sum = sum(naive), distinct_sum = sum(distinct),  # roll the per-settlement detail up to trivial vs. genuinely-large groups
@@ -234,14 +241,12 @@ print(as.data.frame(differ_summary), row.names = FALSE)               # CSV 6 tr
 #    the header quantifies). "distinct" sums only distinct dollar values per settlement, which correctly
 #    collapses a broadcast uniform amount, but would ALSO collapse two facilities that coincidentally owe the
 #    exact same individual fine -- "distinct" is an approximation, not a guaranteed-correct de-broadcast.
-# 6. (settlement_dollars, ~line 126) "all 588 multi-facility" is a hand-typed literal in the population label,
-#    not computed from length(multi_ids). Contradicts the header's "no numbers are hand-entered" claim for
-#    this one string; would go silently stale on a data refresh even though n_settlements stays correct.
-# 7. (settlement_dollars, ~line 127) Same issue as #6 -- "72 differing-amount" is hand-typed, not derived from
-#    length(differ_ids).
+# 6. RESOLVED 2026-07-28: population labels now built via sprintf("all %d multi-facility", length(multi_ids))
+#    and sprintf("%d differing-amount", length(differ_ids)) instead of hand-typed "588"/"72" literals.
+# 7. RESOLVED (same fix as #6).
 # 8. (differ_detail$trivial, ~line 135) `spread <= 5` is a hand-picked $5 threshold separating "rounding-level"
 #    differences from genuinely differing settlement amounts. A defensible judgment call, but arbitrary, and
-#    it directly determines the trivial/large split reported in differ_summary.
-# 9. (differ_detail$is_texas, ~line 136) Assumes ENF_IDENTIFIER is always prefixed with a 2-letter state
-#    postal code (`^TX`). If that format isn't universal across states/programs, is_texas and the n_texas
-#    counts downstream could mis-tag some settlements.
+#    it directly determines the trivial/large split reported in differ_summary. Reviewed 2026-07-28: left as-is.
+# 9. RESOLVED 2026-07-28: is_texas no longer parses ENF_IDENTIFIER (confirmed only ~85% of IDs are
+#    2-letter-state-prefixed; the rest use numeric EPA-region prefixes) -- now joined from each settlement's
+#    facility STATE via coordinates.csv.gz (PGM_SYS_ID-keyed, facility-grain), TRUE if any named facility is TX.

@@ -24,7 +24,7 @@ Comprehensive federal law that regulates air emissions from stationary and mobil
 
 ## NAAQS
 
-Foundation of the CAA. Set under section 108, EPA designates a set of "criteria pollutants" (currently ozone, particulate matter (PM2.5 and PM10), sulfur dioxide, nitrogen dioxide, carbon monoxide, and lead). Under section 109, NAAQS are set for each.
+The National Ambient Air Quality Standards (NAAQS) are the foundation of the CAA. Set under section 108, EPA designates a set of "criteria pollutants" (currently ozone, particulate matter (PM2.5 and PM10), sulfur dioxide, nitrogen dioxide, carbon monoxide, and lead). Under section 109, NAAQS are set for each.
 
 * Primary standards: protect public health. Secondary standards: protect welfare (crops, visibility, materials).
 * NAAQS are about ambient air quality in a geographic area, not about any individual stack.
@@ -38,7 +38,7 @@ Foundation of the CAA. Set under section 108, EPA designates a set of "criteria 
 
 ## State Implementation Plans (SIPs)
 
-Section 110. Each state writes a plan showing how it will achieve and maintain the NAAQS.
+Section 110. Each state writes a plan showing how it will achieve and maintain the National Ambient Air Quality Standards (NAAQS).
 
 * If a state fails to produce an adequate plan, EPA can impose a Federal Implementation Plan.
 
@@ -74,7 +74,7 @@ major sources and certain area sources.
 
 ## PSD and NSR
 
-Preconstruction (New Source Review Permitting). Permitting half of the new source track. NSR splits geographically by attainment status:
+Preconstruction permitting (New Source Review, NSR). Permitting half of the new source track. NSR splits geographically by attainment status:
 
 * PSD (Prevention of Significant Deterioration): applies in attainment/unclassifiable areas. New or modified major sources must install Best Available Control Technology (BACT) and show their emissions won't deteriorate air quality beyond allowed increments. Major-source thresholds here are 100 tons/year for 28 source categories and 250 tons/year otherwise.
 * Nonattainment NSR (NNSR) applies in nonattainment areas and is stricter: new/modified major sources must meet the Lowest Achievable Emissions Rate (LAER) and obtain emission offsets from existing sources, so net area emissions do not rise.
@@ -121,7 +121,7 @@ A facility going through its regulatory life:
    * In a dirty-air area -> NNSR, new source review (lowest-achievable emission rate + offsets)
    * These are one-time permits, not ongoing programs. A source is subject to this regulation until it faces modification, which could change its designation potentially.
 * Once it's operating: what ongoing standards apply?
-   * SIPS: applies to essentially everyone. The state's plan for meeting NAAQS. Federally enforceable.
+   * SIPs (State Implementation Plans): applies to essentially everyone. The state's plan for meeting the National Ambient Air Quality Standards (NAAQS). Federally enforceable.
       * The state figures out which facilities need to do what (might set emission limits on specific plants, require certain control technologies, monitoring requirements). Different facilities in the same state can face very different SIP obligations depending on their size, industry, and location.
    * NSPS (New Source Performance Standards): applies if you're a new or modified source in a listed industrial category. Technology-based emission limits. "New" means built after the standard was published for your category.
       * Applies the moment you're a new source in a covered category.
@@ -153,9 +153,9 @@ Some basic terms:
 
 The threshold depends on the program:
 
-* SIP/Title V (criteria pollutants): 100 tons/year of any single criteria pollutant in attainment areas. In nonattainment areas, the threshold drops to 50, 25, or even 10 tons/year depending on how badly the area misses the NAAQS.
-* HAPs (Section 112): 10 tons/year of any single HAP or 25 tons/year of all HAPs combined.
-* PSD: 100 tons/year for sources in 28 listed industrial categories, 250 tons/year for everything else.
+* SIP (State Implementation Plan) / Title V (criteria pollutants): 100 tons/year of any single criteria pollutant in attainment areas. In nonattainment areas, the threshold drops to 50, 25, or even 10 tons/year depending on how badly the area misses the National Ambient Air Quality Standards (NAAQS).
+* HAPs (hazardous air pollutants, Section 112): 10 tons/year of any single HAP or 25 tons/year of all HAPs combined.
+* PSD (Prevention of Significant Deterioration): 100 tons/year for sources in 28 listed industrial categories, 250 tons/year for everything else.
 * Acid Rain: specific to electric utilities based on capacity and fuel type.
 
 A facility can be major under one program's threshold and not another. Facility-level classification reflects the highest classification across all applicable programs and pollutants.
@@ -163,7 +163,7 @@ A facility can be major under one program's threshold and not another. Facility-
 What being major means:
 
 * Subject to Title V permitting, must hold a comprehensive operating permit, pay permit fees, and submit annual compliance certifications
-* Higher inspection priority, EPA policy targets FCEs every 2 years for major sources
+* Higher inspection priority, EPA policy targets FCEs (Full Compliance Evaluations) every 2 years for major sources
 * More likely to trigger PSD/NSR review for modifications
 * More extensive monitoring, recordkeeping, and reporting requirements
 * More likely to face formal enforcement if violations are found
@@ -175,7 +175,7 @@ What being major means:
 > name. Class is read from the **current snapshot only** and applied to every panel year (time-invariant) —
 > a facility that changed class over 2005–2025 shows only its latest class throughout.
 
-**Synthetic Minor.** A facility whose uncontrolled potential emissions would exceed the major source threshold, but which has accepted legally binding, federally enforceable limits on its operations or emissions that keep it below the threshold. The facility voluntarily constrains itself (through a FESOP or an SIP permit with enforceable conditions) in exchange for a lighter regulatory treatment.
+**Synthetic Minor.** A facility whose uncontrolled potential emissions would exceed the major source threshold, but which has accepted legally binding, federally enforceable limits on its operations or emissions that keep it below the threshold. The facility voluntarily constrains itself (through a FESOP — Federally Enforceable State Operating Permit — or an SIP permit with enforceable conditions) in exchange for a lighter regulatory treatment.
 
 * This is a deliberate regulatory choice by the facility. Limits might cap production hours, restrict fuel types, require specific control equipment, or directly cap emission rates.
 * Limits must be federally enforceable, not just a promise, but a binding permit condition that EPA or state can act on.

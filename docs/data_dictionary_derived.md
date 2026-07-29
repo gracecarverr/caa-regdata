@@ -83,7 +83,7 @@ reference zero-vs-NA flag reused by `hpv_active`.
 | `N_CERTS_DUP` / `N_CERTS_DUP_EXACT` | COUNT_COL | Duplicate-load indicators (~81% of cert rows are event-key duplicates). | R3 |
 | `N_STACK_TESTS` | COUNT_COL | Count of `stacktests` rows (asset asserted dup-free). | R2/R3 |
 | `N_STACK_PASS` / `N_STACK_FAIL` | COUNT_COL | `AIR_STACK_TEST_STATUS_DESC == "Pass"/"Fail"` (Pending/Incomplete/N-A left uncounted). | R3 |
-| `FACILITY_TYPE` | label | `FACILITY_TYPE_CODE` mapped through a fixed lookup (POF→"Privately owned", COR→"Corporation", CNG→"County government", CTG→"City government", FDF→"Federal facility", STF→"State facility", DIS→"District", NON→"Non-classified"); `NA` if unmapped. | R5 |
+| `FACILITY_TYPE` | label | `FACILITY_TYPE_CODE` mapped through a fixed lookup, all 15 official ICIS-Air codes (POF→"Privately owned", COR→"Corporation", CNG→"County government", CTG→"Municipality", FDF→"Federal facility", STF→"State facility", DIS→"District", NON→"Non-government", GOC→"GOCO (government-owned, contractor-operated)", IND→"Individual", MXO→"Mixed ownership (public/private)", MWD→"Municipal or water district", SDT→"School district", TRB→"Tribal government", UNK→"Unknown"); `NA` if unmapped (2026-07-28: expanded from 8 to all 15 codes — see `panel_construction_decisions.md`/`dataset_construction_decisions.md` for the facility counts this closed). | R5 |
 | `OP_STATUS_CURRENT_DESC` | passthrough | Renamed from ICIS's `AIR_OPERATING_STATUS_DESC` — a **current, undated** snapshot, distinct from dataset 1's year-varying wayback status. | R5 |
 | `EMITS_VOC` / `EMITS_PM` / `EMITS_CO` / `EMITS_NOX` / `EMITS_SO2` / `EMITS_HAP` | flag | "Ever reported" flag from `pollutants.csv.gz`: `any(grepl(<pattern>, POLLUTANT_DESC, ignore.case=TRUE))` per facility (Volatile Organic / Particulate Matter / Carbon Monoxide / Nitrogen Oxides / Sulfur Dioxide / Hazardous Air Pollutant). Undated, boolean only — **not** a measured quantity (contrast with `emissions.csv.gz`'s pounds columns). Facility absent from `pollutants.csv.gz` → coalesced to `0` (a true "no profile" reading, not missing data). | **R6** |
 | `PROG_SIP` / `PROG_TITLEV` / `PROG_NSPS` / `PROG_MACT` / `PROG_NESHAP` / `PROG_FESOP` / `PROG_NSR` / `PROG_PSD` | flag | "Ever enrolled" flag from `programs.csv.gz` by `PROGRAM_CODE` (SIP=`CAASIP`, Title V=`CAATVP`, NSPS=`CAANSPS`+`CAANSPSM` pooled, MACT=`CAAMACT`, NESHAP=`CAANESH`, FESOP=`CAAFESOP`, NSR=`CAANSR`, PSD=`CAAPSD`). This is a deliberately **narrowed 8-group set** — `CAAGACTM` (area-source MACT) and `CAACFC` (Title VI ozone) are excluded here to match dataset 1's 8-group `PROG_*_ACTIVE` allowlist, even though the panel layer (Part 2) keeps all 10 groups. Coalesced `NA→0`. | **R6** (aligns w/ `O3`) |
@@ -105,6 +105,29 @@ wherever no Wayback snapshot exists, never imputed (`O2`).
 | `LEFT_CENSORED` / `RIGHT_CENSORED` | flag | Facility-level: spell already in progress at the window's left edge / still ongoing at the right edge. | O4 |
 | `EARLIEST_PROGRAM_BEGIN_YEAR_RAW` | year | `min(year(mdy(BEGIN_DATE)))` across all parseable `BEGIN_DATE` values in `programs.csv.gz`, **unscreened** (raw range observed: [218, 2028] — includes clear data-entry typos). `NA` if no parseable date. | **O5** |
 | `EARLIEST_PROGRAM_BEGIN_YEAR` | year | Same minimum, restricted to a `[1970, 2025]` validity screen — removes implausible candidates only, never imputes; always ≥ the raw version. `NA` if no in-range date. | **O5** |
+| `ICIS_OBSERVED` | flag (NEW 2026-07-28) | Passthrough from `regulatory.csv.gz`, same `(PGM_SYS_ID, YEAR)` — `1` iff ICIS holds ≥1 event record that year. Never `NA` (dataset 0's own invariant). Carried here so `ACTIVE`'s constituent evidence is visible without a join. | **O6** |
+| `EMISSIONS_OBSERVED` / `GHG_OBSERVED` | flag (NEW 2026-07-28) | Passthrough from `emissions.csv.gz`, same `(PGM_SYS_ID, YEAR)` — pounds-based / GHG reporting that year, independently. Never `NA` (dataset 7's own invariant). Carried here so `ACTIVE_BROAD`'s constituent evidence is visible without a join. | **O6** |
+| `ACTIVE` | flag (NEW 2026-07-28) | **Year-varying**, not an "ever" summary: `1` iff `OPERATING==1` OR `ICIS_OBSERVED==1` **that year**; `0` iff both are confirmed `0` that year; `NA` iff `OPERATING` is `NA` that year (no wayback snapshot) AND `ICIS_OBSERVED==0` that year (no ICIS event that specific year) — genuinely no evidence either way. Closes wayback's pre-2015 blind spot and ICIS's never-inspected-facility blind spot, year by year. | **O6** |
+| `ACTIVE_BROAD` | flag (NEW 2026-07-28) | `1` iff `ACTIVE==1` OR `EMISSIONS_OBSERVED==1` OR `GHG_OBSERVED==1` **that year**; `0` iff all three are confirmed `0`; `NA` iff `ACTIVE` is `NA` and neither emissions flag is `1` that year. Nests monotonically under `ACTIVE` (`ACTIVE==1 ⇒ ACTIVE_BROAD==1`, verified 0 violations). | **O6** |
+
+## `wayback_only_facilities.csv.gz` — dataset 1b, facility × year (2015–2025 only), NEW 2026-07-28
+
+Supplementary output, not one of the eight numbered datasets — covers the ~15,302 facilities Wayback has
+captured operating-status snapshots for that are entirely absent from the current ICIS-AIR facility extract
+(the `O1a` population). Grain `PGM_SYS_ID × year`, but window is **2015–2025 only** (Wayback's real coverage,
+narrower than every other file's 2005–2025 — these facilities have zero information of any kind before
+2015). Does **not** join to `regulatory.csv.gz`/`operating.csv.gz` — by definition, none of its facilities
+appear there (confirmed: 0/15,302 have any ICIS event record at all).
+
+| Field | Type | Definition & derivation | Decision |
+|---|---|---|---|
+| `WAYBACK_OBSERVED` | flag | Same definition as `operating.csv.gz`'s column of the same name, restricted to this facility set. | O7 |
+| `OP_STATUS_CODE` / `OP_STATUS_DESC` / `OPERATING` | passthrough / flag | Same definitions as `operating.csv.gz`'s columns of the same name. | O7 |
+| `ENTERED_YEAR` / `EXITED_YEAR` / `EXIT_SOURCE` / `LEFT_CENSORED` / `RIGHT_CENSORED` | facility-level | Same definitions as `operating.csv.gz`'s columns of the same name — the pre-done version of the manual join `O1a` used to point users to. | O7 |
+
+No `ACTIVE`/`ACTIVE_BROAD`-style column here: `ICIS_OBSERVED` and `EMISSIONS_OBSERVED`/`GHG_OBSERVED` are
+structurally undefined for this population (no row to look up in `regulatory.csv.gz` or `emissions.csv.gz`
+at all, not merely a confident `0`), so such a column would either be all-`NA` or wrongly imply a real zero.
 
 ## `hpv_spells.csv.gz` — dataset 2, spell grain, UNcollapsed
 

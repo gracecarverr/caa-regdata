@@ -6,8 +6,7 @@
 
 ---
 
-*Refreshed 2026-07-27 (was 2026-07-22, predates the 2026-07-26 ICIS-AIR refresh) — "was X" notes give the
-previously-documented value.*
+*Refreshed 2026-07-27 (predates the 2026-07-26 ICIS-AIR refresh).*
 
 ## Coverage funnel
 
@@ -19,8 +18,6 @@ previously-documented value.*
 | Checkable vs. ICIS-claimed county | 225,216 | 80.5% |
 | Gross error (>5km, of checkable) | 2,873 | 1.3% of checkable |
 
-*(Was 279,211 / 235,919 / 235,759 / 224,921 (80.6%) / 2,863.)*
-
 "Checkable" is smaller than "has coordinate" because a facility needs both a coordinate *and* an
 ICIS-claimed county to compare against (`STATE`/`COUNTY_NAME`). "Gross error" is a subset of "checkable," not
 an additional filter on the funnel.
@@ -28,19 +25,19 @@ an additional filter on the funnel.
 ## Coordinate-vs-ICIS-county agreement
 
 Of the 225,216 checkable facilities, **219,167 (97.3%) land exactly in the ICIS-claimed county** (distance =
-0, was 218,892/224,921). Of the 6,049 with a nonzero distance (was 6,029): concentrated near 0, tapering out
-to the 5km gross-error threshold — median 0km (driven by the 97.3% exact matches), p90 0km, **p99 ≈ 7.8km**
-(unchanged). Only 1.3% of checkable facilities exceed 5km, i.e. a genuine geocoding/county-assignment
+0). Of the 6,049 with a nonzero distance: concentrated near 0, tapering out
+to the 5km gross-error threshold — median 0km (driven by the 97.3% exact matches), p90 0km, **p99 ≈ 7.8km**.
+Only 1.3% of checkable facilities exceed 5km, i.e. a genuine geocoding/county-assignment
 mismatch.
 
 ## ICIS_COUNTY_FIPS — name-derived FIPS, independent of the coordinate
 
 `ICIS_COUNTY_FIPS` resolves `(STATE, COUNTY_NAME)` text directly to a county GEOID — no coordinate
-required. It's set for **261,646 (93.6%)** of all 279,665 facilities (was 261,220/279,211), well above
-`COUNTY_FIPS`'s 84.5% coordinate-gated coverage: **36,430 facilities** (was 36,299) get a name-derived FIPS
+required. It's set for **261,646 (93.6%)** of all 279,665 facilities, well above
+`COUNTY_FIPS`'s 84.5% coordinate-gated coverage: **36,430 facilities** get a name-derived FIPS
 with no coordinate-derived `COUNTY_FIPS` to compare it to (no FRS match). Where both are set (225,216
-facilities — the same "checkable" set as above), they agree **97.3% of the time (219,167/225,216, was
-218,892/224,921)** — identical to the `COORD_COUNTY_DIST_KM == 0` rate, since both are computed from the same
+facilities — the same "checkable" set as above), they agree **97.3% of the time (219,167/225,216)**
+— identical to the `COORD_COUNTY_DIST_KM == 0` rate, since both are computed from the same
 name-resolution logic against the same shapefile. Full numbers:
 `output/coordinates_profile/icis_county_fips_summary.csv`.
 
@@ -54,7 +51,7 @@ is the only county-FIPS signal available.
 A map of the 234,939 facilities (99.5% of all facilities with a coordinate) falling within a contiguous-US
 bounding box shows the expected population/industrial-density pattern — dense clusters around major metro
 areas and industrial corridors (Gulf Coast, Rust Belt, Northeast corridor), sparser in the Mountain West.
-234,939 of 236,219 facilities with any coordinate fall in this bounding box (was 234,640/235,919); the
+234,939 of 236,219 facilities with any coordinate fall in this bounding box; the
 remaining ~1,280 are AK/HI/PR/territories, excluded from the map plot only, not from the underlying data.
 
 **Coordinate coverage varies substantially by state** — not uniform (figures as of 2026-07-27):
@@ -69,9 +66,6 @@ remaining ~1,280 are AK/HI/PR/territories, excluded from the map plot only, not 
 | PA | 11,425 | 90.3% | 0.4% |
 | MD | 11,119 | 98.9% | 0.2% |
 | **NM** | 8,827 | **57.0%** | 1.0% |
-
-*(Coordinate/gross-error rates are essentially unchanged from the prior pass — CO 71.2%, IL 93.2%, NM 57.3% —
-only facility counts moved with the roster.)*
 
 Two things stand out enough to flag: **Louisiana's coordinate coverage is only 29.1%**, far below every other
 top-10 state (all others are 57%+) — worth checking whether this is an FRS-linkage gap specific to LA
@@ -88,7 +82,7 @@ table: `output/coordinates_profile/coverage_by_state.csv`.
 - New York's elevated gross-error rate is worth a closer look before treating NY coordinates as uniformly
   reliable, even though its raw coverage rate looks fine.
 - These are the same coordinate-quality diagnostics used by the facility spine (`coord_county_flag.R`,
-  shared helper) — this dataset just carries them over the full 279,665-facility universe (was 279,211)
+  shared helper) — this dataset just carries them over the full 279,665-facility universe
   rather than the spine's ever-active subset.
 - `ICIS_COUNTY_FIPS` (name-derived, coordinate-independent) covers 93.6% of facilities vs. `COUNTY_FIPS`'s
   84.5%, and agrees with it 97.3% of the time where both exist — a useful fallback/cross-check precisely
