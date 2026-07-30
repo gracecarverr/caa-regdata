@@ -34,7 +34,7 @@ The documentation site is a 4-page static site under `docs/` — Home (`index.ht
 Raw Data (`raw_data.html`, per-source summary tables), Databases (`databases.html`), and Panels
 (`panels.html`, construction notes + live summary-stat tables). The first three are regenerated as part of
 `RUN_ALL.R` and committed, so GitHub Pages serves them directly with no build step; Panels is rebuilt by hand
-(`Rscript code/diagnostics/build_panels_page.R`, after `06_panel_profile.R`) since it depends on a
+(`Rscript code/diagnostics/build_panels_page.R`, after `18_panel_profile.R`) since it depends on a
 hand-run diagnostic — see `code/diagnostics/README.md`.
 
 ## Computational requirements
@@ -66,15 +66,15 @@ caa-regdata/
 │   ├── 01_data_download/  raw sources -> data/raw/ (immutable) + MANIFEST provenance
 │   ├── 02_cleaning/     one bare-bones clean asset per raw table -> data/processed/
 │   │                      (functions + parameters + a wayback/ subfolder for the bespoke cleaners)
-│   ├── 03_panel_building/  facility spine + the sample panels -> data/panels/
+│   ├── 03_datasets/     the nine deliverable datasets (this repo's main product) -> data/datasets/
+│   ├── 04_panel_building/  facility spine + the two continuous panels -> data/panels/
 │   │                      (build_panel() functions + PANEL_SPECS parameters)
-│   ├── 04_datasets/     the eight deliverable datasets (this repo's main product) -> data/datasets/
 │   └── diagnostics/     NOT part of the build: panel summaries, dataset profiling, site generation, previews, one-offs
 ├── data/
 │   ├── raw/             immutable downloads (gitignored) + MANIFEST.csv (provenance)
 │   ├── processed/       one clean asset per raw table (gitignored, rebuilt from code)
-│   ├── panels/          spine + sample panels (gitignored, rebuilt from code)
-│   └── datasets/        the eight built datasets (gitignored, rebuilt from code)
+│   ├── datasets/        the nine built datasets (gitignored, rebuilt from code)
+│   └── panels/          spine + the two continuous panels (gitignored, rebuilt from code)
 ├── briefs/              institutional overview + construction-decision & open-question briefs
 ├── docs/                generated static site (index.html) + data_dictionary.md (raw) + data_dictionary_derived.md (built)
 ├── output/             generated tables/figures (e.g. panel-summary LaTeX) + sessionInfo.txt
@@ -104,8 +104,8 @@ Every folder has a `README.md`. Start with [`code/README.md`](code/README.md) fo
 |-----------|---------|
 | to run the pipeline | [`code/README.md`](code/README.md), `code/RUN_ALL.R` |
 | the institutional setting (statute, data systems) | [`briefs/institutional_overview.md`](briefs/institutional_overview.md) |
-| **why** a construction choice was made | [`briefs/datasets/dataset_construction_decisions.md`](briefs/datasets/dataset_construction_decisions.md) (eight-dataset layer); [`briefs/panel/panel_construction_decisions.md`](briefs/panel/panel_construction_decisions.md) (panel layer) |
-| what's still undecided (panel layer) | [`briefs/panel/panel_open_questions.md`](briefs/panel/panel_open_questions.md) |
+| **why** a construction choice was made | [`briefs/datasets/dataset_construction_decisions.md`](briefs/datasets/dataset_construction_decisions.md) (nine-dataset layer); [`briefs/panel/panel_construction_decisions.md`](briefs/panel/panel_construction_decisions.md) (panel layer) |
+| what's still undecided (panel layer, archived) | [`archive/panel_building_legacy/briefs/panel/panel_open_questions.md`](archive/panel_building_legacy/briefs/panel/panel_open_questions.md) |
 | column/field definitions (raw sources) | [`docs/data_dictionary.md`](docs/data_dictionary.md) |
 | column/field definitions (built datasets + panels) | [`docs/data_dictionary_derived.md`](docs/data_dictionary_derived.md) |
 | what each data file is + caveats | the per-layer READMEs under [`data/`](data/README.md) |
@@ -116,7 +116,7 @@ Every folder has a `README.md`. Start with [`code/README.md`](code/README.md) fo
 |--------|------|-------------|
 | ICIS-Air (EPA ECHO) | facilities, inspections, violations, enforcement, Title V certs, stack tests, programs | bulk download (automated) |
 | ICIS-Air Wayback | 10 annual snapshots (2015–2017, 2019–2025) → operating-status history & entry/exit | automated — pinned to a confirmed capture per year |
-| AFS | legacy (pre-2001) actions, air program, HPV, historical compliance | automated |
+| AFS | legacy Air Facility System (frozen 2014) actions, air program, HPV, historical compliance | automated |
 | FRS | facility coordinates / cross-system ids | automated |
 | US counties | Census cartographic boundary files | automated |
 | Combined emissions | facility emissions by pollutant × year | automated |
@@ -152,12 +152,14 @@ web archive captures of that same data, none of which carry redistribution restr
 
 Reorganized into the staged `code/` + `data/` + `briefs/` structure with per-folder and per-stage
 documentation. The pipeline builds end-to-end through cleaning (ICIS-Air + AFS + emissions cleaners), the
-facility spine and the universe / major_synmin / electric panels, plus the `04_datasets/` layer — eight
-deliverable datasets, this repo's main product, all built & audited (see
-`briefs/datasets/dataset_construction_decisions.md`). PM2.5-attainment code was removed from this repo
-entirely on 2026-07-27 (already synced to the sibling `CAA_Project` repo, see decision W10 in
-`briefs/panel/panel_construction_decisions.md`). The AFS↔ICIS crosswalk is future work for the panel
-layer — see [`briefs/panel/panel_open_questions.md`](briefs/panel/panel_open_questions.md).
+`03_datasets/` layer — nine deliverable datasets, this repo's main product, all built & audited (see
+`briefs/datasets/dataset_construction_decisions.md`) — and the `04_panel_building/` layer, which now builds
+two continuous facility × year panels (the earlier three-sample-panel system was archived on 2026-07-28; see
+`archive/panel_building_legacy/`). PM2.5-attainment code was removed from this repo entirely on 2026-07-27
+(already synced to the sibling `CAA_Project` repo, see decision W10 in
+`archive/panel_building_legacy/briefs/panel/panel_construction_decisions.md`). The AFS↔ICIS crosswalk is
+future work for the panel layer — see
+[`archive/panel_building_legacy/briefs/panel/panel_open_questions.md`](archive/panel_building_legacy/briefs/panel/panel_open_questions.md).
 
 ## License
 

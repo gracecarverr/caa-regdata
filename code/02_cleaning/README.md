@@ -8,8 +8,8 @@
 
 Cleaning here is **minimal by design**. Each raw source table becomes one `data/processed/<name>.csv.gz`
 that **keeps every original column and every original row** — nothing is dropped, deduplicated, recoded,
-or type-cast. All facility-selection, collapsing, and treatment logic happens later, in the panel layer
-(`code/03_panel_building/`) and the datasets layer (`code/04_datasets/`). Keeping cleaning lossless means the
+or type-cast. All facility-selection, collapsing, and treatment logic happens later, in the datasets layer
+(`code/03_datasets/`) and the panel layer (`code/04_panel_building/`). Keeping cleaning lossless means the
 processed assets are a faithful, traceable image of the raw data, and every downstream decision is auditable
 against them.
 
@@ -50,5 +50,5 @@ scripts in `wayback/`.
 ## Per-asset documentation
 
 Column-level definitions, row/facility counts, and **institutional implications** for each cleaned asset
-live next to the data, in `data/processed/<name>.README.md`. The generated column dictionary is
+live in the matching section of `data/processed/README.md`. The generated column dictionary is
 `docs/data_dictionary.md`.

@@ -1,7 +1,7 @@
 # =========================================================================================================
-# code/03_panel_building/hap_list_112b.R -- static reference table: the CAA section 112(b) list of
+# code/03_datasets/hap_list_112b.R -- static reference table: the CAA section 112(b) list of
 #   Hazardous Air Pollutants (HAPs), 188 substances currently in force. Sourced (not typed from memory) and
-#   validated below; used by 00_spine.R and code/04_datasets/01_regulatory.R to replace the old
+#   validated below; used by code/03_datasets/01_regulatory.R to replace the old
 #   grepl("HAZARDOUS AIR POLLUTANT", POLLUTANT_DESC) rule, which only matched pollutant rows literally
 #   labeled with that umbrella phrase and missed the large majority of HAPs that ICIS-AIR records by
 #   specific chemical name (Benzene, Formaldehyde, Lead, Mercury, ...) -- see panel_construction_decisions.md

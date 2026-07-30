@@ -139,7 +139,7 @@ Full year-by-year table: `output/hpv_profile/active_rate_by_year.csv`.
 read it as a clean enforcement-intensity trend without the two caveats already on record elsewhere in this
 project:**
 
-- **Early-year coverage ramp (V5/P8, `panel_construction_decisions.md`)**: violation-record coverage ramps up
+- **Early-year coverage ramp** (V5/P8, `archive/panel_building_legacy/briefs/panel/panel_construction_decisions.md`): violation-record coverage ramps up
   from sparse in the mid-2000s to fuller later — already flagged as "a reporting artifact, not a real
   decline" for the *inverse* pattern (raw counts). Since `hpv_active` inherits this (P8), some of the *high*
   early-year active rate could reflect a smaller, more heavily-scrutinized early denominator rather than
@@ -149,7 +149,9 @@ project:**
   `n_active` falls much faster in percentage terms (3,296 → 581, an ~82% drop, vs. the
   denominator's ~29% drop over the same span). A shrinking, not growing, denominator can't be
   diluting the rate in later years — so the late-window decline is not explained by the same coverage-ramp
-  mechanism that applies early on. Right-truncation of 2025 (CC2, already documented) is a more likely partial
+  mechanism that applies early on. Right-truncation of 2025 (CC2 — the 2005–2025 year window is applied at build time, not baked into the
+  source assets, `archive/panel_building_legacy/briefs/panel/panel_construction_decisions.md`; inherited by
+  this layer's G1) is a more likely partial
   explanation for the last year or two specifically (an HPV determination process takes time; very recent
   violations haven't had time to reach an HPV day-zero yet), but that doesn't reach back to explain the decline
   across 2010–2020.

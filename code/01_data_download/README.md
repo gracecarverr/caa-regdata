@@ -27,7 +27,7 @@ Every successfully extracted file gets a row appended to `data/raw/MANIFEST.csv`
 > All sources fetched here are automated (verified against the existing manually-staged files this session —
 > byte-identical for ICIS-Air/AFS/Wayback, schema- and content-identical for FRS; US counties
 > was found to differ structurally from the raw Census product and was deliberately updated to the full-US
-> file, see `briefs/panel/panel_construction_decisions.md` N18). **FRS** and the **Wayback snapshots** were
+> file, see N18 in `archive/panel_building_legacy/briefs/panel/panel_construction_decisions.md`). **FRS** and the **Wayback snapshots** were
 > both automated this session after their respective problems were solved (the Green Book / PM2.5-attainment
 > source that used to appear in this table was removed from this repo entirely on 2026-07-27 — see
 > `data/raw/README.md`):
@@ -50,13 +50,23 @@ Every successfully extracted file gets a row appended to `data/raw/MANIFEST.csv`
 >   for the full finding. `01_download.R` now fetches each year from its **pinned, confirmed timestamp** —
 >   not a live "latest capture" search, since that's exactly what produced the false 2016 negative and would
 >   do the same for 2022/2024. **2018 stays excluded**: zero captures of this URL exist in the Archive at any
->   status code (the staged "2018" folder was a mislabeled duplicate of 2019, deleted per decision W7); there
+>   status code (the staged "2018" folder was a mislabeled duplicate of 2019, deleted per decision W7 in
+>   `archive/panel_building_legacy/briefs/panel/panel_construction_decisions.md`); there
 >   is no capture to pin.
 >
 > `MANIFEST.csv` records provenance for whatever `01_download.R` actually downloads. The Wayback files
 > **already staged on disk** predate this automation and have no MANIFEST row (raw is immutable — they are
 > not retroactively re-fetched just to backfill provenance); any year re-acquired by a fresh `01_download.R`
 > run from here on gets a real MANIFEST row like every other automated source.
+>
+> **Q4 consistency (2026-07-29)**: `code/02_cleaning/wayback/17-19_*.R` interpret each snapshot as "the ~Q4
+> state of that year," so `code/diagnostics/wayback_verify/wayback_q4_repin.R` audited whether every pinned
+> year could actually be moved to a Q4 (Oct-Dec) capture. It can't, for most years: the Archive has **zero**
+> Q4 captures of this URL for 2015, 2017, 2019, 2023, or 2025 (2019 and 2023 have exactly one capture in
+> their *entire* year) — those pins are unchanged, already the best/only option. **2024** did have real Q4
+> alternatives and was moved from its Sep 26 pin to a Dec 10 capture. See `output/wayback_verify/
+> q4_repin_summary.csv` for the full finding and `data/raw/README.md` / `code/02_cleaning/wayback/README.md`
+> for how this caveats the "one snapshot ≈ year-end" assumption downstream.
 
 ## Institutional context
 

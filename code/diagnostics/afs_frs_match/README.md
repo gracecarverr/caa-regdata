@@ -5,7 +5,7 @@ Legacy AFS (`AFS_ID`) and current ICIS-Air (`PGM_SYS_ID`) share no facility iden
 string join yields zero hits (`data/raw/README.md` already flags this). If AFS's
 `AFS_AIR_PRG_HIST_COMPLIANCE.csv` (quarterly compliance status per facility-program, back to ~1998, including
 an explicit `9 = "In Compliance, Shut Down"` code) is ever going to serve as a pre-2015 operating-status
-signal — the gap identified in [`../../../briefs/panel/panel_open_questions.md`](../../../briefs/panel/panel_open_questions.md)
+signal — the gap identified in [`../../../archive/panel_building_legacy/briefs/panel/panel_open_questions.md`](../../../archive/panel_building_legacy/briefs/panel/panel_open_questions.md)
 D-A2 and [`../../../briefs/datasets/begin_year_operating_proxy.md`](../../../briefs/datasets/begin_year_operating_proxy.md) —
 the facilities have to be linkable first. **This diagnostic answers only the linkability question**, not
 whether the compliance-status data itself is clean or usable once linked.
@@ -50,6 +50,10 @@ Outputs → `output/afs_frs_match/`: `hop1_length_distribution.csv`, `hop1_extra
 `spine_restricted_coverage.csv`, `pre2015_population_coverage.csv`.
 
 ## Finding (run 2026-07-26)
+
+> Figures below use the 2026-07-26 ICIS-AIR spine (279,211 facilities). The live extract has since grown to
+> 279,665 (as of 2026-07-27) — not re-run against the current spine; treat percentages as directionally
+> current, not exact.
 
 - **Baseline reproduces CAA_Project's prior run exactly**: 164,880 of 236,734 AFS facilities reach an ICIS id
   end-to-end (**69.6%**), 208 ambiguous (0.13%) — a byte-for-byte match on every number checked, including the

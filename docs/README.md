@@ -7,23 +7,28 @@ Jekyll — see `.nojekyll`):
 |------|------|-------------|
 | `index.html` | **Home** — hero, nav cards, `briefs/institutional_overview.md` rendered as prose (its "Valuable Links" section and "Data implication" callouts stripped for a public audience). | `code/diagnostics/build_home.R` |
 | `raw_data.html` | **Raw Data** — one section per raw source (ICIS-Air, AFS, emissions), built directly from `data/raw/` via the section builders in `code/diagnostics/tables/`. | `code/diagnostics/build_site.R` |
-| `databases.html` | **Databases** — what each database contains, what's missing, and how the files join, from `briefs/database_overviews.md` (verbatim from the project's Google Doc). | `code/diagnostics/build_databases_page.R` |
+| `databases.html` | **Datasets** (nav label; file/id kept as `databases`/`databases.html`) — the nine datasets this pipeline builds in `data/datasets/`: construction decisions, headline findings, and the caveat that matters most, from `briefs/datasets/datasets_overview.md`. Superseded the page's old content (`briefs/database_overviews.md`, a description of the **raw** EPA sources — redundant with Raw Data; kept in the repo but no longer publicly linked). | `code/diagnostics/build_databases_page.R` |
 | `panels.html` | **Panels** — the profile narrative (`briefs/panel/panel_profile.md`) plus summary-stat tables computed live from `output/panel_profile/*.csv` (the two continuous panels: `major_synmin`, `electric`). | `code/diagnostics/build_panels_page.R` |
+| `dictionary.html` | **Dictionary** — a browsable, cross-linked rendering of both `data_dictionary.md` and `data_dictionary_derived.md` below: one pane per raw file or derived dataset, grouped by source/layer, each linking out to its live section on `raw_data.html`/`databases.html`/`panels.html` where one exists. Reformats those two files only — never edits them. | `code/diagnostics/build_dictionary.R` |
 | `data_dictionary.md` | Field-level documentation for every **raw** source, verified against EPA's published data dictionaries (ICIS-Air, AFS, emissions, pipeline). | hand-maintained |
 | `data_dictionary_derived.md` | Column-by-column documentation for every **derived** variable in `data/datasets/` and `data/panels/`, verified against the build code and the actual `.csv.gz` headers. | hand-maintained |
 
 ## Regenerating the site
 
 Each page has its own build script (`build_site.R` → `raw_data.html`, `build_home.R` → `index.html`,
-`build_databases_page.R` → `databases.html`, `build_panels_page.R` → `panels.html`); all four run as the
-"docs: build site" step of `code/RUN_ALL.R` (skip with `SKIP_SITE=true`). They share a common header/nav/
-footer defined in `code/diagnostics/site_shell.R`. `panels.html` additionally depends on
-`output/panel_profile/*.csv` already existing (`Rscript code/diagnostics/18_panel_profile.R` first, hand-run
-like every profile script) — see that script's own header.
+`build_databases_page.R` → `databases.html`, `build_panels_page.R` → `panels.html`, `build_dictionary.R` →
+`dictionary.html`); all five run as the "docs: build site" step of `code/RUN_ALL.R` (skip with
+`SKIP_SITE=true`). They share a common header/nav/footer defined in `code/diagnostics/site_shell.R`.
+`panels.html` additionally depends on `output/panel_profile/*.csv` already existing (`Rscript
+code/diagnostics/18_panel_profile.R` first, hand-run like every profile script) — see that script's own
+header. `build_dictionary.R` has no data dependency of its own — it only reads the two `data_dictionary*.md`
+files below, so it's safe to re-run any time either of them changes, independent of the rest of the pipeline.
 
 No number on any page is hand-typed: each is either read live from `data/raw/`/`output/` at render time, or
-transcribed verbatim from a brief in `briefs/`. **Do not hand-edit the HTML** — change the source brief/data
-and re-render (project rule: no hand-edited outputs).
+transcribed verbatim from a brief in `briefs/` (the Home page's stats/stage-grid figures are the one partial
+exception — they re-state counts already asserted elsewhere in that same page's own card copy, not new
+figures). **Do not hand-edit the HTML** — change the source brief/data and re-render (project rule: no
+hand-edited outputs).
 
 ## The two data dictionaries
 
@@ -31,4 +36,6 @@ Unlike the HTML pages, `data_dictionary.md` and `data_dictionary_derived.md` are
 script — they're maintained by hand against EPA's published dictionaries and the actual build code/CSV
 headers, and updated when a source schema or a derived column changes. See each file's own header for its
 last-verified date and scope. They are the canonical column reference — linked from `briefs/README.md`,
-`data/README.md`, and every stage README under `code/`.
+`data/README.md`, and every stage README under `code/`. `dictionary.html` is a **presentation** of these two
+files, not a second source of truth: edit the `.md` files here, then re-run `build_dictionary.R` to pick up
+the change — never hand-edit `dictionary.html` itself.

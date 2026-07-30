@@ -2,9 +2,9 @@
 
 Copied 2026-07-28 from the sibling `CAA_Project` repo's `data/raw/attainment shapefiles/`. This is raw EPA
 source material — **not modified**, and **not read by any script in this repo**. PM2.5-attainment
-construction was deliberately removed from `caa-regdata` on 2026-07-27 (decision **W10**,
-[`briefs/panel/panel_construction_decisions.md`](../../../briefs/panel/panel_construction_decisions.md),
-archived under `archive/panel_building_legacy/`) because the working version already lived in `CAA_Project`
+construction was deliberately removed from `caa-regdata` on 2026-07-27 (decision **W10**, in
+[`archive/panel_building_legacy/briefs/panel/panel_construction_decisions.md`](../../../archive/panel_building_legacy/briefs/panel/panel_construction_decisions.md))
+because the working version already lived in `CAA_Project`
 and a fresh clone here had no way to stage the Green Book status files it needed. This copy exists so that
 history and a possible future revival don't require going back to `CAA_Project`.
 
@@ -33,6 +33,10 @@ only if the build pipeline itself is ever revived):
   the archived county-level approach (below).
 
 ## How it was used in `CAA_Project`
+
+**All paths in this section are in the sibling `CAA_Project` repo, not `caa-regdata`** — they describe how
+this data was consumed there, for reference if this data is ever wired back into a pipeline; none of them
+resolve inside this repo.
 
 Two different approaches were built there, at different granularities:
 

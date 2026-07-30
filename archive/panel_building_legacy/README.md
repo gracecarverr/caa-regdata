@@ -1,7 +1,7 @@
 # Archived: the original (`data/processed/`-based) panel-building pipeline
 
 **Archived 2026-07-28.** This is the full original panel-building system, moved here in one piece
-when the pipeline was inverted: panel-building now consumes `data/datasets/` (the eight-dataset
+when the pipeline was inverted: panel-building now consumes `data/datasets/` (the nine-dataset
 layer) instead of re-deriving facility-year aggregations directly from `data/processed/`. See
 `code/04_panel_building/README.md` and `briefs/panel/panel_construction_decisions.md` for the
 current system.

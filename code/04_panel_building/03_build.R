@@ -1,10 +1,10 @@
 # =========================================================================================================
 # code/04_panel_building/03_build.R -- driver for the panel-building stage. Builds the shared candidate
-#   facility spine, then the two continuous panels.
+#   facility spine, then the two panels.
 #
 #   Order:
-#     00_spine.R  -> in-memory `spine` (CONUS + Major/Synthetic-Minor class, continuity precomputed)
-#     PANEL_SPECS -> data/panels/<name>.csv.gz (major_synmin_continuous_2015_2025, electric_continuous_2015_2025)
+#     00_spine.R  -> in-memory `spine` (CONUS + Major/Synthetic-Minor class, eligibility precomputed)
+#     PANEL_SPECS -> data/panels/<name>.csv.gz (major_synmin_2015_2025, electric_2015_2025)
 #
 #   Standalone: Rscript code/04_panel_building/03_build.R  (assumes data/datasets/ is already built --
 #   see code/RUN_ALL.R's stage order, datasets now build BEFORE panels).
@@ -17,13 +17,13 @@ library(readr); library(dplyr)
 
 # 1. prerequisite construction ----------------------------------------------------------------------------
 cat(" - 00_spine.R\n"); source(here::here("code/04_panel_building/00_spine.R"))
-  # leaves `spine` (and CONUS/MAJOR_SYNMIN_CLASSES/CONTINUITY_YEARS) in this session
+  # leaves `spine` (and CONUS/MAJOR_SYNMIN_CLASSES/SCREEN_YEARS) in this session
 
 # 2. the two panels: one recipe (build_panel) over per-panel filters --------------------------------------
 source(here::here("code/04_panel_building/03_build_functions.R"))     # build_panel() and its helpers
 source(here::here("code/04_panel_building/03_build_parameters.R"))    # YEARS (2015:2025), PANEL_SPECS
   # REVIEW(design): 03_build_parameters.R defines its own `YEARS <- 2015:2025`, distinct from the repo-wide
-  # `YEARS <- 2005:2025` (00_setup.R) and from 00_spine.R's `CONTINUITY_YEARS` (which happens to be the
+  # `YEARS <- 2005:2025` (00_setup.R) and from 00_spine.R's `SCREEN_YEARS` (which happens to be the
   # same 2015:2025 span today) -- three separately-defined literals that currently agree but nothing
   # enforces staying in sync if one is ever changed without the others. Same class of drift risk already
   # documented for YEARS/BEGIN_YEAR_MAX/DZ_MAX elsewhere in this repo.
@@ -41,7 +41,7 @@ for (spec in PANEL_SPECS) {
 # FLAGGED ISSUES
 # =========================================================================================================
 # 1. (YEARS, ~line 20) Three separately-defined 2015:2025 literals (this file's YEARS, 00_spine.R's
-#    CONTINUITY_YEARS, and the fact both happen to match) -- see the REVIEW(design) comment above. Not
+#    SCREEN_YEARS, and the fact both happen to match) -- see the REVIEW(design) comment above. Not
 #    unified into one shared constant because 00_spine.R and 03_build_parameters.R are sourced independently
 #    and don't currently share a params-only file the way the datasets layer's 00_parameters.R does.
 # =========================================================================================================

@@ -1,13 +1,13 @@
 # =========================================================================================================
 # code/diagnostics/site_shell.R \u2014 shared header/nav/hero/footer chrome + CSS design system for the public
-#   docs/ site (Home, Raw Data, Databases, Panels). Sourced by each page's build script alongside
+#   docs/ site (Home, Raw Data, Datasets, Panels). Sourced by each page's build script alongside
 #   tables/_html.R (esc(), comma(), pct1(), dollar()). Contains NO computed numbers \u2014 chrome only.
 # =========================================================================================================
 
 NAV_ITEMS <- list(
   list(id = "home",      href = "index.html",     label = "Home"),
   list(id = "raw_data",  href = "raw_data.html",  label = "Raw Data"),
-  list(id = "databases", href = "databases.html", label = "Databases"),
+  list(id = "databases", href = "databases.html", label = "Datasets"),
   list(id = "panels",    href = "panels.html",    label = "Panels")
 )
 
@@ -33,7 +33,7 @@ site_header <- function(active) paste0(
 # gradient) so the existing white hero text stays readable without needing per-photo contrast tuning.
 hero <- function(title, desc = NULL, eyebrow = NULL, bg_image = NULL, photo_credit = NULL) paste0(
   "<div class='hero", if (!is.null(bg_image)) " hero-photo" else "", "'",
-  if (!is.null(bg_image)) paste0(" style=\"background-image:linear-gradient(160deg,rgba(0,51,73,.88) 0%,rgba(0,31,46,.92) 100%),url('", bg_image, "')\"") else "",
+  if (!is.null(bg_image)) paste0(" style=\"background-image:linear-gradient(160deg,rgba(0,51,73,.55) 0%,rgba(0,31,46,.75) 100%),url('", bg_image, "')\"") else "",
   "><div class='hero-inner'>",
   if (!is.null(eyebrow)) paste0("<p class='eyebrow'>", esc(eyebrow), "</p>") else "",
   "<h1>", esc(title), "</h1>",
@@ -159,7 +159,7 @@ a{color:var(--accent);}
 
 .hero{background:linear-gradient(160deg,var(--navy) 0%,var(--navy-dark) 100%);color:#fff;
   padding:3rem 1.2rem 2.4rem;}
-.hero-photo{background-size:cover;background-position:center 30%;padding:5rem 1.2rem 3.2rem;}
+.hero-photo{background-size:cover;background-position:center;padding:5rem 1.2rem 3.2rem;}
 .hero-inner{max-width:1100px;margin:0 auto;position:relative;}
 .hero .eyebrow{text-transform:uppercase;letter-spacing:.13em;font-size:.76rem;color:rgba(255,255,255,.66);
   font-weight:700;margin:0 0 .7rem;}

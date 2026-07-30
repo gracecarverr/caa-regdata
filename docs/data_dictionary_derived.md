@@ -1,51 +1,57 @@
 # CAA Regulatory Data — Data Dictionary: Derived Layer
 
-Column-by-column documentation for every **created/derived** variable in this repo — the eight built datasets
-in [`data/datasets/`](../data/datasets/README.md) (built by [`code/04_datasets`](../code/04_datasets/README.md))
-and the facility spine + three sample panels in [`data/panels/`](../data/panels/README.md) (built by
-[`code/03_panel_building`](../code/03_panel_building/README.md)). For **raw** EPA source fields, see
+Column-by-column documentation for every **created/derived** variable in this repo — the nine built datasets
+in [`data/datasets/`](../data/datasets/README.md) (built by [`code/03_datasets`](../code/03_datasets/README.md))
+and the two facility × year panels in [`data/panels/`](../data/panels/README.md) (built by
+[`code/04_panel_building`](../code/04_panel_building/README.md)). For **raw** EPA source fields, see
 [`data_dictionary.md`](data_dictionary.md); this file only covers columns that are computed, aggregated, or
 recoded by this repo's build code. For the *why* behind a specific choice, find its decision code (e.g. `R2`,
-`H6`, `W5`) in [`briefs/datasets/dataset_construction_decisions.md`](../briefs/datasets/dataset_construction_decisions.md)
-(Part 1 below) or [`briefs/panel/panel_construction_decisions.md`](../briefs/panel/panel_construction_decisions.md)
+`H6`, `O6`) in [`briefs/datasets/dataset_construction_decisions.md`](../briefs/datasets/dataset_construction_decisions.md)
+(Part 1 below) or its `PB`-prefixed counterpart in
+[`briefs/panel/panel_construction_decisions.md`](../briefs/panel/panel_construction_decisions.md)
 (Part 2 below) — this file gives the *what/how*, not the full rationale.
 
-> **Verified against code, not just READMEs.** Every column below was checked directly against the build
-> scripts (`code/04_datasets/*.R`, `code/03_panel_building/*.R`) and against the actual `.csv.gz` headers on
-> disk as of 2026-07-27 — not just the band-level descriptions in the folder READMEs.
+> **Verified against code.** Part 1 was re-checked directly against the build scripts (`code/03_datasets/*.R`)
+> and `briefs/datasets/dataset_construction_decisions.md` on 2026-07-29 (picking up the 2026-07-28 `R9`
+> derivation fixes — `EMITS_VOC`, `N_VIOL_NSPS`, `N_PENALTY_ACTION` — and the `R6` `EMITS_HAP` addendum, all
+> of which this file had missed in the prior pass) and against the actual `.csv.gz` headers on disk as of
+> 2026-07-27. Part 2 was rewritten 2026-07-29 against the
+> current `code/04_panel_building/*.R` build scripts (which replaced the archived `code/03_panel_building/`
+> pipeline this file used to describe — see `archive/panel_building_legacy/README.md`) — not yet re-checked
+> against a freshly rebuilt panel file, since a Wayback-snapshot redownload is in progress upstream as of this
+> writing; re-verify column names/counts against the rebuilt `.csv.gz` headers once that lands.
 
 ## Conventions used throughout
 
-- **Casing.** `data/datasets/` columns are `UPPER_SNAKE_CASE` (every builder assembles in lowercase, then
-  uppercases once on write — decision `G2`). `data/panels/` columns are `lower_snake_case`, except for a
-  handful of facility-attribute columns carried through unchanged from the raw ICIS schema (`REGISTRY_ID`,
-  `FACILITY_NAME`, `STREET_ADDRESS`, `CITY`, `COUNTY_NAME`, `STATE`, `ZIP_CODE`, `EPA_REGION`, `NAICS_CODES`,
-  `SIC_CODES`, `FACILITY_TYPE_CODE`, `AIR_POLLUTANT_CLASS_DESC`) — this mixed casing in the panel files is a
-  known artifact of the passthrough, not a typo.
+- **Casing.** Both layers are **fully `UPPER_SNAKE_CASE`** — `data/datasets/` builders assemble in lowercase,
+  then uppercase once on write (decision `G2`); `data/panels/` reads columns directly off the
+  already-uppercase datasets layer with no separate casing step of its own (`code/04_panel_building/README.md`'s
+  Conventions section), so there's no mixed casing between the two layers as of the current
+  (`code/04_panel_building/`) pipeline.
 - **Join keys.** Every file in both layers carries `PGM_SYS_ID` (the ICIS-Air facility id) and `REGISTRY_ID`
   (the cross-program FRS facility id, `NA` where no FRS match — `G4`). Facility-year files join `(PGM_SYS_ID,
-  YEAR)`/`(PGM_SYS_ID, year)` 1:1 onto one another; event-grain files (`hpv_spells`, `penalties`) join
-  many-to-one via `PGM_SYS_ID` (+ year where relevant).
+  YEAR)` 1:1 onto one another; event-grain files (`hpv_spells`, `penalties`) join many-to-one via
+  `PGM_SYS_ID` (+ year where relevant).
 - **The zero-vs-NA discipline (the single most load-bearing convention in this repo).** Every count/status
   column in a facility-year file is gated by an observability flag for that file (`ICIS_OBSERVED`,
   `WAYBACK_OBSERVED`, `PIPELINE_OBSERVED`, `EMISSIONS_OBSERVED`/`GHG_OBSERVED`, or the panel layer's
-  `obs_source`). Within an **observed** facility-year, a `0` is a confirmed true zero; an **unobserved**
+  `OBS_SOURCE`). Within an **observed** facility-year, a `0` is a confirmed true zero; an **unobserved**
   facility-year is `NA` — we simply don't know. Never treat `NA` as `0`, and never assume `0` means "checked
   and none happened" without first checking the observability flag. Below, a column tagged **COUNT_COL**
-  follows this rule; a handful of dollar/lag columns (`PENALTY_AMOUNT`, `penalty_amount`,
-  `MEAN_*_LAG_DAYS`) follow a *different*, narrower rule ("no value or zero → `NA`") that's called out
-  explicitly where it applies.
+  follows this rule; a handful of dollar/lag columns (`PENALTY_AMOUNT`, `MEAN_*_LAG_DAYS`) follow a
+  *different*, narrower rule ("no value or zero → `NA`") that's called out explicitly where it applies.
 - **Duplicates are surfaced, never dropped.** Every `N_*`/`n_*` count counts **all rows** of its source event
   table, with no deduplication. Where an asset carries duplicate event-key rows (inspections, enforcement,
   certs), a companion `_DUP`/`_dup` (event-key repeat) and `_DUP_EXACT`/`_dup_exact` (byte-identical repeat)
   column reports how many of those rows were duplicates; recover the event-distinct count as `n_x − n_x_dup`.
-  Violations and stack tests are asserted duplicate-free at build time, so they carry no `_dup` columns.
+  Violations and stack tests carry zero dups **enforced via `stopifnot()` at build time**
+  (`01_regulatory.R:146,216`) — not merely a comment — so they carry no `_dup` columns.
 
 ---
 
-# Part 1 — `data/datasets/` (the eight built datasets)
+# Part 1 — `data/datasets/` (the nine built datasets)
 
-Each dataset is built once over the **full** 279,211-facility ICIS-Air universe (no ever-active screen, no
+Each dataset is built once over the **full** 279,665-facility ICIS-Air universe (no ever-active screen, no
 sample restriction — `G3`); sample selection is left to the user. Full narrative: `dataset_construction_decisions.md`.
 
 ## `regulatory.csv.gz` — dataset 0, facility × year, ICIS-Air only
@@ -65,11 +71,11 @@ reference zero-vs-NA flag reused by `hpv_active`.
 | `N_VIOLATIONS` | COUNT_COL | Count of `violations` rows (asset asserted dup-free). | R2/R3 |
 | `N_HPV` | COUNT_COL | `sum(!is.na(HPV_DAYZERO_DATE) & HPV_DAYZERO_DATE != "")` on violation rows — a **narrower, different** HPV proxy than dataset 2's `ENF_RESPONSE_POLICY_CODE=="HPV"` tier. See cross-file caveats below — do not expect this to reconcile exactly to `hpv_spells`/`hpv_active`. | R2 |
 | `N_FRV` | COUNT_COL | Complement of `N_HPV` — violation rows with no HPV day-zero date. | R2 |
-| `N_VIOL_SIP` / `N_VIOL_TITLEV` / `N_VIOL_NSPS` / `N_VIOL_MACT` / `N_VIOL_FESOP` | COUNT_COL | `grepl()` substring match of the program name in `PROGRAM_DESCS` (State Implementation Plan / Title V Permits / New Source Performance Standards / MACT Standards / Federally-Enforceable State Operating Permit). Overlapping, not partitioning — need not sum to `N_VIOLATIONS`. | R3 |
+| `N_VIOL_SIP` / `N_VIOL_TITLEV` / `N_VIOL_NSPS` / `N_VIOL_MACT` / `N_VIOL_FESOP` | COUNT_COL | Match against `PROGRAM_CODES` with explicit `\b`-bounded codes (State Implementation Plan / Title V Permits / New Source Performance Standards / MACT Standards / Federally-Enforceable State Operating Permit). **Fixed 2026-07-28 (`R9`):** was a `grepl()` substring match against `PROGRAM_DESCS`, which let `N_VIOL_NSPS` scope-creep into `CAANSPSM`'s description by substring accident (418 rows) — now coded, not coincidental, and matches `PROG_NSPS`'s deliberate `CAANSPS`+`CAANSPSM` pooling (`R6`) by design. Overlapping, not partitioning — need not sum to `N_VIOLATIONS`. | **R9** |
 | `N_VIOL_EPA` / `N_VIOL_STATE` / `N_VIOL_LOCAL` | COUNT_COL | `AGENCY_TYPE_DESC` bucketed to federal / state / local (see agent report for exact string sets). | R3 |
 | `N_ENFORCEMENT` | COUNT_COL | Count of pooled `formal_actions` + `informal_actions` rows for the facility-year. | R2 |
 | `N_FORMAL` / `N_INFORMAL` | COUNT_COL | Partition of `N_ENFORCEMENT` by source table. | R3 |
-| `N_PENALTY_ACTION` | COUNT_COL | `ENF_TYPE_DESC == "CAA 113D1 Action For Penalty"`, pooled. | R3 |
+| `N_PENALTY_ACTION` | COUNT_COL | `grepl("^113D1", ENF_TYPE_CODE)`, pooled. **Fixed 2026-07-28 (`R9`):** was an exact match `ENF_TYPE_DESC == "CAA 113D1 Action For Penalty"`, which missed four 112(r)/MRR expedited-settlement variants of the same action (`ENF_TYPE_CODE` `113D1E`/`113D1E1`/`113D1E2`/`113D1E3`) — a 201-row (~2.9%) undercount of the true 113D1 family. | **R9** |
 | `N_PENALTIES` | COUNT_COL | Count of **formal** rows with parsed `PENALTY_AMOUNT > 0` (informal rows have no penalty field, never counted). The count companion to the dollar sum `PENALTY_AMOUNT` — they follow *different* NA rules (see below). | R3/R4 |
 | `N_PENALTIES_DUP` | COUNT_COL | Subset of `N_PENALTIES` on duplicate-flagged rows. | R3 |
 | `N_WARNING_LETTER` / `N_ADMIN_NP` / `N_CIVIL_JUDICIAL` / `N_NOV` / `N_ADMIN_ORDER` | COUNT_COL | Exact `ENF_TYPE_DESC` matches ("Warning Letter" / "CAA 113A Admin Compliance Order (Non-Penalty)" / "Civil Judicial Action" / "Notice of Violation" / "Administrative Order"), pooled formal+informal; unmapped types are dropped, so these need not sum to `N_ENFORCEMENT`. | R3 |
@@ -85,13 +91,15 @@ reference zero-vs-NA flag reused by `hpv_active`.
 | `N_STACK_PASS` / `N_STACK_FAIL` | COUNT_COL | `AIR_STACK_TEST_STATUS_DESC == "Pass"/"Fail"` (Pending/Incomplete/N-A left uncounted). | R3 |
 | `FACILITY_TYPE` | label | `FACILITY_TYPE_CODE` mapped through a fixed lookup, all 15 official ICIS-Air codes (POF→"Privately owned", COR→"Corporation", CNG→"County government", CTG→"Municipality", FDF→"Federal facility", STF→"State facility", DIS→"District", NON→"Non-government", GOC→"GOCO (government-owned, contractor-operated)", IND→"Individual", MXO→"Mixed ownership (public/private)", MWD→"Municipal or water district", SDT→"School district", TRB→"Tribal government", UNK→"Unknown"); `NA` if unmapped (2026-07-28: expanded from 8 to all 15 codes — see `panel_construction_decisions.md`/`dataset_construction_decisions.md` for the facility counts this closed). | R5 |
 | `OP_STATUS_CURRENT_DESC` | passthrough | Renamed from ICIS's `AIR_OPERATING_STATUS_DESC` — a **current, undated** snapshot, distinct from dataset 1's year-varying wayback status. | R5 |
-| `EMITS_VOC` / `EMITS_PM` / `EMITS_CO` / `EMITS_NOX` / `EMITS_SO2` / `EMITS_HAP` | flag | "Ever reported" flag from `pollutants.csv.gz`: `any(grepl(<pattern>, POLLUTANT_DESC, ignore.case=TRUE))` per facility (Volatile Organic / Particulate Matter / Carbon Monoxide / Nitrogen Oxides / Sulfur Dioxide / Hazardous Air Pollutant). Undated, boolean only — **not** a measured quantity (contrast with `emissions.csv.gz`'s pounds columns). Facility absent from `pollutants.csv.gz` → coalesced to `0` (a true "no profile" reading, not missing data). | **R6** |
+| `EMITS_PM` / `EMITS_CO` / `EMITS_NOX` / `EMITS_SO2` | flag | "Ever reported" flag from `pollutants.csv.gz`: `any(grepl(<pattern>, POLLUTANT_DESC, ignore.case=TRUE))` per facility (Particulate Matter / Carbon Monoxide / Nitrogen Oxides / Sulfur Dioxide). Undated, boolean only — **not** a measured quantity (contrast with `emissions.csv.gz`'s pounds columns). Each backed by only 1–8 distinct `POLLUTANT_CODE` values, so the plain substring match is safe here. Facility absent from `pollutants.csv.gz` → coalesced to `0` (a true "no profile" reading, not missing data). | **R6** |
+| `EMITS_VOC` | flag | Same "ever reported" pattern, but with a negative-lookbehind regex `(?<!NON-)VOLATILE ORGANIC` on `POLLUTANT_DESC`. **Fixed 2026-07-28 (`R9`):** the old plain `grepl("VOLATILE ORGANIC", ...)` matched `POLLUTANT_CODE 300000310` "NON-VOLATILE ORGANIC COMPOUNDS" as a false positive, flipping 30 facilities from `1` to the correct `0`. | **R9** |
+| `EMITS_HAP` | flag | "Ever reported" flag, but **not** a single-pattern match: (a) a CAS (Chemical Abstracts Service registry number)-number join against the official CAA §112(b) HAP list (188 substances, `code/03_datasets/hap_list_112b.R`), **unioned with** (b) the original umbrella-phrase rule (`grepl("HAZARDOUS AIR POLLUTANT", POLLUTANT_DESC)`) and (c) a name match for 17 CAS-less compound-class entries (e.g. "Chromium Compounds"). **Fixed 2026-07-28 (`R6` addendum):** the pre-fix rule was (b) alone, which missed the large majority of HAPs that ICIS-AIR records under a specific chemical name (Benzene, Formaldehyde, Lead, Mercury, ...) rather than the umbrella phrase. (b) was kept, not dropped, because it independently catches a real signal: an aggregate `"TOTAL HAZARDOUS AIR POLLUTANTS (HAPS)"` summary record (no CAS) that some facilities report instead of itemizing species. Full-universe `EMITS_HAP=1` count post-fix: 67,011 of 279,665 (24.0%). A coverage diagnostic prints on every build (`pollutants coverage: N/M rows (%) match none of the six EMITS_* categories`). | **R6** |
 | `PROG_SIP` / `PROG_TITLEV` / `PROG_NSPS` / `PROG_MACT` / `PROG_NESHAP` / `PROG_FESOP` / `PROG_NSR` / `PROG_PSD` | flag | "Ever enrolled" flag from `programs.csv.gz` by `PROGRAM_CODE` (SIP=`CAASIP`, Title V=`CAATVP`, NSPS=`CAANSPS`+`CAANSPSM` pooled, MACT=`CAAMACT`, NESHAP=`CAANESH`, FESOP=`CAAFESOP`, NSR=`CAANSR`, PSD=`CAAPSD`). This is a deliberately **narrowed 8-group set** — `CAAGACTM` (area-source MACT) and `CAACFC` (Title VI ozone) are excluded here to match dataset 1's 8-group `PROG_*_ACTIVE` allowlist, even though the panel layer (Part 2) keeps all 10 groups. Coalesced `NA→0`. | **R6** (aligns w/ `O3`) |
 | `N_PROGRAMS` | count | `n_distinct(PROGRAM_CODE)` per facility, **including** GACT/CFC (broader scope than the 8 `PROG_*` flags above). Facility-level, **not** subject to the coalesce-to-0 step. | **R7** |
 
 ## `operating.csv.gz` — dataset 1, facility × year, Wayback reconstruction
 
-Same 279,211 × 21-year rectangle as dataset 0 (1:1 joinable); strictly raw — year-varying fields are `NA`
+Same 279,665 × 21-year rectangle as dataset 0 (1:1 joinable); strictly raw — year-varying fields are `NA`
 wherever no Wayback snapshot exists, never imputed (`O2`).
 
 | Field | Type | Definition & derivation | Decision |
@@ -99,7 +107,7 @@ wherever no Wayback snapshot exists, never imputed (`O2`).
 | `WAYBACK_OBSERVED` | flag | `1` iff `wayback_facility_status.csv.gz` has a snapshot for `(PGM_SYS_ID, year)`. Always 0/1, never itself `NA`. | O2 |
 | `OP_STATUS_CODE` / `OP_STATUS_DESC` | passthrough | Wayback-reconstructed operating-status code/description for that year. `NA` for 2005–2014 and any uncovered facility-year. | O2 |
 | `OPERATING` | flag | `1` iff `OP_STATUS_CODE %in% c("OPR","TMP","SEA")`; carried unchanged from the cleaning layer. `NA` outside wayback coverage. | O3 |
-`PROG_SIP_ACTIVE`, `PROG_TITLEV_ACTIVE`, `PROG_NSPS_ACTIVE`, `PROG_MACT_ACTIVE`, `PROG_NESHAP_ACTIVE`, `PROG_FESOP_ACTIVE`, `PROG_NSR_ACTIVE`, `PROG_PSD_ACTIVE` (8 flags) | flag | From `wayback_program_status.csv.gz`, an explicit 8-group allowlist (chosen to guard against upstream schema drift after `gact`/`cfc` were silently added elsewhere) — "is this program group active in this year's wayback snapshot." `NA` where the facility isn't covered by that year's snapshot. | **O3** |
+| `PROG_SIP_ACTIVE`, `PROG_TITLEV_ACTIVE`, `PROG_NSPS_ACTIVE`, `PROG_MACT_ACTIVE`, `PROG_NESHAP_ACTIVE`, `PROG_FESOP_ACTIVE`, `PROG_NSR_ACTIVE`, `PROG_PSD_ACTIVE` (8 flags) | flag | From `wayback_program_status.csv.gz`, an explicit 8-group allowlist (chosen to guard against upstream schema drift after `gact`/`cfc` were silently added elsewhere) — "is this program group active in this year's wayback snapshot." `NA` where the facility isn't covered by that year's snapshot. | **O3** |
 | `ENTERED_YEAR` / `EXITED_YEAR` | facility-level | From `wayback_facility_spells.csv.gz` — year the facility's observed operating spell began/ended, broadcast to all 21 rows. `NA` for the ~2,472 ICIS facilities with no wayback spell. | O4 |
 | `EXIT_SOURCE` | categorical | `"cls"` (confirmed closure) / `"dropout"` (last seen operating, then vanished — an upper bound on unexplained exits) / `"other"` / `NA` (no exit observed). Because dataset 1 drops wayback-only facilities, only 2 of 11,801 wayback `dropout` exits survive here — this column is effectively almost pure `"cls"` in this file. | **O4** |
 | `LEFT_CENSORED` / `RIGHT_CENSORED` | flag | Facility-level: spell already in progress at the window's left edge / still ongoing at the right edge. | O4 |
@@ -151,7 +159,7 @@ definitions.
 
 | Field | Type | Definition & derivation | Decision |
 |---|---|---|---|
-| `HPV_ACTIVE` | flag | Built from `hpv_spells`: drop `missing_start` spells (no interval to test); screen day-zero year to `[1970, 2025]` (excludes 165/44,457 mappable spells, catching e.g. a mistyped `0218` that would spuriously flag 2005–2017 — `H7`); compute a conservative closing date (`resolved` if `closed`, else Dec 31 of the day-zero year for `open`/`bad_order` — chosen over alternatives in diagnostic 09, `H5`); `1` if any qualifying spell's interval overlaps the calendar year (can be `1` even where `ICIS_OBSERVED == 0` — a spell always wins); `0` if no overlap but `ICIS_OBSERVED == 1` (true zero, reusing dataset 0's flag rather than inventing a new one — `H6`); `NA` if no overlap and unobserved. | **H5** (collapse rule), **H6** (zero-vs-NA reuse), **H7** (day-zero screen) |
+| `HPV_ACTIVE` | flag | Built from `hpv_spells`: drop `missing_start` spells (no interval to test); screen day-zero year to `[1970, 2025]` (excludes 268/44,744 mappable spells, catching e.g. a mistyped `0218` that would spuriously flag 2005–2017 — `H7`); compute a conservative closing date (`resolved` if `closed`, else Dec 31 of the day-zero year for `open`/`bad_order` — chosen over alternatives in diagnostic 09, `H5`); `1` if any qualifying spell's interval overlaps the calendar year (can be `1` even where `ICIS_OBSERVED == 0` — a spell always wins); `0` if no overlap but `ICIS_OBSERVED == 1` (true zero, reusing dataset 0's flag rather than inventing a new one — `H6`); `NA` if no overlap and unobserved. | **H5** (collapse rule), **H6** (zero-vs-NA reuse), **H7** (day-zero screen) |
 
 ## `penalties.csv.gz` — dataset 3, one row per formal enforcement action
 
@@ -172,14 +180,14 @@ code/description), `ACTIVITY_TYPE_CODE` / `ACTIVITY_TYPE_DESC` (activity-type co
 `STATE_EPA_FLAG` (which level — EPA/State/Local — took the action) are direct passthrough from
 `formal_actions.csv.gz`; see `data_dictionary.md`'s `ICIS-AIR_FORMAL_ACTIONS.csv` entry for the raw definitions.
 
-> **Caveat (`P5`).** The penalty is usually one dollar figure repeated across co-defendants (516 of 588
-> multi-facility settlements), but 72 settlements carry *differing* per-facility amounts. Do not sum
-> `PENALTY_AMOUNT` across a settlement's facilities without first deciding a broadcast rule — see
-> `briefs/datasets/multi_facility_settlement_decision.md`.
+> **Caveat (`P5`).** As of 2026-07-27, 571 settlements span more than one facility; the penalty is usually one
+> dollar figure repeated across co-defendants (507 of 571), but 64 settlements carry *differing* per-facility
+> amounts. Do not sum `PENALTY_AMOUNT` across a settlement's facilities without first deciding a broadcast
+> rule — see `briefs/datasets/multi_facility_settlement_decision.md`.
 
 ## `coordinates.csv.gz` — dataset 4, one row per facility
 
-Coordinate source: FRS via `REGISTRY_ID` (`C1`); full 279,211-facility universe (`C4`).
+Coordinate source: FRS via `REGISTRY_ID` (`C1`); full 279,665-facility universe (`C4`).
 
 | Field | Type | Definition & derivation | Decision |
 |---|---|---|---|
@@ -187,15 +195,16 @@ Coordinate source: FRS via `REGISTRY_ID` (`C1`); full 279,211-facility universe 
 | `LATITUDE` / `LONGITUDE` | numeric | `FRS_FACILITIES.csv`'s `LATITUDE_MEASURE`/`LONGITUDE_MEASURE`, joined via `REGISTRY_ID` (first record kept if multiple). `NA` if no FRS match. | **C1** |
 | `HAS_COORDINATE` | flag | `1` iff both lat/lon are non-missing. | C1 |
 | `COUNTY_FIPS` | GEOID | Point-in-polygon spatial join (`st_within`) of the FRS coordinate against the county shapefile — the county the *coordinate itself* falls in, computed only where a coordinate exists. `NA` for non-CONUS facilities (shapefile is CONUS+DC only) or points outside every polygon. | **C2** |
-| `COORD_COUNTY_DIST_KM` | km | Distance from the coordinate to the ICIS-claimed county's polygon (EPSG:5070 Albers). **`0` by construction** where `COUNTY_FIPS == ICIS_COUNTY_FIPS` (no distance computed, exact match); a real `st_distance()` value only for the checkable-and-mismatched subset. `NA` if uncheckable (no coordinate, or `COUNTY_NAME` unresolvable). `0 ≠ NA` is strictly honored — don't treat a missing check as agreement. | **C3** |
+| `COORD_COUNTY_DIST_KM` | km | Distance from the coordinate to the ICIS-claimed county's polygon, via a direct **geodesic** distance. **`0` by construction** where `COUNTY_FIPS == ICIS_COUNTY_FIPS` (no distance computed, exact match); a real distance value only for the checkable-and-mismatched subset. `NA` if uncheckable (no coordinate, or `COUNTY_NAME` unresolvable). `0 ≠ NA` is strictly honored — don't treat a missing check as agreement. **Fixed 2026-07-28 (`C3` addendum):** was reprojected into EPSG:5070 (NAD83 / Conus Albers), valid only for CONUS — Alaska mismatches diverged from the true geodesic distance by up to ~21% (e.g. 817 km vs 993 km); CONUS distances were negligibly affected (mean 0.11 km). `COORD_GROSS_ERROR` itself likely never flipped from this fix (every affected mismatch was well past the 5 km cutoff either way), but the distance number wasn't trustworthy outside CONUS before it. | **C3** |
 | `COORD_GROSS_ERROR` | flag | `1` iff checkable and `COORD_COUNTY_DIST_KM > 5` (km). `NA` exactly where `COORD_COUNTY_DIST_KM` is `NA`. | **C3** |
 
 ## `pipeline.csv.gz` — dataset 6, facility × year, EPA ECHO "CAA Compliance Pipeline"
 
-7,193 of 66,655 raw rows are EPA linkage-helper placeholders (no real violation date) and are excluded
-(`PL1`). Year anchor is `VIOL_START_DATE`, deliberately not the cleaned asset's own `date` (which can trace to
-a later enforcement/eval date and would misdate the violation — `PL2`). Universe: the same 279,211 × 21
-rectangle as datasets 0/1/2b (`PL3`).
+As of 2026-07-27 (automated fetch — this drifts with each live source refresh), 7,218 of 66,723 raw rows are
+EPA linkage-helper placeholders (no real violation date) and are excluded (`PL1`). Year anchor is
+`VIOL_START_DATE`, deliberately not the cleaned asset's own `date` (which can trace to a later
+enforcement/eval date and would misdate the violation — `PL2`). Universe: the same 279,665 × 21 rectangle as
+datasets 0/1/2b (`PL3`).
 
 | Field | Type | Definition & derivation | Decision |
 |---|---|---|---|
@@ -245,114 +254,94 @@ every co-mapped `PGM_SYS_ID` (`EM2`) — flagged, not resolved.
 
 ---
 
-# Part 2 — `data/panels/` (facility spine + three sample panels)
+# Part 2 — `data/panels/` (two panels, built by `code/04_panel_building/`)
 
-Unlike Part 1, this layer *does* apply sample selection. `universe`, `major_synmin`, and `electric` are the
-**same 111-column recipe** (`build_panel()` in `03_build_functions.R`) over three different facility filters —
-documented once here rather than three times.
+**This entire part was rewritten 2026-07-29** — it used to describe the archived `code/03_panel_building/`
+pipeline (a facility spine + three sample panels: `universe`/`major_synmin`/`electric`, 111 lowercase-`snake_case`
+columns). That pipeline is archived in full (`archive/panel_building_legacy/README.md`); the current
+`code/04_panel_building/` pipeline builds from `data/datasets/` instead of `data/processed/` directly, ships
+**exactly two panels**, no persisted spine file, and uses the same `UPPER_SNAKE_CASE` casing as Part 1
+throughout. See `code/04_panel_building/README.md` and `briefs/panel/panel_construction_decisions.md` (`PB1`–`PB8`)
+for the full "why."
+
+`major_synmin_2015_2025` and `electric_2015_2025` are the **same column recipe** (`build_panel()` in
+`03_build_functions.R`) over two different facility filters, both drawn from one shared in-memory candidate
+set (`00_spine.R`'s `spine` — CONUS + Major/Synthetic-Minor class; not written to disk, since only these two
+panels ever consume it in the same R session — `PB1`).
 
 ## Facility filters (`PANEL_SPECS`)
 
 | Panel | Filter |
 |---|---|
-| `universe` | `STATE %in% CONUS` — every ever-active facility in the 48 contiguous states + DC. |
-| `major_synmin` | `universe` filter **+** `AIR_POLLUTANT_CLASS_DESC %in% c("Major Emissions", "Synthetic Minor Emissions")`. |
-| `electric` | `major_synmin` filter **+** NAICS 2211 (prefix-anywhere match, catches child codes like `221112`) **or** SIC 4911 (anchored exact 4-digit match) — decision `PR1`. The NAICS/SIC-OR disagreement set is an open question, `D-C1`. |
+| `major_synmin_2015_2025` | `STATE` in the 48 contiguous states + DC, **+** `AIR_POLLUTANT_CLASS_DESC %in% c("Major Emissions", "Synthetic Minor Emissions")`, **+** `EVER_ACTIVE` (see below). |
+| `electric_2015_2025` | the above **+** NAICS 2211 (prefix-anywhere match, catches child codes like `221112`) **or** SIC 4911 (anchored exact 4-digit match). |
 
-## `spine.csv.gz` — facility grain (one row per ever-active facility)
+`EVER_ACTIVE` (**revised 2026-07-29, explicit user decision — `PB2`**): `1` iff `ACTIVE_BROAD == 1`
+(`operating.csv.gz`, dataset-layer decision `O6`) in **at least one** of the 11 years 2015–2025 —
+`any(ACTIVE_BROAD == 1, na.rm = TRUE)`. Originally required `ACTIVE_BROAD == 1` in *every* year
+("continuously active," `all(...)`); retired because that screen dropped exactly the facilities most likely
+to exit *because of* enforcement/penalty outcomes — survivorship bias in a panel meant to study enforcement
+and compliance. `EVER_ACTIVE` itself rides along as a column in both built panels, constant `TRUE` on every
+row (a facility that failed the screen is never in the panel to begin with) — present for traceability, not
+because it varies within either file.
 
-"Ever-active" = ≥1 dated event in 2005–2025 across any of the six event tables (`F1`). This is the input to
-all three sample panels below; its own attribute columns are also carried unchanged into each panel row
-(time-invariant across all 21 years of a facility — `P7`).
+Grain: `PGM_SYS_ID × YEAR`, window **2015–2025 only** (`PB3`) — not the repo-wide 2005–2025, since the
+eligibility screen and both panels are already restricted to this span. Every eligible facility gets a full
+11-year rectangle of rows (`build_panel()`'s `expand_grid`) regardless of which year(s) made it eligible —
+years outside its actual activity read as `OBS_SOURCE == "unobserved"` (see below), not as missing rows.
 
-| Field | Type | Definition & derivation | Decision |
-|---|---|---|---|
-| `county_fips` | GEOID | Spatial join of the FRS coordinate against the county shapefile (`st_within`). `NA` if no coordinate or unplaceable. | F3/N4 |
-| `coord_county_dist_km` | km | Distance from the coordinate to the ICIS-claimed county (same method as `coordinates.csv.gz`'s `COORD_COUNTY_DIST_KM`); `0` on an exact county match, `NA` if uncheckable. | N13 |
-| `coord_gross_error` | flag | `1` iff checkable and distance `> 5` km; `NA` if uncheckable. | N13 |
-| `facility_type` | label | Same fixed code→label lookup as `regulatory.FACILITY_TYPE`. | — |
-| `op_status_current_desc` | passthrough | Same as `regulatory.OP_STATUS_CURRENT_DESC` — current, undated ICIS status description. | R5/F2 |
-| `latitude` / `longitude` | numeric | FRS coordinate, same derivation as `coordinates.csv.gz`. | F3/N5 |
-| `emits_voc`, `emits_pm`, `emits_co`, `emits_nox`, `emits_so2`, `emits_hap` (6 flags) | flag | Same "ever reported" logic as `regulatory.EMITS_*`. Coalesced `NA→0`. | F6 |
-| `prog_sip`, `prog_titlev`, `prog_nsps`, `prog_mact`, `prog_neshap`, `prog_fesop`, `prog_nsr`, `prog_psd` (8 flags, same set as the datasets layer) | flag | Same "ever enrolled" logic as `regulatory.PROG_*`. Coalesced `NA→0`. | F6 |
-| `prog_gact` | flag | `any(PROGRAM_CODE == "CAAGACTM")` — the Part 63 **area-source** counterpart to MACT; kept as its own flag (not folded into `prog_mact`) so the major/area distinction stays visible. **Present in the panel layer only** — see note below. | F6 |
-| `prog_cfc` | flag | `any(PROGRAM_CODE == "CAACFC")` — Title VI stratospheric-ozone-protection program. **Present in the panel layer only** — see note below. | F6 |
-| `n_programs` | count | `n_distinct(PROGRAM_CODE)` per facility, including `gact`/`cfc`. `0` (not `NA`) for a facility with no `programs.csv.gz` record at all — read as "no enrollment record," not "confirmed unenrolled" (`N7`). | F6/N7 |
-| `program_begin_year` | year | Earliest parseable `BEGIN_DATE` year across `programs.csv.gz`, guarded to `[1900, 2026]`. `NA` if no valid year survives. | F6 |
-| `entered_year` | year | First wayback snapshot year the facility is OPERATING. | F7 |
-| `exited_year` | year | First year *after which* the facility is never operating again — defined off the **last** operating year (reopening-robust: a mid-window close→reopen doesn't fabricate a spurious early exit). This one-row summary collapses any genuine *interior* closure — 0.26% of ever-operating facilities have one; the panel's year-varying `operating`/`op_status_code` columns retain the true sequence. | F7/N9 |
-| `exit_source` | categorical | `"cls"` / `"other"` / `"dropout"` (last seen operating, then vanished — kept distinct from `cls` since disappearance can be an ICIS extract artifact, unresolved open question `D-C4`) / `NA` (never exited). | F7/N8 |
-| `left_censored` / `right_censored` | flag | `1` if already operating at the first (2015) / still operating at the last (2025) wayback snapshot. | F7 |
+## Facility-level attributes (constant across all 11 rows of a `PGM_SYS_ID`)
 
-## The shared 111-column panel recipe (`universe`/`major_synmin`/`electric`)
-
-Balanced facility × year rectangle, 2005–2025, built by `build_panel()`: full-join five per-source
-aggregators → left-join onto the balanced rectangle → compute `any_*` → attach HPV status → attach penalty →
-attach wayback → `code_known_zeros()` (order is load-bearing).
-
-**Inspections, violations, enforcement, certifications, stack tests** — every `n_*`/`_dup`/`_dup_exact` column
-in these five blocks is derived **identically** to its `N_*` counterpart in `regulatory.csv.gz` above (same
-source tables, same logic, only casing differs). Two panel-layer-only additions:
+Read straight from `regulatory.csv.gz`/`coordinates.csv.gz`/`operating.csv.gz` (Part 1) by `00_spine.R`, with
+no panel-specific re-derivation — same columns, same casing, same decisions as their Part 1 entries above.
 
 | Field | Type | Definition & derivation | Decision |
 |---|---|---|---|
-| `n_penalties` | COUNT_COL | Same as `regulatory.N_PENALTIES`, but computed inside the enforcement aggregator specifically so it inherits COUNT_COL/known-zero treatment — diverges from `penalty_amount` below: an observed facility-year with a $0/no-penalty formal action reads `n_penalties = 0` **and** `penalty_amount = NA` simultaneously. | **N14** |
-| `n_penalties_dup` | COUNT_COL | Of the penalty-bearing formal rows, how many are event-key duplicates. | N14 |
+| `REGISTRY_ID`, `FACILITY_NAME`, `STREET_ADDRESS`, `CITY`, `COUNTY_NAME`, `STATE`, `ZIP_CODE`, `EPA_REGION`, `NAICS_CODES`, `SIC_CODES`, `FACILITY_TYPE_CODE`, `FACILITY_TYPE`, `AIR_POLLUTANT_CLASS_DESC` | passthrough | Identical to their `regulatory.csv.gz` entries in Part 1 (current ICIS snapshot, time-invariant). | R5 |
+| `EMITS_VOC` / `EMITS_PM` / `EMITS_CO` / `EMITS_NOX` / `EMITS_SO2` / `EMITS_HAP` | flag | Identical to `regulatory.csv.gz`'s columns of the same name. | R6 |
+| `PROG_SIP` / `PROG_TITLEV` / `PROG_NSPS` / `PROG_MACT` / `PROG_NESHAP` / `PROG_FESOP` / `PROG_NSR` / `PROG_PSD` | flag | Identical to `regulatory.csv.gz`'s columns of the same name — the same narrowed **8-group** set (no `GACT`/`CFC`), matching dataset 1's `PROG_*_ACTIVE` allowlist. Unlike the archived pipeline, the panel layer does **not** carry a 10-group version — `PROG_GACT`/`PROG_CFC` don't exist anywhere in this pipeline. | R6 |
+| `N_PROGRAMS` | count | Identical to `regulatory.csv.gz`'s column — `NA`-able, **never** coalesced to `0` (unlike the archived pipeline's `n_programs`, which did coalesce). A facility absent from `programs.csv.gz` reads `NA`, not `0`. | R7, PB6 |
+| `LATITUDE` / `LONGITUDE` / `HAS_COORDINATE` / `COUNTY_FIPS` / `ICIS_COUNTY_FIPS` / `COORD_COUNTY_DIST_KM` / `COORD_GROSS_ERROR` | numeric/flag/GEOID | Identical to their `coordinates.csv.gz` entries in Part 1. | C1–C5 |
+| `COORD_NO_COUNTY_MATCH` | flag | Panel-layer-only derivation (`coordinates.csv.gz` doesn't ship this exact flag): `1` iff `HAS_COORDINATE == 1` but the point-in-polygon lookup still failed to land in any county polygon — distinct from `HAS_COORDINATE == 0` (no coordinate to begin with). | — |
+| `ENTERED_YEAR` / `EXITED_YEAR` / `EXIT_SOURCE` | year / categorical | Identical to their `operating.csv.gz` entries in Part 1 (wayback-derived facility-level spell fields, `O4`). | O4 |
+| `EARLIEST_PROGRAM_BEGIN_YEAR` / `EARLIEST_PROGRAM_BEGIN_YEAR_RAW` | year | Identical to their `operating.csv.gz` entries in Part 1. | O5 |
+| `EVER_ACTIVE` | flag | The panel's own eligibility screen (see above) — always `TRUE` within either built panel. | PB2 |
 
-**Any-flags and observation source**
+**Removed from the panel, 2026-07-29 (explicit user decisions):**
+- **`OP_STATUS_CURRENT_DESC`** (the static, current-ICIS-snapshot status Part 1's `regulatory.csv.gz` carries,
+  `R5`) — excluded here to avoid it being mistaken for the panel's genuinely year-varying operating-status
+  evidence (`OP_STATUS_CODE`/`OPERATING`/`ACTIVE`/`ACTIVE_BROAD`, below). Still available directly from
+  `regulatory.csv.gz` for anyone who wants the current snapshot specifically.
+- **`LEFT_CENSORED`/`RIGHT_CENSORED`** — dropped as a derived convenience on top of `ENTERED_YEAR`/
+  `EXITED_YEAR`/`EXIT_SOURCE`, which already carry the same entry/exit information directly.
 
-| Field | Type | Definition & derivation | Decision |
-|---|---|---|---|
-| `any_inspections` / `any_violations` / `any_enforcement` / `any_certs` | flag | `1` iff the matching `n_*` count `> 0`; NA-safe (an `NA` count propagates to `NA` here). | P5 |
-| `obs_source` | categorical | `"event"` — the facility-year appeared in ≥1 of the five event aggregators (some measure has a real count); `"operating"` — no event, but the wayback snapshot says `operating == 1` that year (a genuine **structural zero**, 2015–2025 only); `"unobserved"` — neither (includes all pre-2015 zero-event years and closed/`CLS` zero-event years). This is the flag `code_known_zeros()` uses to turn `NA` counts into `0` for the `"operating"` rows — the mechanism behind the whole zero-vs-NA discipline for this layer. | **W6** |
+## Year-varying block (facility × year, `build_panel()`)
 
-**Facility attributes** — identical derivations to the `spine.csv.gz` table above (same columns, riding along
-unchanged across all 21 rows of a `PGM_SYS_ID` — `P7`); not repeated here.
-
-**Wayback status** (year-varying, `NA` outside 2015–2025 and for the facility's uncovered years — `W3`/`W7`)
-
-| Field | Type | Definition & derivation | Decision |
-|---|---|---|---|
-| `op_status_code` | passthrough | Raw wayback operating-status code, forward-filled (LOCF) across interior gaps within a facility's observed span, never extrapolated at the edges. | W1/W4 |
-| `operating` | flag | `1` iff `op_status_code %in% c("OPR","TMP","SEA")`. Drives the `"operating"` branch of `obs_source`. | W2 |
-| `prog_sip_active` … `prog_fesop_active` (7 flags: sip/titlev/nsps/mact/gact/neshap/fesop) + `prog_cfc_active` | flag | `1` iff the facility carries ≥1 matching program row whose that-year status is in `{OPR,TMP,SEA}` (the "operating-program" rule), given the facility is present in that year's snapshot; `NA` if the facility's status that year is blank/`CLS`, or the facility isn't in that snapshot at all. | **W5**, **N11** |
-| `prog_nsr_active` / `prog_psd_active` | flag | **Preconstruction-program rule**: `1` iff ≥1 matching row with status in `{OPR,TMP,SEA}` **or** `{PLN,CNS}` (planned/under-construction) — these permits attach *before* a source operates, so these two flags can be `1` while `operating = 0`. | **N11** |
-
-> **Note — `prog_gact`/`prog_gact_active`/`prog_cfc`/`prog_cfc_active` exist in the panel layer but not
-> `data/datasets/`.** This is a deliberate scope difference, not an inconsistent derivation: dataset 1
-> (`operating.csv.gz`) narrows to the same 8 program groups as dataset 0 (`O3`), while the panel/spine layer
-> keeps all 10 groups the underlying wayback-programs data actually carries. `n_programs`/`N_PROGRAMS` in both
-> layers already count all 10 regardless of which per-group flags are exposed.
->
-> **Documentation-drift note (found while compiling this dictionary, 2026-07-27):** `panel_construction_decisions.md`'s
-> `W5` and `N10` entries describe "the 8 spine groups" / "every one of the 8 flags" — that predates `gact`/`cfc`
-> being added; the code and the actual 111-column header both carry 10. See the addendum added at those entries.
-
-**HPV interval status**
+**Event counts** — every `N_*`/`_DUP`/`_DUP_EXACT` column, plus `PENALTY_AMOUNT`/`PENALTY_AMOUNT_DUP`, is a
+direct passthrough of its identically-named `regulatory.csv.gz` column (Part 1) — same source tables, same
+logic, same zero-vs-NA gate (`ICIS_OBSERVED`), no re-derivation at this layer. Not repeated here; see Part 1's
+`regulatory.csv.gz` table.
 
 | Field | Type | Definition & derivation | Decision |
 |---|---|---|---|
-| `hpv_active` | flag | Built from violation-row HPV spells (`HPV_DAYZERO_DATE`/`HPV_RESOLVED_DATE`, `dup==0` kept — the one count-family exception to "no dedup," since this is a status flag not a count); spell end = resolved date if valid, else Dec 31 of the day-zero year; overlapping spells at a facility are **merged/unioned**. `1` iff any spell overlaps the year (never masked by other-measure unobserved status — can be `1` even where `any_violations` is `NA`); `0` if checked and no overlap; `NA` if unobserved and no overlap. Distinct from `n_hpv` (a recorded-year count, not a status) — 69% of resolved HPV spells span more than one calendar year, so the two disagree by design. | **P8**, **V6** |
-| `hpv_active_1mo` | flag | Same spell construction; `1` iff the unioned overlap days for the year `> 30` (operationalizes "in HPV status for more than a month"). | P8/V6 |
+| `ANY_INSPECTIONS` / `ANY_VIOLATIONS` / `ANY_ENFORCEMENT` / `ANY_CERTS` | flag | `1` iff the matching `N_*` count `> 0`; NA-safe (`NA > 0` is `NA`, so an unobserved facility-year reads `NA` here too, never a silent `0`). | — |
+| `OP_STATUS_CODE` / `OPERATING` / `PROG_SIP_ACTIVE` … `PROG_PSD_ACTIVE` (8 flags, same set as the facility-level `PROG_*` above) / `ICIS_OBSERVED` / `EMISSIONS_OBSERVED` / `GHG_OBSERVED` / `ACTIVE` / `ACTIVE_BROAD` | passthrough / flag | Direct passthrough of their identically-named `operating.csv.gz` columns (Part 1) — no panel-specific re-derivation. `PROG_NSR_ACTIVE`/`PROG_PSD_ACTIVE` inherit the dataset layer's preconstruction-program rule (`{PLN,CNS}` counts as active, since these permits attach before a source operates). | O2, O3, O6 |
+| `HPV_ACTIVE` | flag | Direct passthrough of `hpv_active.csv.gz` (Part 1) — the R2 interval-overlap collapse, `H5`/`H6`/`H7` zero-vs-NA discipline. **No `HPV_ACTIVE_1MO` variant** — `hpv_active.csv.gz` never shipped it, and recomputing a third implementation of the same interval logic was explicitly ruled out. | H5–H7, PB7 |
+| `OBS_SOURCE` | categorical | The one piece of real logic this layer adds. `"event"` = `ICIS_OBSERVED == 1` (a real ICIS record that year); `"operating"` = no ICIS event but `ACTIVE_BROAD == 1` (confirmed active some other way — a genuine structural zero); `"unobserved"` = neither. **Revised 2026-07-29 (`PB2`/`PB4`):** under the old all-11-years eligibility screen, `"unobserved"` was impossible by construction; under the current ≥1-year rule it's real and substantial, since a facility can qualify via one year while other years in its 11-year rectangle have no confirmed activity. | PB4 |
 
-**Penalty**
-
-| Field | Type | Definition & derivation | Decision |
-|---|---|---|---|
-| `penalty_amount` | dollars | `sum(parse_number(PENALTY_AMOUNT), na.rm=TRUE)` over **all** formal rows (dup and non-dup) for the facility-year; then set to `NA` whenever the sum is zero **or** missing — a separate rule from the `obs_source`/COUNT_COLS convention, and explicitly exempt from `code_known_zeros()`'s NA→0 fill. Can include a broadcast multi-facility settlement penalty repeated across co-defendants — don't sum across facilities. | E3 |
-| `penalty_amount_dup` | dollars | Dollars contributed specifically by event-key duplicate rows. | — |
-
-> **Documentation-drift note (found while compiling this dictionary, 2026-07-27):** `panel_construction_decisions.md`'s
-> `E4` entry describes penalties as filtered to `dup==0` before summing — that's superseded by the file's own
-> 2026-07-17 revision banner; the current `attach_penalty()` sums **all** rows and reports the dup dollars
-> separately in `penalty_amount_dup`, matching what's actually in `03_build_functions.R` and in the data. See
-> the addendum added at that entry.
+**The known-operating-zero fill:** for rows with `OBS_SOURCE == "operating"`, every `N_*` count and
+`HPV_ACTIVE` is filled `NA → 0` (a confirmed-active facility-year with no ICIS event is a true zero, not
+unknown). `PENALTY_AMOUNT`/`PENALTY_AMOUNT_DUP` are **deliberately excluded** from this fill — a known-active,
+zero-ICIS-event facility-year still reads `NA` for `PENALTY_AMOUNT` (no confirmed formal action), matching
+the dataset layer's own `R4` convention.
 
 ### Cross-cutting notes (Part 2)
 
-- **`obs_source` is context-dependent.** Within an already-filtered "operating" subsample, `obs_source ==
-  "event"` is mechanically equivalent to "some count > 0" — conditioning on it there is conditioning on the
-  outcome. Across the full panel (all years), it carries independent information by separating `"unobserved"`
-  from real zeros — that's the whole point of the convention (`W6`/`N16`).
-- **`n_hpv` and `hpv_active`/`hpv_active_1mo` answer different questions** and will disagree year to year
-  (`N6`) — use the interval flags for a status question, the recorded-year count for an events question.
+- **`OBS_SOURCE` is context-dependent**, same as its predecessor concept was: within an already-filtered
+  `"operating"` subsample, `OBS_SOURCE == "event"` is mechanically equivalent to "some count > 0" —
+  conditioning on it there is conditioning on the outcome. Across the full panel it carries independent
+  information by separating `"unobserved"` from real zeros.
+- **This layer carries no separate HPV-count column of its own** (unlike the old `hpv_active`/`hpv_active_1mo`
+  vs. a spine-level recorded-year count) — `N_HPV` (an event count, from `regulatory.csv.gz`) and `HPV_ACTIVE`
+  (an interval-overlap status, from `hpv_active.csv.gz`) answer different questions and will disagree year to
+  year; use the interval flag for a status question, the recorded-year count for an events question.

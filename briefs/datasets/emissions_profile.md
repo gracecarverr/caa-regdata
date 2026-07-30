@@ -57,8 +57,8 @@ PM10 and PM2.5 each have a canonical **total** `POLLUTANT_NAME` plus several **c
 variants that are subsets of that total (e.g. `"Primary PM10, filterable portion only"` is part of
 `"Primary PM10 (filterables and condensibles)"`; PM2.5 additionally has sulfate/organic-carbon/
 elemental-carbon/nitrate "portion" rows). **Checked directly**: a naive substring match (`grepl("PM10", ...)`)
-gives a total of **$11.66B vs. the correct $7.04B — a 1.65× inflation**; PM2.5 is inflated 1.66× the same
-way (`$8.27B` vs. `$4.97B`). VOC/NOx/SO2/CO have exactly one `POLLUTANT_NAME` variant each, so exact-match
+gives a total of **11.66B lbs vs. the correct 7.04B lbs — a 1.65× inflation**; PM2.5 is inflated 1.66× the
+same way (`8.27B lbs` vs. `4.97B lbs`). VOC/NOx/SO2/CO have exactly one `POLLUTANT_NAME` variant each, so exact-match
 costs nothing there. Every pollutant column in dataset 7 matches its canonical total string exactly — never
 by substring — for this reason (EM4).
 

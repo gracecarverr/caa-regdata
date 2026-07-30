@@ -5,10 +5,10 @@
 #   this page is retyped -- every cell below is read from those CSVs and formatted at render time.
 #   This replaces the archived build_panels_page.R (archive/panel_building_legacy/diagnostics/), which
 #   profiled the OLD three-panel (universe/major_synmin/electric) structure built from data/processed/.
-#   This version profiles the NEW two-panel structure (major_synmin_continuous_2015_2025,
-#   electric_continuous_2015_2025) from scratch, matching 18_panel_profile.R's own schema one-for-one --
-#   it is not a revival of the archived script. docs/panels.html had been left un-regenerated since the
-#   2026-07-28 archive (see code/diagnostics/README.md's prior warning); this script ends that gap.
+#   This version profiles the two-panel structure (major_synmin_2015_2025, electric_2015_2025) from scratch,
+#   matching 18_panel_profile.R's own schema one-for-one -- it is not a revival of the archived script.
+#   docs/panels.html had been left un-regenerated since the 2026-07-28 archive (see
+#   code/diagnostics/README.md's prior warning); this script ends that gap.
 #   Depends on: output/panel_profile/*.csv existing (run `Rscript code/diagnostics/18_panel_profile.R`
 #   first -- that script is hand-run, not part of RUN_ALL.R, matching every sibling profile script's own
 #   convention; see that script's own header).
@@ -110,9 +110,10 @@ t3_rows <- vapply(years, function(yr) {
 }, character(1))
 table3 <- stat_table("Coverage by year — share of facility-years with an ICIS event", c("Year", PANEL_LABELS), t3_rows)
 table3_note <- paste(
-  "\"Share with an ICIS event\" = OBS_SOURCE == \"event\"; the remainder is OBS_SOURCE == \"operating\"",
-  "(no ICIS event that year, but confirmed active another way). OBS_SOURCE is never \"unobserved\" in these",
-  "continuity-screened panels (PB4), so the two shares are complementary and only one is shown here.")
+  "\"Share with an ICIS event\" = OBS_SOURCE == \"event\". The remainder splits between OBS_SOURCE ==",
+  "\"operating\" (no ICIS event that year, but confirmed active another way) and \"unobserved\" (no",
+  "confirmed activity that year — expected here, since each panel only requires a facility to be active",
+  "in at least one of its 11 years, not every year).")
 
 # =========================================================================================================
 # Table 4 -- HPV-active rate by year (hpv_active_by_year.csv; H6 zero-vs-NA discipline)
@@ -157,17 +158,16 @@ t6_rows <- c(
 table6 <- stat_table("Coordinate coverage & geocoding quality (facility-level)", c("", PANEL_LABELS), t6_rows)
 
 # =========================================================================================================
-# Table 7 -- entry/exit censoring (entry_exit_summary.csv, facility-level). Every facility here is active in
-#   all 11 years within the 2015-2025 window by construction -- these rows describe activity OUTSIDE the
-#   window, not gaps within it.
+# Table 7 -- entry/exit (entry_exit_summary.csv, facility-level). These fields are wayback's own entry/exit
+#   spell record (facility-level, broadcast across all 11 rows) -- not a claim that every facility here is
+#   active every year within the window (that's no longer guaranteed under the >=1-year eligibility rule;
+#   see Table 3's note for within-window coverage instead).
 # =========================================================================================================
 t7_rows <- c(
-  td_row(c("Left-censored (existed pre-2015)",     sapply(PANEL_KEYS, function(p) pct1(get_field(entry_exit, p, "pct_left_censored"))))),
-  td_row(c("Right-censored (no confirmed exit)",   sapply(PANEL_KEYS, function(p) pct1(get_field(entry_exit, p, "pct_right_censored"))))),
   td_row(c("Confirmed exited",                     sapply(PANEL_KEYS, function(p) pct1(get_field(entry_exit, p, "pct_exited"))))),
   td_row(c("Entered-year, median",                 sapply(PANEL_KEYS, function(p) as.character(get_field(entry_exit, p, "entered_year_median")))))
 )
-table7 <- stat_table("Entry/exit censoring (facility-level)", c("", PANEL_LABELS), t7_rows)
+table7 <- stat_table("Entry/exit (facility-level)", c("", PANEL_LABELS), t7_rows)
 
 # =========================================================================================================
 # Table 8 -- top 5 states by facility count (categorical_frequency.csv, variable == "STATE", per panel --
@@ -203,31 +203,33 @@ while (length(md_lines) && !nzchar(trimws(md_lines[1]))) md_lines <- md_lines[-1
 # unrelated text -- the warning below catches that case so it doesn't go unnoticed.
 narrative_text <- paste(md_lines, collapse = "\n")
 PUBLIC_TEXT_SUBS <- list(
-  list(pat = "\\| `major_synmin_continuous_2015_2025` \\|", rep = "| Major/Synthetic Minor |"),
-  list(pat = "\\| `electric_continuous_2015_2025` \\|", rep = "| Electric |"),
-  list(pat = paste0("`panel_facility_count_over_time\\.png`\\s+visualizes this directly\\s+—\\s+",
-                     "both series are flat lines across 2015–2025,"),
+  list(pat = "\\| `major_synmin_2015_2025` \\|", rep = "| Major/Synthetic Minor |"),
+  list(pat = "\\| `electric_2015_2025` \\|", rep = "| Electric |"),
+  list(pat = paste0("`panel_facility_count_over_time\\.png`\\s+still\\s+shows\\s+flat\\s+lines\\s+across\\s+",
+                     "2015–2025\\s+for\\s+both\\s+panels\\s+—"),
        rep = "Facility counts are flat lines across 2015–2025 for both panels,"),
   list(pat = paste0("—\\s+the same zero-vs-NA gate as the dataset layer\\s+",
                      "\\(`13_regulatory_profile\\.R`\\)\\."),
        rep = "— the same zero-vs-NA gate used at the dataset layer."),
-  list(pat = paste0("`panel_count_distributions\\.png`\\s+shows the full ECDFs\\s+",
-                     "side by side \\(pseudo-log x-axis\\)\\s+—\\s+electric's"),
-       rep = "The full distributions (pseudo-log x-axis) show that electric's"),
-  list(pat = "already documented for the dataset layer in\\s+`hpv_profile\\.md`'s Figure 1\\.",
-       rep = "already documented at the dataset layer."),
+  list(pat = paste0("`panel_count_distributions\\.png`\\s+shows\\s+the\\s+full\\s+ECDFs\\s+side\\s+by\\s+side\\s+",
+                     "\\(pseudo-log x-axis\\)\\."),
+       rep = "The full distributions (pseudo-log x-axis) show each panel's count-measure spread side by side."),
+  list(pat = paste0("matches\\s+`hpv_profile\\.md`'s\\s+Figure\\s+1\\s+at\\s+the\\s+dataset\\s+layer\\."),
+       rep = "matches the pattern already documented at the dataset layer."),
   list(pat = "carried over unchanged from\\s+`data/panels/README\\.md`\\)\\.",
        rep = "carried over unchanged from the underlying panel data)."),
   list(pat = "same caveat as\\s+`12_penalties_profile\\.R`'s\\s+`by_year\\.csv`\\);",
        rep = "same caveat noted at the dataset layer);"),
-  list(pat = paste0("`panel_penalty_dist\\.png`\\s+shows both distributions on a shared\\s+",
-                     "log10 axis, faceted by panel"),
-       rep = "Both distributions sit on a shared log10 axis when faceted by panel"),
-  list(pat = paste0("`panel_state_composition\\.png`\\s+plots the top 10 states ",
-                     "\\(major_synmin's ranking, both\\s+panels' bars\\) for a direct visual comparison\\s+—\\s+",
-                     "see the figure's own caveat \\(\u00a7 FLAGGED ISSUES in the script\\)\\s+that electric's"),
+  list(pat = paste0("`panel_penalty_dist\\.png`\\s+shows\\s+both\\s+distributions\\s+on\\s+a\\s+shared\\s+",
+                     "log10\\s+axis,\\s+faceted\\s+by\\s+panel\\."),
+       rep = "Both distributions sit on a shared log10 axis when faceted by panel."),
+  list(pat = paste0("`panel_state_composition\\.png`\\s+plots\\s+the\\s+top\\s+10\\s+states\\s+",
+                     "\\(major_synmin's\\s+ranking,\\s+both\\s+panels'\\s+bars\\)\\s+for\\s+a\\s+direct\\s+visual\\s+",
+                     "comparison\\s+—\\s+see\\s+the\\s+figure's\\s+own\\s+caveat\\s+",
+                     "\\(\u00a7\\s+FLAGGED\\s+ISSUES\\s+in\\s+the\\s+script\\)\\s+that\\s+electric's"),
        rep = "The top 10 states (ranked by major_synmin, both panels shown) give a direct visual comparison — note that electric's"),
-  list(pat = "the full-universe dataset-4 coordinate coverage rate \\(84\\.5%, `coordinates_profile\\.md`\\)",
+  list(pat = paste0("the\\s+full-universe\\s+dataset-4\\s+coordinate\\s+coverage\\s+rate\\s+",
+                     "\\(84\\.5%,\\s+`coordinates_\\s*profile\\.md`\\)"),
        rep = "the full-universe coordinate coverage rate (84.5%)"),
   list(pat = "`code/04_panel_building/README\\.md`\\s+documents electric as major_synmin's filter",
        rep = "Electric is defined as major_synmin's filter"),
@@ -249,9 +251,10 @@ body <- paste0(
   hero(
     title   = "Panels",
     desc    = paste(
-      "Two continuously screened facility × year panels for empirical work on enforcement and",
-      "compliance, both spanning 2015–2025: a broad Major / Synthetic Minor panel and a narrower",
-      "Electric utilities subset. Construction decisions, coverage, and summary statistics below."),
+      "Two facility × year panels for empirical work on enforcement and compliance, both spanning",
+      "2015–2025 and screened to facilities active in at least one year of the window: a broad",
+      "Major / Synthetic Minor panel and a narrower Electric utilities subset. Construction decisions,",
+      "coverage, and summary statistics below."),
     eyebrow = "Facility × Year Panels"
   ),
   page_main(

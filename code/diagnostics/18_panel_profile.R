@@ -1,6 +1,6 @@
 # =========================================================================================================
 # code/diagnostics/18_panel_profile.R -- exploratory profiling of the panel layer
-#   (data/panels/{major_synmin_continuous_2015_2025,electric_continuous_2015_2025}.csv.gz), built by
+#   (data/panels/{major_synmin_2015_2025,electric_2015_2025}.csv.gz), built by
 #   code/04_panel_building/. Purpose: characterize both panels for a reader picking the project up cold --
 #   coverage, count-measure distributions, HPV/penalty summaries, geography, and the electric-is-a-subset-of-
 #   major_synmin relationship the two panels are built to share. Companion to 11_operating_profile.R ..
@@ -10,22 +10,24 @@
 #   panel-building pipeline they profiled -- see archive/panel_building_legacy/README.md. This script profiles
 #   the NEW two-panel structure from scratch; it is not a revival of the archived scripts.
 #
-#   in : data/panels/{major_synmin_continuous_2015_2025,electric_continuous_2015_2025}.csv.gz
+#   in : data/panels/{major_synmin_2015_2025,electric_2015_2025}.csv.gz
 #   out: output/panel_profile/*.csv (incl. mean_counts_by_year.csv)
 #        output/figures/panels/panel_{coverage_over_time,hpv_active_over_time,count_distributions,
 #                                      penalty_dist,state_composition,facility_count_over_time,
 #                                      mean_counts_over_time,violations_enforcement}.png
 #
-#   DISCIPLINE: both panels are continuity-screened (PB2 in briefs/panel/panel_construction_decisions.md) --
-#   every row already has ACTIVE_BROAD==1, so OBS_SOURCE can only be "event" or "operating", never
-#   "unobserved" (PB4); every table/figure below that touches OBS_SOURCE checks this invariant explicitly
-#   rather than assuming it. N_* count measures still follow the dataset layer's zero-vs-NA gate
-#   (ICIS_OBSERVED==1 -- a facility-year with no ICIS record that year is NA, not a false 0); every summary
-#   below is computed on the ICIS_OBSERVED==1 subset and reports the NA share. PENALTY_AMOUNT is NA-if-none-
-#   OR-if-summed-to-exactly-$0 (data/panels/README.md's own documented ambiguity, inherited unchanged here --
-#   NOT re-derived or disambiguated by this script). No numbers are hand-entered; every cell/figure is
-#   computed here. Hand-run (not part of RUN_ALL.R, matching every sibling profile script -- see
-#   code/diagnostics/README.md). No stochastic step.
+#   DISCIPLINE (REVISED 2026-07-29, PB2's eligibility-rule change): both panels are eligibility-screened on
+#   ACTIVE_BROAD==1 in AT LEAST ONE of the 11 years (PB2 in briefs/panel/panel_construction_decisions.md), not
+#   every year as before -- so OBS_SOURCE=="unobserved" is now a REAL, EXPECTED value (a facility can be
+#   eligible via one qualifying year while other years in its 11-year rectangle have no confirmed activity),
+#   not an impossible one. Every table/figure below that touches OBS_SOURCE treats "unobserved" as a normal
+#   category to report, not a build-defect signal to warn on. N_* count measures still follow the dataset
+#   layer's zero-vs-NA gate (ICIS_OBSERVED==1 -- a facility-year with no ICIS record that year is NA, not a
+#   false 0); every summary below is computed on the ICIS_OBSERVED==1 subset and reports the NA share.
+#   PENALTY_AMOUNT is NA-if-none-OR-if-summed-to-exactly-$0 (data/panels/README.md's own documented ambiguity,
+#   inherited unchanged here -- NOT re-derived or disambiguated by this script). No numbers are hand-entered;
+#   every cell/figure is computed here. Hand-run (not part of RUN_ALL.R, matching every sibling profile
+#   script -- see code/diagnostics/README.md). No stochastic step.
 #
 #   FIGURE DESIGN (dataviz skill, static/print variant -- no hover/dark-mode, those are screen-only concerns):
 #   validated 5-hue categorical palette (blue/aqua/green/violet slots), one axis per chart, thin 2px lines,
@@ -47,8 +49,8 @@ dir.create(OUT_FIG, showWarnings = FALSE, recursive = TRUE)
 # NOT forced: it's alphanumeric (e.g. "TX0000012345"), so fread already infers it as character.
 ID_CHAR_COLS <- c("REGISTRY_ID", "ZIP_CODE", "COUNTY_FIPS", "ICIS_COUNTY_FIPS")
 
-PANEL_FILES <- c(major_synmin = "major_synmin_continuous_2015_2025.csv.gz",  # named vector: short panel label -> file name, used throughout to read/tag/label consistently
-                 electric     = "electric_continuous_2015_2025.csv.gz")
+PANEL_FILES <- c(major_synmin = "major_synmin_2015_2025.csv.gz",  # named vector: short panel label -> file name, used throughout to read/tag/label consistently
+                 electric     = "electric_2015_2025.csv.gz")
 PANEL_LEVELS <- names(PANEL_FILES)                                    # fixed display/plot order: major_synmin first (the larger, less-restricted panel), electric second (its subset)
 
 read_panel <- function(label, file) {                                 # read one panel file and tag every row with its panel label
@@ -74,7 +76,7 @@ fac1 <- function(dt) dt[, .SD[1L], by = PGM_SYS_ID]                   # collapse
 # =========================================================================================================
 overview <- all_panels[, .(n_facilities = uniqueN(PGM_SYS_ID), n_facility_years = .N,
                            year_min = min(YEAR), year_max = max(YEAR)), by = panel]
-overview[, balanced := n_facility_years == n_facilities * length(YEARS)]  # sanity check: is each panel a full facility x year rectangle -- should be TRUE by construction (continuity screen requires every year present for every facility, PB2/PB3)
+overview[, balanced := n_facility_years == n_facilities * length(YEARS)]  # sanity check: is each panel a full facility x year rectangle -- should be TRUE by construction (build_panel()'s expand_grid always gives every eligible facility a full 11-year rectangle, PB3; NOT a claim that every year has confirmed activity -- see coverage_by_year's pct_unobserved for that)
 fwrite(overview, file.path(OUT_CSV, "overview.csv"))
 
 # =========================================================================================================
@@ -82,10 +84,10 @@ fwrite(overview, file.path(OUT_CSV, "overview.csv"))
 # =========================================================================================================
 coverage_by_year <- all_panels[, .(n_facility_years = .N, pct_event = mean(OBS_SOURCE == "event"),
                                    pct_operating = mean(OBS_SOURCE == "operating"),
-                                   pct_unobserved = mean(OBS_SOURCE == "unobserved")),  # should be exactly 0 in every row -- PB4's stated invariant for these continuity-screened panels; kept as its own column (not just asserted) so a violation is visible in the CSV, not just in a console warning
+                                   pct_unobserved = mean(OBS_SOURCE == "unobserved")),  # REVISED 2026-07-29 (PB2): no longer expected to be 0 -- the eligibility screen only requires ACTIVE_BROAD==1 in >=1 of the 11 years, so a facility-year outside its qualifying year(s) can genuinely have no confirmed activity. A real, informative share now, not a build-defect signal (contrast the pre-2026-07-29 version of this file, which warned on any nonzero value here).
                                 by = .(panel, YEAR)][order(panel, YEAR)]
-n_unobserved <- sum(coverage_by_year$n_facility_years * coverage_by_year$pct_unobserved)  # total facility-years with OBS_SOURCE=="unobserved", across both panels -- should be exactly 0
-if (n_unobserved > 0) warning(sprintf("18_panel_profile.R: %d facility-years have OBS_SOURCE=='unobserved' in a continuity-screened panel -- this violates PB4's stated invariant (every row already passed ACTIVE_BROAD==1 in every year); investigate before trusting coverage_by_year.csv", round(n_unobserved)))
+n_unobserved <- sum(coverage_by_year$n_facility_years * coverage_by_year$pct_unobserved)  # total facility-years with OBS_SOURCE=="unobserved", across both panels -- expected to be > 0 under the >=1-year eligibility rule
+cat(sprintf("coverage_by_year: %s facility-years have OBS_SOURCE=='unobserved' across both panels (expected under the >=1-year eligibility rule, PB2)\n", format(round(n_unobserved), big.mark = ",")))
 fwrite_rounded(coverage_by_year, file.path(OUT_CSV, "coverage_by_year.csv"),
                prop_cols = c("pct_event", "pct_operating", "pct_unobserved"))
 
@@ -159,17 +161,19 @@ coordinate_coverage <- rbindlist(lapply(PANEL_LEVELS, function(p) {
 fwrite(coordinate_coverage, file.path(OUT_CSV, "coordinate_coverage.csv"))
 
 # =========================================================================================================
-# CSV 8 -- entry/exit censoring summary (facility-level), both panels. Within the 2015-2025 window every
-#   facility here is, by construction, active in all 11 years (PB2/PB3) -- LEFT_CENSORED/RIGHT_CENSORED and
-#   ENTERED_YEAR/EXITED_YEAR describe activity OUTSIDE the panel window (did the facility exist before 2015 /
-#   does it exit after 2025), not gaps within it.
+# CSV 8 -- entry/exit summary (facility-level), both panels. REVISED 2026-07-29 (PB2 + explicit user
+#   decision): LEFT_CENSORED/RIGHT_CENSORED are no longer carried by the panel build (00_spine.R) -- dropped
+#   as a derived convenience on top of ENTERED_YEAR/EXITED_YEAR/EXIT_SOURCE, which already carry the same
+#   entry/exit information directly. This CSV now reports only what those three fields give directly:
+#   whether a facility has a confirmed exit at all, and its entry-year distribution. Under the old
+#   all-11-years continuity screen, every facility was active through 2025 by construction, so a confirmed
+#   exit was near-impossible; under the >=1-year eligibility rule that's no longer true (see PB2, `pct_exited`
+#   below is now a real, substantial number, not near-zero).
 # =========================================================================================================
 entry_exit_summary <- rbindlist(lapply(PANEL_LEVELS, function(p) {
   fac <- fac1(panels_list[[p]])
   data.table(panel = p, n_facilities = nrow(fac),
-             pct_left_censored = round(mean(fac$LEFT_CENSORED == 1, na.rm = TRUE), 4),   # entered before the observation window started (begin year unknown/pre-window)
-             pct_right_censored = round(mean(fac$RIGHT_CENSORED == 1, na.rm = TRUE), 4), # still active as of the last observed year (no confirmed exit)
-             pct_exited = round(mean(!is.na(fac$EXITED_YEAR)), 4),                       # has a confirmed EXITED_YEAR at all (necessarily after 2025, since every facility here is active through 2025)
+             pct_exited = round(mean(!is.na(fac$EXITED_YEAR)), 4),                       # has a confirmed EXITED_YEAR at all
              entered_year_median = median(fac$ENTERED_YEAR, na.rm = TRUE))
 }))
 fwrite(entry_exit_summary, file.path(OUT_CSV, "entry_exit_summary.csv"))
@@ -231,9 +235,9 @@ fig1 <- ggplot(coverage_by_year, aes(YEAR, pct_event, color = panel)) +
   geom_text(data = end_labels1, aes(label = panel), hjust = 0, nudge_x = 0.3, size = 3.2, fontface = "bold") +
   coord_cartesian(clip = "off") +
   labs(title = "Share of facility-years with an ICIS event, 2015-2025",
-       subtitle = "OBS_SOURCE == \"event\" vs. \"operating\" (no ICIS event that year, but confirmed active another way) --\nOBS_SOURCE is never \"unobserved\" in these continuity-screened panels (PB4)",
+       subtitle = "OBS_SOURCE == \"event\" vs. \"operating\" (no ICIS event that year, but confirmed active another way) vs.\n\"unobserved\" (no confirmed activity that year -- expected under the >=1-year eligibility rule, PB2)",
        x = NULL, y = "Share \"event\"",
-       caption = "Source: data/panels/*_continuous_2015_2025.csv.gz.") +
+       caption = "Source: data/panels/*_2015_2025.csv.gz.") +
   theme_journal + theme(plot.margin = margin(t = 5.5, r = 14, b = 5.5, l = 5.5),
                         plot.subtitle = element_text(color = INK_SECONDARY, size = 8.5, lineheight = 1.1))
 save_fig("panel_coverage_over_time.png", fig1, w = 8.3, h = 4.8)
@@ -250,7 +254,7 @@ fig2 <- ggplot(hpv_active_by_year, aes(YEAR, pct_active, color = panel)) +
   labs(title = "Share of facilities in HPV-active status, 2015-2025",
        subtitle = "Of facility-years with known HPV_ACTIVE status (non-NA); H6 zero-vs-NA discipline",
        x = NULL, y = "Share HPV-active",
-       caption = "Source: data/panels/*_continuous_2015_2025.csv.gz.") +
+       caption = "Source: data/panels/*_2015_2025.csv.gz.") +
   theme_journal + theme(plot.margin = margin(t = 5.5, r = 14, b = 5.5, l = 5.5))
 save_fig("panel_hpv_active_over_time.png", fig2, w = 8.3, h = 4.8)
 
@@ -270,7 +274,7 @@ fig3 <- ggplot(ecdf_data, aes(value, color = panel)) +
   labs(title = "Distribution of key count measures, ICIS-observed facility-years, 2015-2025",
        subtitle = "Empirical CDF; x-axis on a pseudo-log scale (compresses the long right tail, keeps 0 visible)",
        x = "Count (pseudo-log scale)", y = "Cumulative share of facility-years",
-       caption = "Source: data/panels/*_continuous_2015_2025.csv.gz.") +
+       caption = "Source: data/panels/*_2015_2025.csv.gz.") +
   theme_journal + theme(legend.position = "bottom", legend.title = element_blank(),
                         strip.text = element_text(face = "bold", size = 9.5))
 save_fig("panel_count_distributions.png", fig3, w = 9.5, h = 4.3)
@@ -288,7 +292,7 @@ fig4 <- ggplot(pen_nonna, aes(PENALTY_AMOUNT, fill = panel)) +
        subtitle = sprintf("n = %s facility-years; log10 x-axis; NA (no formal action, or summed to exactly $0) excluded per\ndata/panels/README.md's documented ambiguity",
                           format(nrow(pen_nonna), big.mark = ",")),
        x = "Penalty amount (log scale)", y = "Facility-years",
-       caption = "Source: data/panels/*_continuous_2015_2025.csv.gz.") +
+       caption = "Source: data/panels/*_2015_2025.csv.gz.") +
   theme_journal + theme(strip.text = element_text(face = "bold", size = 9.5),
                         plot.subtitle = element_text(color = INK_SECONDARY, size = 8.5, lineheight = 1.1))
 save_fig("panel_penalty_dist.png", fig4, w = 7.5, h = 5.5)
@@ -305,16 +309,19 @@ fig5 <- ggplot(state_plot_data, aes(level, n, fill = panel)) +
   labs(title = "Top 10 states by facility count (ranked by major_synmin), 2015-2025",
        subtitle = "Facility-level (one row per PGM_SYS_ID); electric bars use major_synmin's state ordering",
        x = NULL, y = "Facilities",
-       caption = "Source: data/panels/*_continuous_2015_2025.csv.gz.") +
+       caption = "Source: data/panels/*_2015_2025.csv.gz.") +
   theme_journal + theme(legend.position = "bottom", legend.title = element_blank())
 save_fig("panel_state_composition.png", fig5, w = 7.5, h = 5)
 
-# ---- FIGURE 6: facility count over time, both panels -- should be FLAT within each panel (continuity screen
-#   requires the same facility set active in every year 2015-2025, PB2/PB3); this figure doubles as a visual
-#   check of that invariant, not just a display of the (otherwise unsurprising) subset relationship ----------
+# ---- FIGURE 6: facility count over time, both panels -- should STILL be FLAT within each panel even after
+#   the PB2 eligibility-rule revision: build_panel()'s expand_grid always gives every eligible facility a row
+#   in every one of the 11 years (03_build_functions.R) -- eligibility is evaluated once, over the facility's
+#   whole 2015-2025 record, not per-year, so the SET of facilities in the panel can't vary by year regardless
+#   of which eligibility rule is used. This figure doubles as a visual check of that (build-recipe, not
+#   eligibility-rule) invariant, not just a display of the (otherwise unsurprising) subset relationship ------
 facility_by_year <- all_panels[, .(n_facilities = uniqueN(PGM_SYS_ID)), by = .(panel, YEAR)][order(panel, YEAR)]
-n_distinct_counts <- facility_by_year[, uniqueN(n_facilities), by = panel]  # should be 1 for both panels (flat line) -- if not, the continuity screen isn't actually holding for this build, which would be a real problem, not a display nuance
-if (any(n_distinct_counts$V1 > 1)) warning("18_panel_profile.R: facility count varies by year within a panel that's supposed to be continuity-screened (PB2/PB3) -- panel_facility_count_over_time.png will show this visually; investigate before trusting the panel build")
+n_distinct_counts <- facility_by_year[, uniqueN(n_facilities), by = panel]  # should be 1 for both panels (flat line) -- if not, the expand_grid rectangle isn't actually holding for this build, which would be a real problem, not a display nuance
+if (any(n_distinct_counts$V1 > 1)) warning("18_panel_profile.R: facility count varies by year within a panel -- this should be impossible given build_panel()'s expand_grid recipe (03_build_functions.R); panel_facility_count_over_time.png will show this visually; investigate before trusting the panel build")
 end_labels6 <- facility_by_year[YEAR == max(YEAR)]
 fig6 <- ggplot(facility_by_year, aes(YEAR, n_facilities, color = panel)) +
   geom_line(linewidth = 0.9) + geom_point(size = 1.4) +
@@ -325,9 +332,9 @@ fig6 <- ggplot(facility_by_year, aes(YEAR, n_facilities, color = panel)) +
             hjust = 0, nudge_x = 0.3, size = 3.2, fontface = "bold") +
   coord_cartesian(clip = "off") +
   labs(title = "Facility count by year, both panels, 2015-2025",
-       subtitle = "Expected to be flat within each panel -- continuity screen requires ACTIVE_BROAD==1 in every year",
+       subtitle = "Expected to be flat within each panel -- eligibility is evaluated once over each facility's whole 2015-2025 record",
        x = NULL, y = "Facilities",
-       caption = "Source: data/panels/*_continuous_2015_2025.csv.gz.") +
+       caption = "Source: data/panels/*_2015_2025.csv.gz.") +
   theme_journal + theme(plot.margin = margin(t = 5.5, r = 20, b = 5.5, l = 5.5))
 save_fig("panel_facility_count_over_time.png", fig6, w = 8.3, h = 4.8)
 
@@ -349,7 +356,7 @@ fig7 <- ggplot(mean_plot_data, aes(YEAR, mean, color = panel)) +
   labs(title = "Mean count measures per ICIS-observed facility-year, 2015-2025",
        subtitle = "ICIS_OBSERVED == 1 subset (same gate as summary_counts.csv); means are right-skew-sensitive --\nsee FIGURE 3's ECDF / summary_counts.csv's median for the fuller distributional picture",
        x = NULL, y = "Mean count",
-       caption = "Source: data/panels/*_continuous_2015_2025.csv.gz.") +
+       caption = "Source: data/panels/*_2015_2025.csv.gz.") +
   theme_journal + theme(legend.position = "bottom", legend.title = element_blank(),
                         strip.text = element_text(face = "bold", size = 9),
                         plot.subtitle = element_text(color = INK_SECONDARY, size = 8.5, lineheight = 1.1))
@@ -374,13 +381,13 @@ fig8 <- ggplot(ve_data, aes(YEAR, mean, color = panel)) +
   labs(title = "Violations and enforcement actions, mean per ICIS-observed facility-year, 2015-2025",
        subtitle = "ICIS_OBSERVED == 1 subset; means are right-skew-sensitive -- see FIGURE 3's ECDF / summary_counts.csv's\nmedian for the fuller distributional picture",
        x = NULL, y = "Mean count",
-       caption = "Source: data/panels/*_continuous_2015_2025.csv.gz.") +
+       caption = "Source: data/panels/*_2015_2025.csv.gz.") +
   theme_journal + theme(strip.text = element_text(face = "bold", size = 9.5),
                         plot.subtitle = element_text(color = INK_SECONDARY, size = 8.5, lineheight = 1.1))
 save_fig("panel_violations_enforcement.png", fig8, w = 10, h = 4.3)
 
 # ---- console summary ---------------------------------------------------------------------------------------
-cat("data/panels/*_continuous_2015_2025.csv.gz -- profile summary\n")
+cat("data/panels/*_2015_2025.csv.gz -- profile summary\n")
 cat("================================================================\n\n")
 print(as.data.frame(overview), row.names = FALSE)
 cat("\nOBS_SOURCE COMPOSITION BY YEAR (event vs. operating; unobserved should be 0)\n"); print(as.data.frame(coverage_by_year), row.names = FALSE)
