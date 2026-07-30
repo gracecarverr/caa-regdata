@@ -8,15 +8,24 @@ body{margin:0;font-family:'Merriweather Sans',system-ui,sans-serif;font-weight:3
   background:var(--bg);}
 a{color:var(--accent);}
 
-.site-header{background:#fff;border-bottom:1px solid var(--border);}
-.site-header-inner{max-width:1100px;margin:0 auto;padding:.9rem 1.2rem;display:flex;align-items:center;
-  justify-content:space-between;flex-wrap:wrap;gap:.5rem 1.2rem;}
-.site-brand{font-family:'Merriweather',Georgia,serif;font-weight:300;font-size:1.2rem;
-  color:var(--navy);text-decoration:none;letter-spacing:.01em;}
-.site-nav{display:flex;gap:1.5rem;font-weight:600;font-size:.92rem;flex-wrap:wrap;}
-.site-nav a{color:var(--accent);text-decoration:none;padding:.15rem 0;border-bottom:2px solid transparent;}
-.site-nav a:hover{color:var(--accent-dark);border-bottom-color:var(--accent-dark);}
-.site-nav a.active{color:var(--navy);border-bottom-color:var(--accent-dark);}
+/* ---- masthead + mnav: two-tier top banner (every page) -- a plain white identity band (site eyebrow,
+   big serif site title/home-link, one-line subtitle) above a separate nav-links band. ------------------ */
+.masthead{background:#fff;padding:1.5rem 1.2rem 1.3rem;}
+.masthead-inner{max-width:1100px;margin:0 auto;}
+.masthead .eyebrow{text-transform:uppercase;letter-spacing:.13em;font-size:.76rem;color:var(--accent);
+  font-weight:700;margin:0 0 .5rem;}
+.mast-title{margin:0 0 .35rem;}
+.mast-title a{font-family:'Merriweather',Georgia,serif;font-weight:300;font-size:1.85rem;color:var(--navy);
+  text-decoration:none;letter-spacing:.01em;}
+.mast-title a:hover{color:var(--accent-dark);}
+.mast-sub{margin:0;font-size:.98rem;color:var(--muted);max-width:640px;line-height:1.5;}
+
+.mnav{background:#fff;border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.mnav-inner{max-width:1100px;margin:0 auto;padding:.7rem 1.2rem;display:flex;gap:1.5rem;flex-wrap:wrap;
+  font-weight:600;font-size:.92rem;}
+.mnav-inner a{color:var(--accent);text-decoration:none;padding:.15rem 0;border-bottom:2px solid transparent;}
+.mnav-inner a:hover{color:var(--accent-dark);border-bottom-color:var(--accent-dark);}
+.mnav-inner a.active{color:var(--navy);border-bottom-color:var(--accent-dark);}
 
 .hero{background:linear-gradient(160deg,var(--navy) 0%,var(--navy-dark) 100%);color:#fff;
   padding:3rem 1.2rem 2.4rem;}
@@ -30,6 +39,11 @@ a{color:var(--accent);}
 .hero .photo-credit{font-size:.7rem;color:rgba(255,255,255,.55);max-width:none;margin:1.6rem 0 0;
   font-style:italic;}
 
+.cta{margin-top:1.4rem;display:flex;flex-wrap:wrap;gap:.8rem;}
+.btn{display:inline-block;padding:.6rem 1.2rem;font-size:.88rem;font-weight:600;color:#fff;
+  border:1px solid rgba(255,255,255,.55);text-decoration:none;transition:border-color .15s ease,background-color .15s ease;}
+.btn:hover{border-color:#fff;background:rgba(255,255,255,.08);}
+
 main{max-width:1100px;margin:0 auto;padding:2.4rem 1.2rem 3rem;}
 
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1.1rem;margin:1.6rem 0 2.4rem;}
@@ -39,6 +53,36 @@ main{max-width:1100px;margin:0 auto;padding:2.4rem 1.2rem 3rem;}
 .card p{font-size:.92rem;color:var(--muted);margin:0 0 .8rem;line-height:1.45;}
 .card a{color:var(--accent);font-weight:600;font-size:.88rem;text-decoration:none;}
 .card a:hover{color:var(--accent-dark);text-decoration:underline;}
+
+/* ---- card-badge: small numbered label above a card's title (e.g. 'Brief 00') -- Briefs page's landing
+   grid only, as of this writing. Reuses .card's border/padding as-is, no separate component. ------------ */
+.card-badge{display:block;font-family:'Merriweather',Georgia,serif;font-weight:700;font-size:.78rem;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin:0 0 .35rem;}
+
+/* ---- srccard: external-source link groups (Home's Public EPA Sources section only) -- a .card whose
+   body is a short list of links instead of one description + one CTA. -------------------------------- */
+.srccard{padding-bottom:.6rem;}
+.src-row{margin:0 0 1rem;}
+.src-row:last-child{margin-bottom:0;}
+.src-row .src-name{display:block;font-weight:600;font-size:.95rem;color:var(--accent);text-decoration:none;
+  margin-bottom:.15rem;}
+.src-row .src-name:hover{color:var(--accent-dark);text-decoration:underline;}
+.src-row p{margin:0;font-size:.88rem;color:var(--muted);line-height:1.45;}
+
+/* ---- stage-grid: numbered pipeline-stage cards (Home only) -- informational, not navigation, so no
+   CTA link and an accent-top border distinguishes them from the navy-top nav .card above. -------------- */
+.sec-h2{font-family:'Merriweather',Georgia,serif;font-weight:300;color:var(--navy);font-size:1.5rem;
+  margin:0 0 .3rem;}
+.sec-lede{font-size:.92rem;color:var(--muted);margin:0;line-height:1.5;}
+.stage-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.1rem;
+  margin:1.6rem 0 2.4rem;}
+.stage-card{border:1px solid var(--border);border-top:3px solid var(--accent);background:#fff;
+  padding:1.2rem 1.3rem;}
+.stage-step{display:block;font-family:'Merriweather',Georgia,serif;font-weight:700;font-size:1.4rem;
+  color:var(--accent);line-height:1;margin-bottom:.3rem;}
+.stage-card h3{font-family:'Merriweather',Georgia,serif;font-weight:300;margin:.1rem 0 .4rem;
+  font-size:1.15rem;color:var(--navy);}
+.stage-card p{font-size:.92rem;color:var(--muted);margin:0;line-height:1.45;}
 
 .prose h2{font-family:'Merriweather',Georgia,serif;font-weight:300;color:var(--navy);
   border-top:1px solid var(--border);padding-top:1.6rem;margin-top:2.4rem;font-size:1.5rem;text-align:left;}
@@ -64,6 +108,9 @@ main{max-width:1100px;margin:0 auto;padding:2.4rem 1.2rem 3rem;}
   border-left:3px solid transparent;transition:background-color .15s ease,color .15s ease,border-color .15s ease;}
 .doc-sidebar-link:hover{background:var(--bg-alt);color:var(--navy);}
 .doc-sidebar-link.active{background:var(--bg-alt);color:var(--accent);border-left-color:var(--accent);font-weight:600;}
+.doc-sidebar-group{font-size:.72rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--muted);padding:.9rem .7rem .25rem;}
+.doc-sidebar-group:first-child{padding-top:0;}
 .doc-content{flex:1;min-width:0;overflow-x:auto;}
 @media (max-width:820px){
   .doc-nav{flex-direction:column;gap:0;}
@@ -71,10 +118,17 @@ main{max-width:1100px;margin:0 auto;padding:2.4rem 1.2rem 3rem;}
     border-right:none;border-bottom:1px solid var(--border);padding:0 0 .8rem;margin-bottom:1rem;}
   .doc-sidebar-link{border-left:none;border-bottom:3px solid transparent;padding:.4rem .6rem;}
   .doc-sidebar-link.active{border-left-color:transparent;border-bottom-color:var(--accent);}
+  .doc-sidebar-group{width:100%;padding:.5rem .2rem 0;}
 }
 
 .section-note{background:var(--bg-alt);border:1px solid var(--border);border-left:3px solid var(--accent);
   padding:.9rem 1.1rem;margin:1.4rem 0;font-size:.92em;line-height:1.55;}
+
+/* ---- dict-xref: small jump-to-the-live-version pointer at the end of a dictionary.html pane ----------- */
+.dict-xref{margin:1rem 0 0;padding:.55rem .8rem;background:var(--bg-alt);border-left:3px solid var(--accent);
+  font-size:.85em;}
+.dict-xref a{font-weight:600;text-decoration:none;}
+.dict-xref a:hover{text-decoration:underline;}
 
 .stat-table{border-collapse:collapse;width:100%;margin:.6rem 0 .5rem;font-size:.9em;}
 .stat-table th,.stat-table td{border:1px solid var(--border);padding:.45rem .7rem;text-align:right;}
@@ -107,10 +161,10 @@ main{max-width:1100px;margin:0 auto;padding:2.4rem 1.2rem 3rem;}
 
 @media (max-width:700px){
   .hero h1{font-size:1.9rem;}
-  .site-header-inner{flex-direction:column;align-items:flex-start;}
-  .site-nav{gap:.9rem;font-size:.85rem;}
+  .mast-title a{font-size:1.5rem;}
+  .mnav-inner{gap:.9rem;font-size:.85rem;}
 }
-</style></head><body><header class='site-header'><div class='site-header-inner'><a class='site-brand' href='index.html'>CAA Regulatory Data</a><nav class='site-nav'><a href='index.html'>Home</a><a href='raw_data.html'>Raw Data</a><a href='databases.html' class='active'>Datasets</a><a href='panels.html'>Panels</a></nav></div></header><div class='hero'><div class='hero-inner'><p class='eyebrow'>The Eight Datasets</p><h1>Datasets</h1><p>The eight datasets this pipeline builds — one row per facility × year (or, for Penalties and HPV Spells, one row per action/spell) — with the construction decisions behind each, its headline finding, and the one caveat that matters most before you use it.</p></div></div><main><div class='section-note'>These are the built datasets in <code>data/datasets/</code> — for the raw EPA source files they're built from, see <a href='raw_data.html'>Raw Data</a>; for column-by-column definitions of every field below, see the <a href='data_dictionary_derived.md'>derived data dictionary</a>.</div><div class='prose'><div class='doc-nav'><nav class='doc-sidebar'><a href='#regulatory' class='doc-sidebar-link' data-target='regulatory'>Regulatory</a><a href='#operating' class='doc-sidebar-link' data-target='operating'>Operating</a><a href='#hpv-spells' class='doc-sidebar-link' data-target='hpv-spells'>HPV Spells</a><a href='#hpv-active' class='doc-sidebar-link' data-target='hpv-active'>HPV Active</a><a href='#penalties' class='doc-sidebar-link' data-target='penalties'>Penalties</a><a href='#coordinates' class='doc-sidebar-link' data-target='coordinates'>Coordinates</a><a href='#pipeline' class='doc-sidebar-link' data-target='pipeline'>Pipeline</a><a href='#emissions' class='doc-sidebar-link' data-target='emissions'>Emissions</a></nav><div class='doc-content'><div class='doc-pane' id='regulatory'><h2>Regulatory</h2><p>Facility × year record built purely from ICIS-Air: inspections, violations, enforcement actions, penalties,
+</style></head><body><header class='masthead'><div class='masthead-inner'><p class='eyebrow'>Clean Air Act · Stationary Sources</p><h1 class='mast-title'><a href='index.html'>CAA Regulatory Data Infrastructure</a></h1><p class='mast-sub'>Facility-level data on stationary-source air pollution, assembled from public EPA sources.</p></div></header><nav class='mnav'><div class='mnav-inner'><a href='index.html'>Home</a><a href='briefs.html'>Briefs</a><a href='raw_data.html'>Raw Data</a><a href='databases.html' class='active'>Datasets</a><a href='panels.html'>Panels</a><a href='dictionary.html'>Dictionary</a></div></nav><div class='hero'><div class='hero-inner'><p class='eyebrow'>The Eight Datasets</p><h1>Datasets</h1><p>The eight datasets this pipeline builds — one row per facility × year (or, for Penalties and HPV Spells, one row per action/spell) — with the construction decisions behind each, its headline finding, and the one caveat that matters most before you use it.</p></div></div><main><div class='section-note'>These are the built datasets in <code>data/datasets/</code> — for the raw EPA source files they're built from, see <a href='raw_data.html'>Raw Data</a>; for column-by-column definitions of every field below, see the <a href='dictionary.html'>Data Dictionary</a>.</div><div class='prose'><div class='doc-nav'><nav class='doc-sidebar'><a href='#regulatory' class='doc-sidebar-link' data-target='regulatory'>Regulatory</a><a href='#operating' class='doc-sidebar-link' data-target='operating'>Operating</a><a href='#hpv-spells' class='doc-sidebar-link' data-target='hpv-spells'>HPV Spells</a><a href='#hpv-active' class='doc-sidebar-link' data-target='hpv-active'>HPV Active</a><a href='#penalties' class='doc-sidebar-link' data-target='penalties'>Penalties</a><a href='#coordinates' class='doc-sidebar-link' data-target='coordinates'>Coordinates</a><a href='#pipeline' class='doc-sidebar-link' data-target='pipeline'>Pipeline</a><a href='#emissions' class='doc-sidebar-link' data-target='emissions'>Emissions</a></nav><div class='doc-content'><div class='doc-pane' id='regulatory'><h2>Regulatory</h2><p>Facility × year record built purely from ICIS-Air: inspections, violations, enforcement actions, penalties,
 certifications, and stack tests, alongside each facility's static characteristics (location, classification,
 industry codes). It's the spine every other dataset in this layer joins to.</p>
 <p><strong>Scale.</strong> 5,872,965 rows — every one of 279,665 ICIS-Air facilities × 21 years (2005–2025). Only 12.6% of
@@ -118,11 +172,11 @@ that rectangle is actually observed in ICIS-Air that year; the rest is unknown, 
 <p><strong>Key decisions.</strong></p>
 <ul>
 <li>The universe is every facility ICIS-Air has ever tracked, with no &quot;was this facility ever active&quot; screen
-applied — including the 52.2% of facilities with zero events anywhere in the window (R1).</li>
+applied — including the 52.2% of facilities with zero events anywhere in the window.</li>
 <li>A zero-vs-unknown discipline anchors this entire layer: a count is a true zero only if the facility was
-actually observed that year; otherwise it's unknown (R2). Every other dataset here inherits this rule.</li>
+actually observed that year; otherwise it's unknown. Every other dataset here inherits this rule.</li>
 <li>The penalty-amount field reads the same whether no formal action occurred or a formal action assessed
-exactly $0 — the two cases aren't distinguishable in this field alone (R4).</li>
+exactly $0 — the two cases aren't distinguishable in this field alone.</li>
 </ul>
 <p><strong>Headline finding.</strong> Coverage is far from uniform — only 12.6% of facility-years are observed overall, and
 that share has drifted down over time (13.9% in the early window to 10.6% recently). It's also sharply
@@ -140,31 +194,35 @@ facilities the archive saw operating that current ICIS-Air no longer lists at al
 <p><strong>Key decisions.</strong></p>
 <ul>
 <li>Every signal here is kept strictly raw — no imputation. Outside 2015–2025, or wherever the archive has no
-snapshot, the value is unknown (O2).</li>
+snapshot, the value is unknown.</li>
 <li>The broader of the two existence tiers unions archive-confirmed operating status with ICIS and
-emissions/greenhouse-gas reporting, closing gaps no single signal covers alone (O6) — the panel layer's
+emissions/greenhouse-gas reporting, closing gaps no single signal covers alone — the panel layer's
 continuity screen is built on this tier.</li>
 <li>The universe here matches Regulatory's exactly, dropping the ~15,302 archive-only facilities into their
-own companion file so the two main datasets stay row-for-row joinable (O1/O1a).</li>
+own companion file so the two main datasets stay row-for-row joinable.</li>
 </ul>
 <p><strong>Headline finding.</strong> 92,080 facilities are archive-confirmed operating with zero ICIS events recorded,
 ever — meaning ICIS observation alone badly undercounts which facilities genuinely exist, which is exactly
 what motivated building the broader existence tiers in the first place.</p>
 <p><strong>Caveat.</strong> A facility's disappearance from ICIS is only reliably captured here when it's a confirmed
 closure — real mid-window disappearances that were never formally closed (roughly 1,018 of them) are
-invisible in this main file; they only show up in the companion &quot;archive-only&quot; file.</p>
+invisible in this main file; they only show up in the companion &quot;archive-only&quot; file. This isn't an
+oversight: the ~15,302 archive-only facilities have zero ICIS footprint of any kind (absent from
+<code>facilities.csv.gz</code>, zero ICIS events), so keeping them out of this table is what preserves its exact
+1:1 join to Regulatory — folding them in would make every ICIS-sourced column permanently <code>NA</code> for them,
+for a different reason than this table's normal &quot;unobserved&quot; <code>NA</code>.</p>
 </div><div class='doc-pane' id='hpv-spells'><h2>HPV Spells</h2><p>The uncollapsed, spell-grain record of every High Priority Violation determination — one row per HPV spell,
 kept deliberately raw rather than merged or deduplicated.</p>
 <p><strong>Scale.</strong> 44,777 spells across 15,656 facilities; 42.8% of those facilities have more than one spell.</p>
 <p><strong>Key decisions.</strong></p>
 <ul>
 <li>The HPV universe is defined by the enforcement-response-policy code itself, not a broader violation
-category — it excludes the less-severe &quot;federally reportable&quot; tier entirely (H1).</li>
+category — it excludes the less-severe &quot;federally reportable&quot; tier entirely.</li>
 <li>Overlapping spells at the same facility are NOT merged here — that collapse is deliberately deferred to
-the facility-year dataset below, keeping this file a faithful, minimally processed record (H2).</li>
+the facility-year dataset below, keeping this file a faithful, minimally processed record.</li>
 <li>Where a spell needs to become a single facility-year flag, an interval-overlap rule was chosen over two
 simpler alternatives (day-zero-year-only, or open-ended extension) after directly comparing what each
-would produce (H5).</li>
+would produce.</li>
 </ul>
 <p><strong>Headline finding.</strong> Once resolved, an HPV spell tends to run long — median 315 days, and 44.2% span more
 than a full calendar year. Title V (57.3%) and state implementation plan (48.5%) obligations dominate which
@@ -181,10 +239,10 @@ window.</p>
 <ul>
 <li>The same zero-vs-unknown discipline as Regulatory applies, with one addition: a spell can mark a
 facility-year active even in a year ICIS-Air itself has no other observed record for that facility
-(2,431 facility-years) (H6).</li>
+(2,431 facility-years).</li>
 <li>Collapsing spells into years applies a plausibility screen on day-zero dates (rejecting anything outside
 1970–2025) — which caught a real data-entry bug: a mistyped day-zero year that would otherwise have
-spuriously flagged over a decade of facility-years as HPV-active (H7).</li>
+spuriously flagged over a decade of facility-years as HPV-active.</li>
 </ul>
 <p><strong>Headline finding.</strong> The active-HPV rate has fallen steadily and substantially, from 8.4% in 2005 to 2.0%
 in 2025 — a roughly 4.3x decline that isn't fully explained by the known coverage-ramp and right-truncation
@@ -199,11 +257,11 @@ restricted to the main panel window); 72,560 of those actions assessed a nonzero
 <p><strong>Key decisions.</strong></p>
 <ul>
 <li>Only formal enforcement actions are included — informal actions have no penalty amount to report at all
-(P2).</li>
+.</li>
 <li>Multi-facility settlements (one enforcement action naming several co-defendant facilities) are exposed via
 an explicit settlement identifier and facility count, not silently resolved — the per-row penalty amount
 is left exactly as reported, which is often the full settlement total repeated on every co-defendant's row
-(P5).</li>
+.</li>
 </ul>
 <p><strong>Headline finding.</strong> 571 settlements (0.55% of all actions) span more than one facility. Naively summing
 the penalty amount across all rows overstates the true multi-facility penalty total by roughly $1.99B —
@@ -219,12 +277,12 @@ and 2,873 (1.3% of those checkable) show a gross location error.</p>
 <p><strong>Key decisions.</strong></p>
 <ul>
 <li>Coordinates come from the Facility Registry Service via each facility's registry ID; no match there means
-no coordinate at all, not an estimated one (C1).</li>
+no coordinate at all, not an estimated one.</li>
 <li>County assignment uses genuine point-in-polygon geometry against the full Census county file (all 56
 state/territory codes, not just the continental US) — not a text match against ICIS's own county name
-field (C2).</li>
+field.</li>
 <li>A second, coordinate-independent county field is also included, derived from ICIS's own name text — it
-covers 93.6% of facilities, wider than the 84.5% that have a usable coordinate at all (C5).</li>
+covers 93.6% of facilities, wider than the 84.5% that have a usable coordinate at all.</li>
 </ul>
 <p><strong>Headline finding.</strong> For facilities where both a coordinate and an ICIS-claimed county exist, 97.3% land in
 exactly the county ICIS claims. But quality varies sharply by state — Louisiana has only 29.1% coordinate
@@ -241,11 +299,11 @@ show up in this source at all.</p>
 <p><strong>Key decisions.</strong></p>
 <ul>
 <li>Roughly 7,218 raw rows are EPA placeholder records with no real violation behind them, and are excluded
-outright (PL1).</li>
+outright.</li>
 <li>The year a record is assigned to is anchored to the violation's own start date, chosen only after testing
-it directly against alternative date fields — not assumed (PL2).</li>
+it directly against alternative date fields — not assumed.</li>
 <li>A penalty-amount field carried over from this source is exposed but explicitly flagged not to be summed
-against the Penalties dataset — the two aren't additive (PL4).</li>
+against the Penalties dataset — the two aren't additive.</li>
 </ul>
 <p><strong>Headline finding.</strong> The less-severe violation tier outnumbers HPV more than 2-to-1 in this source (39,987
 vs. 17,210). The evaluation-to-violation linkage this dataset is built to provide is essentially absent
@@ -263,13 +321,13 @@ observed for greenhouse gases specifically.</p>
 <p><strong>Key decisions.</strong></p>
 <ul>
 <li>This is the one dataset in the layer that can't join on the standard facility program-system ID — it
-joins on the Facility Registry Service ID instead, since its raw rows are cross-program by nature (EM1).</li>
+joins on the Facility Registry Service ID instead, since its raw rows are cross-program by nature.</li>
 <li>Pollutant totals are matched to each source row's pollutant name exactly, never by a partial/substring
 match — a direct test confirmed that a naive substring match would have inflated the PM10/PM2.5 totals by
-about 1.7x (EM4).</li>
+about 1.7x.</li>
 <li>Cases where several facilities share one registry ID are exposed as a flag rather than silently resolved
 (affecting 22,175 facilities) — the same kind of ambiguity Penalties handles for multi-facility
-settlements (EM2).</li>
+settlements.</li>
 </ul>
 <p><strong>Headline finding.</strong> This dataset's coverage ceiling is only about 19.7% of the full ICIS-Air universe —
 most emissions reporters simply aren't ICIS-Air facilities at all. Several key pollutants (VOC, PM10,
@@ -297,6 +355,16 @@ just means that pollutant wasn't due to report that year.</p>
     var initial = (location.hash || '').slice(1);
     if (!initial || !nav.querySelector("[id='" + initial + "']")) initial = links.length ? links[0].dataset.target : null;
     if (initial) show(initial);
+  });
+  window.addEventListener('hashchange', function(){
+    var id = (location.hash || '').slice(1);
+    if (!id) return;
+    document.querySelectorAll('.doc-nav').forEach(function(nav){
+      var pane = nav.querySelector("[id='" + id + "']");
+      if (!pane) return;
+      nav.querySelectorAll('.doc-sidebar-link').forEach(function(l){ l.classList.toggle('active', l.dataset.target === id); });
+      nav.querySelectorAll('.doc-pane').forEach(function(p){ p.hidden = (p.id !== id); });
+    });
   });
 })();
 </script></body></html>

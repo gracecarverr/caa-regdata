@@ -19,8 +19,8 @@
 - **Input:** `data/datasets/regulatory.csv.gz` (via `read_counts()`) — all `N_*` event counts +
   `PENALTY_AMOUNT`/`PENALTY_AMOUNT_DUP`, facility × year.
 - **Input:** `data/datasets/operating.csv.gz` (via `read_wayback()`) — year-varying wayback status
-  (`OP_STATUS_CODE`, `OPERATING`, 8 `PROG_*_ACTIVE` flags) plus `ICIS_OBSERVED`/`EMISSIONS_OBSERVED`/
-  `GHG_OBSERVED`/`ACTIVE`/`ACTIVE_BROAD`, facility × year.
+  (`OP_STATUS_CODE`, `OPERATING`, `OPERATING_IMPUTED` (NEW 2026-07-30), 8 `PROG_*_ACTIVE` flags) plus
+  `ICIS_OBSERVED`/`EMISSIONS_OBSERVED`/`GHG_OBSERVED`/`ACTIVE`/`ACTIVE_BROAD`, facility × year.
 - **Input:** `data/datasets/hpv_active.csv.gz` (via `read_hpv()`) — `HPV_ACTIVE`, facility × year.
 - **Output:** no output of its own; the `build_panel()` function it defines is what `03_build.R` calls to
   produce both panel files — see `03_build.R`'s README for example rows.
@@ -50,8 +50,9 @@ defaults to `col_integer()`).
 
 **`FILL_COLS`** and **`code_obs_source(panel)`** — the one piece of real logic in this file. Derives
 `OBS_SOURCE` via `case_when()` (`ICIS_OBSERVED == 1` → `"event"`; else `ACTIVE_BROAD == 1` → `"operating"`;
-else `"unobserved"`), then for rows where `OBS_SOURCE == "operating"`, fills `NA → 0` across `FILL_COLS`
-(`COUNT_COLS` + `HPV_ACTIVE`) — `PENALTY_AMOUNT`/`PENALTY_AMOUNT_DUP` are excluded from this fill.
+else `ACTIVE_BROAD == 0` → `"confirmed_inactive"`; else `"unobserved"`), then for rows where
+`OBS_SOURCE %in% c("operating", "confirmed_inactive")`, fills `NA → 0` across `FILL_COLS` (`COUNT_COLS` +
+`HPV_ACTIVE`) — `PENALTY_AMOUNT`/`PENALTY_AMOUNT_DUP` are excluded from this fill regardless of branch.
 
 **`build_panel(facs, years)`** — the exported entry point. `expand_grid(PGM_SYS_ID = ids, YEAR = years)` to
 build the balanced rectangle, left-joins in `read_counts()`/`read_wayback()`/`read_hpv()`, derives the four
@@ -70,15 +71,24 @@ attributes from `facs` (the filtered spine slice), and returns the assembled pan
   `unobserved`."* And on why this reproduces rather than reinvents the archived logic: *"Verified:
   `ICIS_OBSERVED==1` always implies `ACTIVE_BROAD==1` (an invariant asserted when `ACTIVE_BROAD` was built), so
   `case_when()` checking `event` first is exhaustive and mutually exclusive by construction."*
-- ⚠️ **The known-operating-zero fill**, from `docs/data_dictionary_derived.md` Part 2, quoted verbatim:
-  *"for rows with `OBS_SOURCE == "operating"`, every `N_*` count and `HPV_ACTIVE` is filled `NA → 0` (a
-  confirmed-active facility-year with no ICIS event is a true zero, not unknown). `PENALTY_AMOUNT`/
-  `PENALTY_AMOUNT_DUP` are **deliberately excluded** from this fill — a known-active, zero-ICIS-event
-  facility-year still reads `NA` for `PENALTY_AMOUNT` (no confirmed formal action), matching the dataset
-  layer's own `R4` convention."*
-- **`OBS_SOURCE`'s own definition**, from the same source, on the exact three-way split: *"`"event"` =
+  **REVISED AGAIN 2026-07-30:** `unobserved` split into two — `ACTIVE_BROAD == 0` (every checked signal
+  positively confirms the facility was NOT active that year) now reads `"confirmed_inactive"`, a real,
+  known-zero year; `"unobserved"` is now reserved for `ACTIVE_BROAD == NA` (genuinely no evidence either way).
+  The original `case_when()` tested only `ACTIVE_BROAD == 1` and let `0`/`NA` collapse into the same
+  catch-all, discarding a 0-vs-`NA` distinction `operating.csv.gz` (`O6`) already made correctly upstream —
+  checked directly: 33% of major_synmin's `"unobserved"` rows (30,612 of 92,013) had `ACTIVE_BROAD == 0`, not
+  `NA`.
+- ⚠️ **The known-operating-zero fill**, updated 2026-07-30 to cover both known-outcome branches: for rows with
+  `OBS_SOURCE %in% c("operating", "confirmed_inactive")`, every `N_*` count and `HPV_ACTIVE` is filled
+  `NA → 0` (a facility-year we know was active — or know was inactive — with no ICIS event is a true zero
+  either way, not unknown). `PENALTY_AMOUNT`/`PENALTY_AMOUNT_DUP` are **deliberately excluded** from this fill
+  in both branches — a known-outcome, zero-ICIS-event facility-year still reads `NA` for `PENALTY_AMOUNT` (no
+  confirmed formal action), matching the dataset layer's own `R4` convention.
+- **`OBS_SOURCE`'s own definition, the current four-way split (as of 2026-07-30):** `"event"` =
   `ICIS_OBSERVED == 1` (a real ICIS record that year); `"operating"` = no ICIS event but `ACTIVE_BROAD == 1`
-  (confirmed active some other way — a genuine structural zero); `"unobserved"` = neither."*
+  (confirmed active some other way — a genuine structural zero); `"confirmed_inactive"` = no ICIS event and
+  `ACTIVE_BROAD == 0` (confirmed NOT active some other way — also a genuine structural zero); `"unobserved"` =
+  no ICIS event and `ACTIVE_BROAD` is `NA` (no evidence either way — the only truly unknown case).
 - **No `HPV_ACTIVE_1MO` (`PB7`):** *"Only the binary `HPV_ACTIVE`, read straight from `hpv_active.csv.gz`.
   ... `hpv_active.csv.gz` never shipped this variant; adding a third copy of the same logic was ruled out as
   unnecessary duplication."*

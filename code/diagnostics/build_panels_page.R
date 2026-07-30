@@ -110,10 +110,11 @@ t3_rows <- vapply(years, function(yr) {
 }, character(1))
 table3 <- stat_table("Coverage by year — share of facility-years with an ICIS event", c("Year", PANEL_LABELS), t3_rows)
 table3_note <- paste(
-  "\"Share with an ICIS event\" = OBS_SOURCE == \"event\". The remainder splits between OBS_SOURCE ==",
-  "\"operating\" (no ICIS event that year, but confirmed active another way) and \"unobserved\" (no",
-  "confirmed activity that year — expected here, since each panel only requires a facility to be active",
-  "in at least one of its 11 years, not every year).")
+  "\"Share with an ICIS event\" = OBS_SOURCE == \"event\". The remainder splits three ways: OBS_SOURCE ==",
+  "\"operating\" (no ICIS event that year, but confirmed active another way), \"confirmed_inactive\" (no",
+  "ICIS event, but confirmed NOT active that year — also a real, known outcome, not missing data), and",
+  "\"unobserved\" (no evidence either way that year — expected here, since each panel only requires a",
+  "facility to be active in at least one of its 11 years, not every year).")
 
 # =========================================================================================================
 # Table 4 -- HPV-active rate by year (hpv_active_by_year.csv; H6 zero-vs-NA discipline)
@@ -201,7 +202,11 @@ while (length(md_lines) && !nzchar(trimws(md_lines[1]))) md_lines <- md_lines[-1
 # points (a soft wrap in the source is just a space once rendered). If the brief's wording changes later,
 # a pattern will simply stop matching (silently leaving that one citation in place) rather than mangling
 # unrelated text -- the warning below catches that case so it doesn't go unnoticed.
-narrative_text <- paste(md_lines, collapse = "\n")
+# run the shared regex sanitizer first (_html.R) to catch any bare "(CODE)" citation the hand-written
+# PUBLIC_TEXT_SUBS list below doesn't already rewrite -- this brief mostly uses backtick-wrapped mid-
+# sentence citations (`` `PB2` ``, not "(PB2)"), which is why PUBLIC_TEXT_SUBS, not the regex pass, does
+# most of the work here; the regex pass is just a backstop.
+narrative_text <- strip_internal_citations(paste(md_lines, collapse = "\n"))
 PUBLIC_TEXT_SUBS <- list(
   list(pat = "\\| `major_synmin_2015_2025` \\|", rep = "| Major/Synthetic Minor |"),
   list(pat = "\\| `electric_2015_2025` \\|", rep = "| Electric |"),
@@ -235,7 +240,40 @@ PUBLIC_TEXT_SUBS <- list(
        rep = "Electric is defined as major_synmin's filter"),
   list(pat = paste0("same caveat as the dataset-layer\\s+",
                      "`penalties_profile\\.md`/`multi_facility_settlement_decision\\.md`\\."),
-       rep = "same caveat noted at the dataset layer.")
+       rep = "same caveat noted at the dataset layer."),
+  # remaining internal citations strip_internal_citations()'s regex pass doesn't catch (each is either a
+  # backtick-wrapped code embedded mid-sentence, not a "(CODE)" parenthetical, or a parenthetical that mixes
+  # a citation code with a non-code token so the auto-stripper's pure-citation-group pattern doesn't match):
+  list(pat = "What changed under `PB2` is the eligibility rule itself:",
+       rep = "What changed is the eligibility rule itself:"),
+  list(pat = "is the direct, intended consequence\\s+of the `PB2` revision\\.",
+       rep = "is a direct, intended consequence of the eligibility-rule revision described above."),
+  # 3 more, added with the 2026-07-30 PB4 (confirmed_inactive split) rewrite of panel_profile.md §2 -- same
+  # class of embedded-mid-sentence citation the auto-stripper's bare-parenthetical regex doesn't catch,
+  # because each parenthetical mixes a citation code with a non-code token (a word, filename, or 2nd file):
+  list(pat = "2026-07-30 \\(`PB4` fix\\)",
+       rep = "2026-07-30"),
+  list(pat = "`ACTIVE_BROAD`\\s+\\(`operating\\.csv\\.gz`,\\s*`O6`\\)\\s+already made correctly",
+       rep = "`ACTIVE_BROAD` (`operating.csv.gz`) already made correctly"),
+  list(pat = "\\(`operating\\.csv\\.gz`,\\s*`O4`/`O5`\\)",
+       rep = "(`operating.csv.gz`)"),
+  # 2 more, added with the 2026-07-30 bridge-imputation (PB9/O2) addition to panel_profile.md §2 -- a third
+  # needed for that same rewrite, "(`PB9`/`O2`)", turned out to already be caught by the auto-stripper's own
+  # bare-parenthetical regex (a "/"-separated pure-citation-code group, same shape as its own doc-comment
+  # example) -- no manual entry needed for it.
+  list(pat = "unchanged\\s+from\\s+the\\s+`PB4`\\s+fix\\s+—\\s+that\\s+fix\\s+only\\s+touched",
+       rep = "unchanged from that earlier fix — it only touched"),
+  list(pat = "already\\s+`O4`'s\\s+`W7a`\\s+treatment",
+       rep = "already a documented treatment for exactly this timing-unknowable case"),
+  list(pat = "—\\s+see\\s+`O2`\\s+in\\s+`dataset_construction_decisions\\.md`\\s+for\\s+the\\s+full\\s+derivation",
+       rep = "— see `dataset_construction_decisions.md` for the full derivation"),
+  # "the retired build"/"the retired continuity-screened build" -- internal build-versioning name for the
+  # panels' previous (all-11-years) eligibility rule, meaningless to a public reader; reworded rather than
+  # dropped since the comparison itself (old rule vs. new rule) is real, useful methodological context.
+  list(pat = "the retired continuity-screened build",
+       rep = "the previous, continuity-screened construction rule"),
+  list(pat = "retired build",
+       rep = "previous construction rule")
 )
 for (s in PUBLIC_TEXT_SUBS) {
   if (!grepl(s$pat, narrative_text, perl = TRUE)) {
@@ -243,6 +281,7 @@ for (s in PUBLIC_TEXT_SUBS) {
   }
   narrative_text <- gsub(s$pat, s$rep, narrative_text, perl = TRUE)
 }
+assert_no_internal_citations(narrative_text, "build_panels_page.R")
 md_lines <- strsplit(narrative_text, "\n")[[1]]
 
 narrative_html <- commonmark::markdown_html(paste(md_lines, collapse = "\n"), extensions = TRUE)  # extensions=TRUE for GFM pipe tables (panel_profile.md has several)
@@ -258,6 +297,8 @@ body <- paste0(
     eyebrow = "Facility × Year Panels"
   ),
   page_main(
+    "<div class='section-note'>For column-by-column definitions of every field in these panels, see the ",
+    "<a href='dictionary.html'>Data Dictionary</a> (Part 2, the panel layer).</div>",
     "<div class='prose'>",
     narrative_html,
     "<h2>Summary-Statistics Tables</h2>",
@@ -314,4 +355,6 @@ cat("wrote", OUT, "\n")
 #    make a pattern stop matching. This fails SAFE (the one un-matched citation stays in the rendered page,
 #    everything else still renders) and fails LOUD (a warning() names the exact pattern that didn't match),
 #    but it does mean this list needs a human review pass whenever panel_profile.md's prose changes, not just
-#    when its numbers do.
+#    when its numbers do. assert_no_internal_citations() (_html.R) is the backstop for this: it stop()s the
+#    whole build if any citation-code-shaped token survives both strip_internal_citations()'s regex pass and
+#    this list, so a silently-stale pattern can't ship a stray "(PB2)" to the public page unnoticed.

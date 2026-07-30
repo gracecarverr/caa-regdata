@@ -1,5 +1,5 @@
 # =========================================================================================================
-# code/04_datasets/03_hpv_spells.R -- DATASET 2: hpv_spells. One row per HPV spell, UNcollapsed.
+# code/03_datasets/03_hpv_spells.R -- DATASET 2: hpv_spells. One row per HPV spell, UNcollapsed.
 #   The spell-level source of truth for High Priority Violation status. Dataset `hpv_active` (facility x year,
 #   built in 04_hpv_active.R) is a deterministic R2 collapse of THIS table; nothing here is lost.
 #
@@ -19,7 +19,7 @@
 #   GRAIN -- spell-level: a facility has 0..N rows. Does NOT join 1:1 to datasets 0/1; join on PGM_SYS_ID.
 # =========================================================================================================
 library(readr); library(dplyr); library(lubridate)
-source(here::here("code/04_datasets/00_parameters.R"))
+source(here::here("code/03_datasets/00_parameters.R"))
 
 COLS <- c("PGM_SYS_ID","ACTIVITY_ID","COMP_DETERMINATION_UID","ENF_RESPONSE_POLICY_CODE",
           "EARLIEST_FRV_DETERM_DATE","HPV_DAYZERO_DATE","HPV_RESOLVED_DATE",

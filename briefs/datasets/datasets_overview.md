@@ -53,7 +53,11 @@ what motivated building the broader existence tiers in the first place.
 
 **Caveat.** A facility's disappearance from ICIS is only reliably captured here when it's a confirmed
 closure — real mid-window disappearances that were never formally closed (roughly 1,018 of them) are
-invisible in this main file; they only show up in the companion "archive-only" file.
+invisible in this main file; they only show up in the companion "archive-only" file. This isn't an
+oversight: the ~15,302 archive-only facilities have zero ICIS footprint of any kind (absent from
+`facilities.csv.gz`, zero ICIS events), so keeping them out of this table is what preserves its exact
+1:1 join to Regulatory — folding them in would make every ICIS-sourced column permanently `NA` for them,
+for a different reason than this table's normal "unobserved" `NA` (O1a/O7).
 
 ## HPV Spells
 

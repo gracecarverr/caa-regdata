@@ -1,5 +1,5 @@
 # =========================================================================================================
-# code/04_datasets/01_regulatory.R -- DATASET 0: the regulatory dataset. Facility x year, built from the
+# code/03_datasets/01_regulatory.R -- DATASET 0: the regulatory dataset. Facility x year, built from the
 #   raw ICIS-Air download and NOTHING ELSE. Every column here is either an ICIS event count or an ICIS
 #   facility characteristic; no wayback status, no FRS coordinates, no AFS. Those live in other datasets
 #   and merge on PGM_SYS_ID (+ year).
@@ -24,7 +24,7 @@
 #     count - dup. Violations and stack tests carry zero dups (asserted below).
 # =========================================================================================================
 library(readr); library(dplyr); library(tidyr)
-source(here::here("code/04_datasets/00_parameters.R"))     # YEARS, CLEAN, DATASETS, write_dataset()
+source(here::here("code/03_datasets/00_parameters.R"))     # YEARS, CLEAN, DATASETS, write_dataset()
 
 rd <- function(name, cols)                                    # read one clean asset, keep needed columns
   read_csv(file.path(CLEAN, paste0(name, ".csv.gz")), col_select = all_of(cols),
@@ -56,7 +56,7 @@ ids <- attrs$PGM_SYS_ID                                # the FULL ICIS-AIR_FACIL
 stopifnot("facilities: PGM_SYS_ID is not unique -- the facility grain is broken" = !anyDuplicated(ids))
 
 # emitted-pollutant profile: ever-reported, undated (ICIS gives no start/end) -> time-invariant flags.
-source(here::here("code/04_datasets/hap_list_112b.R"))   # HAP_112B, HAP_COMPOUND_CLASS_PATTERNS
+source(here::here("code/03_datasets/hap_list_112b.R"))   # HAP_112B, HAP_COMPOUND_CLASS_PATTERNS
   # moved here from code/03_panel_building/ (now archived, see archive/panel_building_legacy/) --
   # this is the only remaining consumer of the HAP list going forward, since the new panel-building
   # pipeline (code/04_panel_building/) consumes EMITS_HAP from regulatory.csv.gz instead of

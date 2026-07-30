@@ -18,12 +18,16 @@
 #
 #   DISCIPLINE (REVISED 2026-07-29, PB2's eligibility-rule change): both panels are eligibility-screened on
 #   ACTIVE_BROAD==1 in AT LEAST ONE of the 11 years (PB2 in briefs/panel/panel_construction_decisions.md), not
-#   every year as before -- so OBS_SOURCE=="unobserved" is now a REAL, EXPECTED value (a facility can be
-#   eligible via one qualifying year while other years in its 11-year rectangle have no confirmed activity),
-#   not an impossible one. Every table/figure below that touches OBS_SOURCE treats "unobserved" as a normal
-#   category to report, not a build-defect signal to warn on. N_* count measures still follow the dataset
-#   layer's zero-vs-NA gate (ICIS_OBSERVED==1 -- a facility-year with no ICIS record that year is NA, not a
-#   false 0); every summary below is computed on the ICIS_OBSERVED==1 subset and reports the NA share.
+#   every year as before -- so OBS_SOURCE=="unobserved"/"confirmed_inactive" are now REAL, EXPECTED values (a
+#   facility can be eligible via one qualifying year while other years in its 11-year rectangle have no
+#   confirmed activity), not impossible ones. Every table/figure below that touches OBS_SOURCE treats them as
+#   normal categories to report, not a build-defect signal to warn on. N_* count measures still follow the
+#   dataset layer's zero-vs-NA gate (ICIS_OBSERVED==1 -- a facility-year with no ICIS record that year is NA,
+#   not a false 0); every summary below is computed on the ICIS_OBSERVED==1 subset and reports the NA share.
+#   REVISED AGAIN 2026-07-30 (PB4 fix): OBS_SOURCE is now a FOUR-way split -- "unobserved" used to also
+#   absorb facility-years where ACTIVE_BROAD==0 (positively confirmed NOT active, just no ICIS event); those
+#   now read "confirmed_inactive", a real known-zero, not missing data. See panel_construction_decisions.md
+#   (PB4) for the fix and the empirical finding that motivated it.
 #   PENALTY_AMOUNT is NA-if-none-OR-if-summed-to-exactly-$0 (data/panels/README.md's own documented ambiguity,
 #   inherited unchanged here -- NOT re-derived or disambiguated by this script). No numbers are hand-entered;
 #   every cell/figure is computed here. Hand-run (not part of RUN_ALL.R, matching every sibling profile
@@ -80,16 +84,20 @@ overview[, balanced := n_facility_years == n_facilities * length(YEARS)]  # sani
 fwrite(overview, file.path(OUT_CSV, "overview.csv"))
 
 # =========================================================================================================
-# CSV 2 -- OBS_SOURCE composition by year, both panels (coverage: event vs. operating vs. unobserved)
+# CSV 2 -- OBS_SOURCE composition by year, both panels (coverage: event vs. operating vs. confirmed_inactive
+#          vs. unobserved -- four-way as of the 2026-07-30 PB4 fix, see header comment)
 # =========================================================================================================
 coverage_by_year <- all_panels[, .(n_facility_years = .N, pct_event = mean(OBS_SOURCE == "event"),
                                    pct_operating = mean(OBS_SOURCE == "operating"),
-                                   pct_unobserved = mean(OBS_SOURCE == "unobserved")),  # REVISED 2026-07-29 (PB2): no longer expected to be 0 -- the eligibility screen only requires ACTIVE_BROAD==1 in >=1 of the 11 years, so a facility-year outside its qualifying year(s) can genuinely have no confirmed activity. A real, informative share now, not a build-defect signal (contrast the pre-2026-07-29 version of this file, which warned on any nonzero value here).
+                                   pct_confirmed_inactive = mean(OBS_SOURCE == "confirmed_inactive"),  # NEW 2026-07-30 (PB4): ACTIVE_BROAD==0, positively confirmed not active that year -- a real known-zero, previously mislabeled "unobserved"
+                                   pct_unobserved = mean(OBS_SOURCE == "unobserved")),  # REVISED 2026-07-29 (PB2): no longer expected to be 0 -- the eligibility screen only requires ACTIVE_BROAD==1 in >=1 of the 11 years, so a facility-year outside its qualifying year(s) can genuinely have no confirmed activity. REVISED 2026-07-30 (PB4): now only ACTIVE_BROAD==NA rows (genuinely no evidence) -- confirmed-inactive years moved out to their own category above.
                                 by = .(panel, YEAR)][order(panel, YEAR)]
 n_unobserved <- sum(coverage_by_year$n_facility_years * coverage_by_year$pct_unobserved)  # total facility-years with OBS_SOURCE=="unobserved", across both panels -- expected to be > 0 under the >=1-year eligibility rule
-cat(sprintf("coverage_by_year: %s facility-years have OBS_SOURCE=='unobserved' across both panels (expected under the >=1-year eligibility rule, PB2)\n", format(round(n_unobserved), big.mark = ",")))
+n_confirmed_inactive <- sum(coverage_by_year$n_facility_years * coverage_by_year$pct_confirmed_inactive)  # total facility-years with OBS_SOURCE=="confirmed_inactive", across both panels
+cat(sprintf("coverage_by_year: %s facility-years have OBS_SOURCE=='unobserved' and %s have OBS_SOURCE=='confirmed_inactive' across both panels (both expected under the >=1-year eligibility rule, PB2/PB4)\n",
+            format(round(n_unobserved), big.mark = ","), format(round(n_confirmed_inactive), big.mark = ",")))
 fwrite_rounded(coverage_by_year, file.path(OUT_CSV, "coverage_by_year.csv"),
-               prop_cols = c("pct_event", "pct_operating", "pct_unobserved"))
+               prop_cols = c("pct_event", "pct_operating", "pct_confirmed_inactive", "pct_unobserved"))
 
 # =========================================================================================================
 # CSV 3 -- five-number summaries for key N_* count measures, ICIS_OBSERVED subset, both panels
@@ -235,7 +243,7 @@ fig1 <- ggplot(coverage_by_year, aes(YEAR, pct_event, color = panel)) +
   geom_text(data = end_labels1, aes(label = panel), hjust = 0, nudge_x = 0.3, size = 3.2, fontface = "bold") +
   coord_cartesian(clip = "off") +
   labs(title = "Share of facility-years with an ICIS event, 2015-2025",
-       subtitle = "OBS_SOURCE == \"event\" vs. \"operating\" (no ICIS event that year, but confirmed active another way) vs.\n\"unobserved\" (no confirmed activity that year -- expected under the >=1-year eligibility rule, PB2)",
+       subtitle = "OBS_SOURCE == \"event\" vs. \"operating\"/\"confirmed_inactive\" (confirmed active or inactive\nanother way, no ICIS event) vs. \"unobserved\" (no evidence either way -- expected under the\n>=1-year eligibility rule, PB2/PB4)",
        x = NULL, y = "Share \"event\"",
        caption = "Source: data/panels/*_2015_2025.csv.gz.") +
   theme_journal + theme(plot.margin = margin(t = 5.5, r = 14, b = 5.5, l = 5.5),
@@ -390,7 +398,7 @@ save_fig("panel_violations_enforcement.png", fig8, w = 10, h = 4.3)
 cat("data/panels/*_2015_2025.csv.gz -- profile summary\n")
 cat("================================================================\n\n")
 print(as.data.frame(overview), row.names = FALSE)
-cat("\nOBS_SOURCE COMPOSITION BY YEAR (event vs. operating; unobserved should be 0)\n"); print(as.data.frame(coverage_by_year), row.names = FALSE)
+cat("\nOBS_SOURCE COMPOSITION BY YEAR (event / operating / confirmed_inactive / unobserved -- all four expected nonzero under PB2/PB4)\n"); print(as.data.frame(coverage_by_year), row.names = FALSE)
 cat("\nKEY COUNT MEASURES (ICIS_OBSERVED subset)\n"); print(as.data.frame(summary_counts), row.names = FALSE)
 cat("\nHPV-ACTIVE RATE BY YEAR\n"); print(as.data.frame(hpv_active_by_year), row.names = FALSE)
 cat("\nPENALTY_AMOUNT SUMMARY\n"); print(as.data.frame(penalty_summary), row.names = FALSE)

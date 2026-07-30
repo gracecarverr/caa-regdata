@@ -58,3 +58,75 @@ num_table <- function(headers, rows) paste0(
 # ---- notes / footnotes / duplicates --------------------------------------------------------------------
 note  <- function(text) paste0("<p class='note'>", esc(text), "</p>")
 dupes <- function(text) paste0("<p class='dupes'><b>DUPLICATES</b><br>", esc(text), "</p>")
+
+# ---- public-site citation sanitizer ----------------------------------------------------------------------
+# Every build_*.R page builder that injects prose verbatim from an internal source (briefs/*.md,
+# docs/data_dictionary*.md) uses this to strip that source's internal decision-code citations
+# (`R1`, `O6`, `H5`, `PB2`, ... -- pointers into dataset_construction_decisions.md/panel_construction_
+# decisions.md) and changelog-style "Fixed/Revised YYYY-MM-DD" annotations before rendering, so the public
+# HTML reads as a public reference rather than an internal traceability log. The SOURCE .md files themselves
+# are never touched -- they keep full citations for a researcher returning to the project cold; only the
+# rendered page is sanitized. Mirrors the exact-text PUBLIC_TEXT_SUBS approach build_panels_page.R already
+# used for organic prose it can't safely regex (composite parentheticals, filename citations) -- callers
+# should still apply their own hand-checked substitutions for those after calling this.
+CITATION_CODE <- "\\b(?:PL|EM|PB|R|O|H|P|C|G)[0-9]{1,2}[a-z]?\\b"   # every family used across both construction-decisions logs
+
+strip_internal_citations <- function(text) {
+  one   <- paste0("`?", CITATION_CODE, "`?")
+  group <- paste0(one, "(?:\\s*[/,]\\s*", one, ")*")   # "R1", "`H6`", "O1a/O7", "`PB2`/`PB4`"
+
+  # changelog preambles: "**Fixed 2026-07-28 (`R9`):**" / "**Revised 2026-07-29 (`PB2`/`PB4`):**" -- note
+  # the colon sits INSIDE the closing "**" in the source ("...):**"), so it is matched before, not after,
+  # the trailing \\*{0,2}. "(**revised 2026-07-29, explicit user decision — `PB2`**):" (colon AFTER the
+  # closing paren instead) is different-enough bracketing that it is left to a caller's own exact
+  # substitution rather than this general pattern.
+  text <- gsub(paste0("\\*{0,2}(?:Fixed|Revised|Corrected) \\d{4}-\\d{2}-\\d{2}",
+                       "(?:\\s*(?:\u2014|-)\\s*", one, "|\\s*\\(", group, "(?: addendum)?\\))",
+                       ":?\\*{0,2}\\s*"),
+               "Previously: ", text, perl = TRUE)
+
+  # a bare "(NEW YYYY-MM-DD)" build-date tag, or a ", NEW YYYY-MM-DD" heading suffix
+  text <- gsub("\\s?\\(NEW \\d{4}-\\d{2}-\\d{2}\\)", "", text, perl = TRUE)
+  text <- gsub(",?\\s*NEW \\d{4}-\\d{2}-\\d{2}", "", text, perl = TRUE)
+
+  # bare pure-citation parens: "(R1)" "(`H6`)" "(O1a/O7)" "(`PB2`/`PB4`)" "(decision `G2`)"
+  text <- gsub(paste0("\\s?\\((?:decision )?", group, "\\)"), "", text, perl = TRUE)
+
+  # "(aligns w/ `O3`)"-style asides directly following a stripped/bare code
+  text <- gsub("\\s?\\(aligns w/ `?[A-Za-z0-9]+`?\\)", "", text, perl = TRUE)
+
+  # em-dash/hyphen-attached trailing bare citation immediately before a closing paren: "... session — `PB1`)."
+  text <- gsub(paste0("\\s?[\u2014-]\\s?", one, "(?=\\))"), "", text, perl = TRUE)
+
+  gsub("[ \t]{2,}", " ", text)
+}
+
+# tables whose header's LAST column is "Decision" (docs/data_dictionary_derived.md's convention -- every
+# per-field table there ends in a Decision column citing the code(s) behind that field) get that whole
+# column dropped: header, divider, and every data row. Safe because it only ever touches the LAST
+# pipe-delimited cell of a table confirmed (by hand, against every table in that file) to have one.
+strip_decision_column <- function(lines) {
+  header_idx <- grep("\\|\\s*Decision\\s*\\|\\s*$", lines)
+  in_table <- rep(FALSE, length(lines))
+  for (h in header_idx) {
+    i <- h
+    while (i <= length(lines) && grepl("^\\s*\\|.*\\|\\s*$", lines[i])) {
+      in_table[i] <- TRUE
+      i <- i + 1
+    }
+  }
+  lines[in_table] <- gsub("\\s*\\|[^|]*\\|\\s*$", "|", lines[in_table], perl = TRUE)
+  lines
+}
+
+# verification net: called after a page's narrative text is fully assembled (post-sanitize, post-
+# PUBLIC_TEXT_SUBS/DICTIONARY_TEXT_SUBS) -- stop()s loud if any citation-code-shaped token survived, rather
+# than silently shipping one to the public page (stronger than the "warn but continue" convention used for
+# an individual unmatched PUBLIC_TEXT_SUBS pattern, appropriate given how many instances these pages carry).
+assert_no_internal_citations <- function(text, page) {
+  hits <- regmatches(text, gregexpr(CITATION_CODE, text, perl = TRUE))[[1]]
+  if (length(hits)) {
+    stop(sprintf("%s: %d internal citation-code token(s) survived sanitization: %s",
+                 page, length(hits), paste(unique(hits), collapse = ", ")))
+  }
+}

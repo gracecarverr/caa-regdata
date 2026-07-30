@@ -1,5 +1,5 @@
 # =========================================================================================================
-# code/04_datasets/coord_county_flag.R -- coordinate quality flag, used by the coordinates dataset.
+# code/03_datasets/coord_county_flag.R -- coordinate quality flag, used by the coordinates dataset.
 #   flag_coord_county(fac, counties_sf) cross-checks each facility's FRS coordinate against its ICIS-listed
 #   county: it resolves (STATE, COUNTY_NAME) -> county GEOID using the SAME shapefile that assigned
 #   county_fips (so the derived side is vintage-consistent), then measures how far the coordinate falls from

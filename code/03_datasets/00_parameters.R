@@ -1,5 +1,5 @@
 # =========================================================================================================
-# code/04_datasets/00_parameters.R -- shared window + paths for the eight-dataset build.
+# code/03_datasets/00_parameters.R -- shared window + paths for the eight-dataset build.
 #
 #   The deliverable is EIGHT datasets, not one wide panel (see code/04_datasets/README.md):
 #     0 regulatory  facility x year   ICIS-Air only: event counts + ICIS facility characteristics

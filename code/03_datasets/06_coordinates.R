@@ -1,5 +1,5 @@
 # =========================================================================================================
-# code/04_datasets/06_coordinates.R -- DATASET 4: coordinates. One row per facility. FRS lat/lon, the derived
+# code/03_datasets/06_coordinates.R -- DATASET 4: coordinates. One row per facility. FRS lat/lon, the derived
 # county FIPS (point-in-polygon), and coordinate-vs-ICIS-county error diagnostics. Over the FULL 279,665
 #   universe.
 #
@@ -32,7 +32,7 @@
 #   GRAIN -- one row per PGM_SYS_ID (facility). Joins on PGM_SYS_ID to every facility-year dataset.
 # =========================================================================================================
 library(readr); library(dplyr); library(sf)
-source(here::here("code/04_datasets/00_parameters.R"))
+source(here::here("code/03_datasets/00_parameters.R"))
 RAW <- here::here("data/raw")
 
 attrs <- read_csv(file.path(CLEAN, "facilities.csv.gz"),
@@ -62,7 +62,7 @@ fac_fips <- st_join(pts, co["GEOID"], join = st_within) |> st_drop_geometry() |>
 fac <- fac |> left_join(fac_fips, by = "PGM_SYS_ID")
 
 # coordinate-quality diagnostics (standalone copy, local to this datasets layer -- see coord_county_flag.R).
-source(here::here("code/04_datasets/coord_county_flag.R"))
+source(here::here("code/03_datasets/coord_county_flag.R"))
 coords <- fac |> left_join(flag_coord_county(fac, co), by = "PGM_SYS_ID") |>
   transmute(PGM_SYS_ID, REGISTRY_ID, STATE, county_name = COUNTY_NAME, icis_county_fips,
             latitude, longitude, has_coordinate = as.integer(!is.na(latitude) & !is.na(longitude)),

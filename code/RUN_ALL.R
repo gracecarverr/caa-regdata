@@ -16,11 +16,16 @@
 #     04 panels         code/04_panel_building/03_build.R     -> data/panels/         (2 continuous panels,
 #                        built FROM the datasets above -- see code/04_panel_building/README.md)
 #     (docs) build site code/diagnostics/build_site.R         -> docs/raw_data.html   (generated from data/raw)
-#                        code/diagnostics/build_home.R        -> docs/index.html      (institutional overview)
+#                        code/diagnostics/build_home.R        -> docs/index.html      (landing page)
+#                        code/diagnostics/build_briefs_page.R -> docs/briefs.html     (twelve institutional
+#                        briefs -- Clean Air Act structure + the data systems/identifiers; no data dependency)
 #                        code/diagnostics/build_databases_page.R -> docs/databases.html (database overviews)
 #                        code/diagnostics/build_panels_page.R -> docs/panels.html     (panel construction +
 #                        summary stats; requires output/panel_profile/*.csv to already exist --
 #                        Rscript code/diagnostics/18_panel_profile.R first, hand-run like every profile script)
+#                        code/diagnostics/build_dictionary.R  -> docs/dictionary.html (renders the two
+#                        hand-maintained docs/data_dictionary*.md files, cross-linked to raw_data.html/
+#                        databases.html/panels.html -- reads only those two .md files, no data dependency)
 #
 #   Stage order was inverted 2026-07-28 -- datasets now build BEFORE panels (panel-building consumes
 #   data/datasets/ instead of re-deriving facility-year aggregations from data/processed/ itself). The
@@ -67,8 +72,10 @@ if (!skip_site) {
   step("docs: build site")
   source(here::here("code/diagnostics/build_site.R"))
   source(here::here("code/diagnostics/build_home.R"))
+  source(here::here("code/diagnostics/build_briefs_page.R"))
   source(here::here("code/diagnostics/build_databases_page.R"))
   source(here::here("code/diagnostics/build_panels_page.R"))
+  source(here::here("code/diagnostics/build_dictionary.R"))
 } else step("docs: build site -- SKIPPED (SKIP_SITE=true)")
 
 step("done")

@@ -55,7 +55,8 @@ nav_html <- doc_nav(lapply(built, to_doc_pane))
 raw_data_body <- paste0(
   "<div class='raw-data'>",
   "<div class='section-note'>Per-source summary tables, computed directly from the raw EPA downloads. ",
-  "Navy table headers are categorical (frequent values); burgundy headers are date/numeric distributions.</div>",
+  "Navy table headers are categorical (frequent values); burgundy headers are date/numeric distributions. ",
+  "For column-by-column field definitions, see the <a href='dictionary.html'>Data Dictionary</a>.</div>",
   nav_html,
   "</div>")
 

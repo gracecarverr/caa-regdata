@@ -1,74 +1,34 @@
 # =========================================================================================================
-# code/diagnostics/build_home.R \u2014 assembles docs/index.html, the site's Home page: a hero, cards linking to
-#   the other 3 pages, and the institutional-overview brief rendered as a docs-site-style sidebar + content
-#   pane (site_shell.R's doc_nav(), one pane per top-level "## " section of the brief) rather than one long
-#   scroll of prose \u2014 a reader shouldn't have to read the whole Clean Air Act primer to find the one section
-#   they want. The brief's own H1, its "Valuable Links" section, and every "Data implication" blockquote are
-#   dropped (internal-audience/working-notes framing not meant for a public page) \u2014 everything else is
-#   passed through commonmark unedited within its own section, so no institutional fact or number is retyped
-#   by hand.
-#   briefs/institutional_overview.md -> docs/index.html
+# code/diagnostics/build_home.R \u2014 assembles docs/index.html, the site's Home page: a hero, and cards
+#   linking to the other 4 pages (Briefs, Raw Data, Datasets, Panels). The institutional-overview brief
+#   used to be embedded here as a docs-site-style sidebar + content pane; it's now split into its own
+#   topic briefs and rendered on the Briefs page instead (code/diagnostics/build_briefs_page.R), alongside
+#   the new facility-identifiers / data-systems / pollutant-classification briefs \u2014 Home just links there
+#   now, rather than duplicating the same content on two pages.
 # =========================================================================================================
 library(here)
-library(commonmark)
 source(here("code", "diagnostics", "tables", "_html.R"))
 source(here("code", "diagnostics", "site_shell.R"))
 
-md_path <- here("briefs", "institutional_overview.md")
-lines   <- enc2utf8(readLines(md_path, warn = FALSE, encoding = "UTF-8"))
-
-# drop the brief's own H1 (the hero supplies the page title)
-if (length(lines) && grepl("^# ", lines[1])) lines <- lines[-1]
-
-# drop the "## Valuable Links" section (working-notes scratchpad, not for a public page)
-vl_start <- grep("^## Valuable Links$", lines)
-if (length(vl_start) == 1) {
-  h2s     <- grep("^## ", lines)
-  after   <- h2s[h2s > vl_start]
-  vl_end  <- if (length(after)) after[1] - 1L else length(lines)
-  lines   <- lines[-(vl_start:vl_end)]
-}
-
-# drop every "> **Data implication.**" blockquote block (every blockquote in this brief is one of these \u2014
-# verified: `grep -n "^>"` on the source file matches nothing but Data-implication callouts)
-lines <- lines[!grepl("^>", lines)]
-
-# split what's left into one chunk per top-level "## " section (title + its body, up to the next "## " or
-# end of file) -- each chunk becomes its own sidebar entry + content pane below (site_shell.R's doc_nav()),
-# instead of one continuous prose block. "### " subsections (e.g. "Layers of CAA Regulation"'s two
-# "### Layer N" blocks) stay nested INSIDE their parent "## " pane, rendered as ordinary sub-headings --
-# only "## " sections get their own sidebar entry.
-slugify <- function(x) {                              # "State Implementation Plans (SIPs)" -> "state-implementation-plans-sips"; used as this section's #hash / element id, so must be unique per page and URL-fragment-safe
-  x <- gsub("[^a-z0-9]+", "-", tolower(x))
-  gsub("^-|-$", "", x)
-}
-h2_idx <- grep("^## ", lines)
-if (length(h2_idx) == 0) stop("build_home.R: no '## ' sections found in institutional_overview.md after stripping -- doc_nav split has nothing to split.")
-section_ends <- c(h2_idx[-1] - 1L, length(lines))
-overview_sections <- Map(function(start, end) {
-  title <- sub("^## +", "", lines[start])
-  body  <- if (start < end) lines[(start + 1):end] else character(0)
-  list(id = slugify(title), title = title,
-       body_html = commonmark::markdown_html(paste(body, collapse = "\n"), extensions = TRUE))
-}, h2_idx, section_ends)
-
-nav_html <- doc_nav(overview_sections)
-
 body <- paste0(
   hero(
-    title        = "CAA Regulatory Data Infrastructure",
+    title        = "Stationary-source pollution, turned into research infrastructure.",
     desc         = paste(
       "A reproducible pipeline of U.S. Environmental Protection Agency (EPA) enforcement, compliance, and",
       "permitting data on stationary sources of air pollution under the Clean Air Act \u2014 built for",
       "empirical research on regulation and compliance."),
-    eyebrow      = "Clean Air Act \u00B7 Stationary Sources",
     bg_image     = "images/hero-smokestack.jpg",
     photo_credit = paste(
       "Photo: John Messina, March 1973 \u2014 EPA Documerica Project / U.S. National Archives.",
-      "Public domain.")
+      "Public domain."),
+    cta_buttons  = list(list(label = "View the code \u2197", href = "https://github.com/gracecarverr/caa-regdata"))
   ),
   page_main(
     cards(
+      card("Institutional Briefs", paste(
+        "Twelve briefs on the Clean Air Act's regulatory structure and the EPA data systems this",
+        "pipeline draws on \u2014 each ending in what it implies for the data."),
+        "briefs.html"),
       card("Raw Data", paste(
         "Per-source summary tables for all 16 raw ICIS-Air, AFS, and emissions files \u2014 variable",
         "coverage, frequent values, and missingness, computed directly from the raw downloads."),
@@ -82,7 +42,46 @@ body <- paste0(
         "compliance, 2015\u20132025: construction decisions, coverage, and summary statistics."),
         "panels.html")
     ),
-    "<div class='prose'>", nav_html, "</div>"
+    "<h2 class='sec-h2'>How the pipeline works</h2>",
+    "<p class='sec-lede'>Four stages, run in order by <code>code/RUN_ALL.R</code>, each reading only the ",
+    "previous stage's output.</p>",
+    # descriptions transcribed from each stage's own README (code/0N_*/README.md) "Stage input/output" line
+    # -- not re-derived here, so if a stage's inputs/outputs change, update this alongside that README.
+    stage_grid(list(
+      list(step = "01", title = "Download",
+           desc = "Pull raw sources from EPA ECHO into data/raw/*."),
+      list(step = "02", title = "Clean",
+           desc = "Raw sources \u2192 bare-bones clean assets in data/processed/*.csv.gz."),
+      list(step = "03", title = "Datasets",
+           desc = "Build the eight deliverable datasets in data/datasets/*.csv.gz."),
+      list(step = "04", title = "Panels",
+           desc = "Build two facility \u00d7 year panels in data/panels/*.csv.gz.")
+    )),
+    "<h2 class='sec-h2'>Public EPA sources</h2>",
+    "<p class='sec-lede'>Downloaded at run time by <code>code/01_data_download/01_download.R</code>. None ",
+    "are redistributed here.</p>",
+    # every URL below is copied verbatim from an existing verified reference elsewhere in this repo --
+    # docs/data_dictionary.md's own "Sources" list (ICIS-Air/Air Emissions/CAA Pipeline/AFS), briefs/
+    # database_overviews.md (FRS), and 01_download.R's own COUNTIES_URL constant (Census) -- not re-typed
+    # from memory, and none is a landing page this script has independently verified live.
+    cards(
+      source_card("Core CAA Sources", list(
+        list(name = "ICIS-Air", href = "https://echo.epa.gov/tools/data-downloads/icis-air-download-summary",
+             desc = "Facility identification, compliance monitoring, and enforcement data for stationary air sources \u2014 the pipeline's primary source."),
+        list(name = "Air Emissions", href = "https://echo.epa.gov/tools/data-downloads/air-emissions-download-summary",
+             desc = "Facility-level pollutant emissions, combining NEI, GHGRP, TRI, and CAMD."),
+        list(name = "CAA Compliance Pipeline", href = "https://echo.epa.gov/tools/data-downloads/caa-pipeline-download-summary",
+             desc = "Violations pre-joined to their triggering evaluation and resulting enforcement action."),
+        list(name = "AFS (Air Facility System, pre-2014)", href = "https://echo.epa.gov/system/files/AFS_Data_Download.pdf",
+             desc = "Legacy facility, program, action, and HPV-history tables, frozen as of 2014 \u2014 ICIS-Air's predecessor.")
+      )),
+      source_card("Crosswalk", list(
+        list(name = "FRS (Facility Registry Service)", href = "https://echo.epa.gov/tools/data-downloads/frs-download-summary",
+             desc = "Cross-program facility registry \u2014 the source of this pipeline's facility coordinates."),
+        list(name = "US Counties (Census TIGER)", href = "https://www2.census.gov/geo/tiger/GENZ2022/shp/cb_2022_us_county_500k.zip",
+             desc = "County boundaries, used for the point-in-polygon coordinate-to-county match.")
+      ))
+    )
   )
 )
 

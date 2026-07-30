@@ -1,0 +1,7 @@
+"year","status","chosen_timestamp","window_widen_days","n_candidates_tried","note"
+2015,"UNRESOLVED",NA,NA,2,"no complete candidate found after widening up to +/-60 days (2 total candidate(s) tried) -- needs manual review"
+2017,"UNRESOLVED",NA,NA,0,"no complete candidate found after widening up to +/-60 days (0 total candidate(s) tried) -- needs manual review"
+2019,"UNRESOLVED",NA,NA,0,"no complete candidate found after widening up to +/-60 days (0 total candidate(s) tried) -- needs manual review"
+2023,"UNRESOLVED",NA,NA,0,"no complete candidate found after widening up to +/-60 days (0 total candidate(s) tried) -- needs manual review"
+2024,"RESOLVED","20241210051325",0,1,"complete 10-table capture found within strict Q4"
+2025,"RESOLVED","20250916010046",15,1,"complete 10-table capture found only after widening +/-15 days"
