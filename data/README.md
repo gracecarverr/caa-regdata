@@ -6,8 +6,9 @@ Everything the pipeline reads and writes. Four layers, in the order the pipeline
 data/
 ├── raw/         immutable source downloads (gitignored; rebuilt via 01_download + manual staging)
 ├── processed/   one bare-bones "clean" asset per raw table (gitignored; rebuilt from raw by 02_cleaning)
-├── panels/      derived spine + sample facility x year panels (gitignored; rebuilt by 03_panel_building)
-└── datasets/    eight purpose-built deliverable datasets, full universe (gitignored; rebuilt by 04_datasets)
+├── datasets/    nine purpose-built deliverable datasets, full universe (gitignored; rebuilt by 03_datasets)
+└── panels/      derived spine + two continuous facility x year panels (gitignored; rebuilt by 04_panel_building,
+                   which consumes 03_datasets' output)
 ```
 
 Only `.gitkeep` files and `data/raw/MANIFEST.csv` are tracked; the data files themselves are **gitignored**
@@ -26,10 +27,10 @@ matters — is in [`briefs/institutional_overview.md`](../briefs/institutional_o
 **What it's useful for.** Building facility × year panels of regulatory activity for empirical work on
 enforcement and compliance: e.g. how inspections/violations/enforcement activity varies by facility type,
 facility entry/exit dynamics (the reconstructed Wayback spells), or program-specific compliance patterns.
-Also useful as eight full-universe
+Also useful as nine full-universe
 deliverable datasets (`data/datasets/`) — inspections/violations/enforcement activity, HPV spells, penalties,
-coordinate/county placement, the evaluation-to-enforcement compliance pipeline, and combined-pollutant
-emissions — with sample selection left to the analysis.
+coordinate/county placement, the evaluation-to-enforcement compliance pipeline, combined-pollutant
+emissions, and wayback-only facilities — with sample selection left to the analysis.
 
 ## The four layers
 
@@ -37,8 +38,8 @@ emissions — with sample selection left to the analysis.
 |-------|----------|----------|--------|
 | [`raw/`](raw/) | `code/01_data_download` (+ manual staging) | EPA source CSVs/shapefiles, unmodified | [`raw/README.md`](raw/README.md) |
 | [`processed/`](processed/) | `code/02_cleaning` | one lossless clean asset per raw table (+ `date`/`year`/`dup`/`dup_exact`) | [`processed/README.md`](processed/README.md) |
-| [`panels/`](panels/) | `code/03_panel_building` | facility spine and the three sample panels | [`panels/README.md`](panels/README.md) |
-| [`datasets/`](datasets/) | `code/04_datasets` | eight purpose-built deliverables (regulatory, operating, HPV spells/status, penalties, coordinates, pipeline, emissions) over the full facility universe — **this repo's main product** | [`datasets/README.md`](datasets/README.md) |
+| [`datasets/`](datasets/) | `code/03_datasets` | nine purpose-built deliverables (regulatory, operating, HPV spells/status, penalties, coordinates, pipeline, emissions, wayback_only_facilities) over the full facility universe — **this repo's main product** | [`datasets/README.md`](datasets/README.md) |
+| [`panels/`](panels/) | `code/04_panel_building` | facility spine and the two continuous facility × year panels | [`panels/README.md`](panels/README.md) |
 
 ## Documentation map
 
@@ -46,7 +47,7 @@ emissions — with sample selection left to the analysis.
 - **What each processed asset is, its counts, added columns, and institutional caveats:** the per-asset
   sections in [`processed/README.md`](processed/README.md).
 - **Why construction choices were made (panels):** [`briefs/panel/panel_construction_decisions.md`](../briefs/panel/panel_construction_decisions.md).
-- **Why construction choices were made (the eight datasets):** [`briefs/datasets/dataset_construction_decisions.md`](../briefs/datasets/dataset_construction_decisions.md).
+- **Why construction choices were made (the nine datasets):** [`briefs/datasets/dataset_construction_decisions.md`](../briefs/datasets/dataset_construction_decisions.md).
 - **Provenance** (source, URL, download date, MD5) for raw files: `raw/MANIFEST.csv`.
 
 > **Reproducibility invariant.** Never edit files under `raw/`. Derived data (`processed/`, `panels/`,

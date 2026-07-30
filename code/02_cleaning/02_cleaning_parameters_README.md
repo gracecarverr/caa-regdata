@@ -50,4 +50,4 @@ An entry with **no** `date`/`key` is an **attribute** table: it keeps all column
 - **Bespoke shape** (multi-file, gap-filling, reshaping): write a script under `wayback/` (or a new
   subfolder) and source it from `02_clean.R`. Don't force it into a spec.
 
-Always add a matching `data/processed/<name>.README.md` documenting columns and institutional implications.
+Always add a matching section to `data/processed/README.md` documenting columns and institutional implications.

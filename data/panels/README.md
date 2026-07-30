@@ -1,7 +1,7 @@
 # data/panels — the two panels
 
 Built by [`code/04_panel_building`](../../code/04_panel_building/README.md) from `data/datasets/` (the
-eight-dataset layer, `code/03_datasets/`) — **not** from `data/processed/` directly. All files are
+nine-dataset layer, `code/03_datasets/`) — **not** from `data/processed/` directly. All files are
 gzip-compressed CSV, **gitignored**, rebuilt from code.
 
 > **2026-07-28:** this pipeline replaced a larger one that built a general facility spine plus three sample
@@ -14,10 +14,14 @@ gzip-compressed CSV, **gitignored**, rebuilt from code.
 
 | file | grain | what | built by |
 |------|-------|------|----------|
-| `major_synmin_2015_2025.csv.gz` | facility × year (2015–2025) | CONUS, Major/Synthetic-Minor emissions class, **`ACTIVE_BROAD == 1` in at least one year 2015–2025** — 116 cols, 45,873 facilities, 504,603 rows | `03_build.R` |
-| `electric_2015_2025.csv.gz` | facility × year (2015–2025) | the above **+** electric utilities (NAICS 2211 / SIC 4911) — 116 cols, 2,965 facilities, 32,615 rows | `03_build.R` |
+| `major_synmin_2015_2025.csv.gz` | facility × year (2015–2025) | CONUS, Major/Synthetic-Minor emissions class, **`ACTIVE_BROAD == 1` in at least one year 2015–2025** — 113 cols, 45,872 facilities, 504,592 rows | `03_build.R` |
+| `electric_2015_2025.csv.gz` | facility × year (2015–2025) | the above **+** electric utilities (NAICS 2211 / SIC 4911) — 113 cols, 2,965 facilities, 32,615 rows | `03_build.R` |
 
-Figures as of the 2026-07-29 rebuild (PB2 revision) — will drift with each live ICIS-AIR/Wayback refresh.
+Figures as of the 2026-07-29 rebuild, following the Wayback capture Q4 re-pin
+(`briefs/datasets/dataset_construction_decisions.md` `O8`) — will drift with each live ICIS-AIR/Wayback
+refresh. The 113-column count reflects an earlier same-day revision (`OP_STATUS_CURRENT_DESC` and
+`LEFT_CENSORED`/`RIGHT_CENSORED` dropped, `docs/data_dictionary_derived.md` Part 2) and was unaffected by the
+Q4 re-pin; only the row/facility counts moved (down by 1 facility for major_synmin, unchanged for electric).
 
 There is no longer a separate `spine.csv.gz`, `universe.csv.gz`, or full-universe `major_synmin.csv.gz` /
 `electric.csv.gz` — this pipeline ships only the two panels above (see

@@ -1,5 +1,9 @@
 # Clean Air Act Overview
 
+For a database-by-database summary of the data systems referenced throughout this brief (ICIS-Air, AFS, the
+combined emissions dataset, the compliance pipeline), see
+[`briefs/database_overviews.md`](database_overviews.md).
+
 ## Valuable Links
 
 Nonattainment and Maintenance Area Dashboard: https://awsedap.epa.gov/public/extensions/specs-area-dashboard/index.html
@@ -19,8 +23,9 @@ Comprehensive federal law that regulates air emissions from stationary and mobil
 * Distinguishes between mobile sources (cars, trucks, planes) and stationary sources (power plants, factories, refineries).
 
 > **Data implication.** This project covers **stationary sources only**. Cooperative federalism shows up
-> directly in the data as `STATE_EPA_FLAG` / `agency` on every event asset (E/S/L) — enforcement counts pool
-> across levels of government unless deliberately split by agency.
+> directly in the data as `STATE_EPA_FLAG` / `agency` on every event asset (`E`/`S`/`L` = EPA / State / Local
+> — see `docs/data_dictionary.md`) — enforcement counts pool across levels of government unless deliberately
+> split by agency.
 
 ## NAAQS
 
@@ -52,7 +57,7 @@ Stationary-source regulation runs on: standard-setting programs that say how cle
 
 * Section 111: New Source Performance Standards (NSPS). Technology-based, nationally uniform emissions standards set by source category (power plants, cement kilns, etc).
    * NSPS apply to sources that are newly constructed or that undergo "modification."
-      * Older sources can avoid the standard until they modify - incentive to keep aging plants running?
+      * An existing source is not subject to NSPS unless it undergoes "modification" or "reconstruction" as defined under 40 CFR Part 60; an unmodified existing source remains subject only to its prior requirements (e.g. SIP limits), not the newer NSPS standard for its category.
       * NSPS standards are largely "self-implementing"; they bind the source directly whether or not they've been written into a permit yet.
 * Section 112: NESHAP and MACT: two regulatory generations under the same statutory section. Emissions of hazardous air pollutants (HAPs). Older Part 61 NESHAPs are pollutant-by-pollutant standards. (pre-1990 approach). Part 63 standards are MACT standards
 created by 1990 amendments (set category-by-category at the level already being achieved by the lower-emitting sources of an industrial sector). A separate track for toxic air pollutants regulated through technology-based standards rather than ambient standards.
@@ -69,7 +74,8 @@ major sources and certain area sources.
 
 > **Data implication.** `prog_nsps` pools **both** the major-source code (`CAANSPS`) and the non-major code
 > (`CAANSPSM`) into one flag, so it doesn't by itself distinguish major/area-source NSPS status.
-> `prog_mact`/`prog_neshap` are separate flags; the area-source GACT code (`CAAGACTM`) is deliberately **not**
+> `prog_mact`/`prog_neshap` are separate flags; the area-source GACT (Generally Available Control
+> Technology — the area-source-scale counterpart to MACT) code (`CAAGACTM`) is deliberately **not**
 > folded into `prog_mact`. All are static/ever-enrolled (see SIP note above).
 
 ## PSD and NSR
@@ -82,11 +88,14 @@ Preconstruction permitting (New Source Review, NSR). Permitting half of the new 
 
 > **Data implication.** These are *preconstruction* permits, which the panel's year-varying program-active
 > flags now encode directly: `prog_nsr_active` / `prog_psd_active` are active not only while a facility is
-> **operating** (`OPR`/`TMP`/`SEA`) but also while it's **planned or under construction** (`PLN`/`CNS`) —
-> unlike the other six program-active flags (SIP, Title V, NSPS, MACT, NESHAP, FESOP), which require the
-> facility to actually be operating. A facility can therefore read `prog_nsr_active = 1` while `operating = 0`
-> in the same year — that's not a contradiction, it reflects that the NSR/PSD obligation attaches before
-> operation begins. (Decision **N11**, `panel/panel_construction_decisions.md`.)
+> **operating** (status code `OPR` = Operating, `TMP` = Temporarily closed, `SEA` = Seasonal — all count as
+> "in service") but also while it's **planned or under construction** (`PLN` = Planned, `CNS` = Under
+> construction) — unlike the other program-active flags (SIP, Title V, NSPS, MACT, NESHAP, FESOP, and
+> GACT/CFC where carried), which require the facility to actually be operating. A facility can therefore read
+> `prog_nsr_active = 1` while `operating = 0` in the same year — that's not a contradiction, it reflects that
+> the NSR/PSD obligation attaches before operation begins. (Decision N11 in
+> [`archive/panel_building_legacy/briefs/panel/panel_construction_decisions.md`](../archive/panel_building_legacy/briefs/panel/panel_construction_decisions.md)
+> — this is an intentional divergence from `operating`, not a bug.)
 
 ## Title V: Operating Permits (compliance backbone)
 
@@ -101,7 +110,8 @@ Preconstruction permitting (New Source Review, NSR). Permitting half of the new 
 > "required annual" does not mean "always observed": among **operating Major Emissions facilities**, only
 > **72.5%** have a reported cert in 2025 (9,428 of 13,012), down from 77.5% in 2015 — a gap consistent with
 > **reporting lag** in the ICIS extract (older certs for the same facilities exist through 2020–2024) rather
-> than confirmed non-compliance. (Decision **N12**.)
+> than confirmed non-compliance. (Decision N12 in
+> [`archive/panel_building_legacy/briefs/panel/panel_construction_decisions.md`](../archive/panel_building_legacy/briefs/panel/panel_construction_decisions.md).)
 
 ## Layers of CAA Regulation
 
@@ -131,7 +141,9 @@ A facility going through its regulatory life:
    * FESOP (Federally Enforceable State Operating Permit): mechanism for states to cap a source's potential emissions below major source thresholds, making it a synthetic minor. Keeps small sources out of Title V.
 * If it's a major source:
    * Title V: must hold a comprehensive operating permit. Must submit annual compliance certifications. This is the permitting program, not a substantive standard. Bundles everything else into one document.
-   * Acid Rain (Title IV): only electric utilities. SO2/NOx cap-and-trade. CAMD data in emissions dataset.
+   * Acid Rain (Title IV): only electric utilities. SO2/NOx cap-and-trade. CAMD (EPA's Clean Air Markets
+     Division, the emissions-trading data source — `CAMDBS` in the emissions dataset's program-acronym
+     column) data in emissions dataset.
    * Major source thresholds are set per pollutant. The facility-level classification is the "worst case": if you're major for one pollutant, you're a major facility. Regulatory burden is pollutant-specific.
 
 > **Data implication.** "Once it's operating" is directly measurable via the year-varying `operating` flag
@@ -188,8 +200,6 @@ What being a synthetic minor means:
 * Still subject to SIP requirements
 * Enforceable limits themselves become compliance obligations. Violating the limit is an enforceable violation and can bump you back up to major
 
-Bunching below the threshold? Gaming potential to emit calculations? Differences for facilities just above or below the threshold?
-
 **Minor Source.** Actual and potential emissions are below all major source thresholds without needing enforceable limits. The lightest regulatory burden.
 
 What being a minor source means:
@@ -210,8 +220,6 @@ What being a minor source means:
 
 "AIR_POLLUTANT_CLASSIFICATION_CODE" in Facilities table gives facility-level "worst case." In the Pollutants table, the same field is the pollutant-specific classification. In AFS, the equivalent is "EPA_CLASSIFICATION_CODE." A1 (actual or potential controlled >100 tons/year), A2 (actual <100, potential >100), B (potential uncontrolled <100), SM (synthetic minor).
 
-Classifications dependent on potential to emit are interesting.
-
 > **Data implication.** AFS's `EPA_CLASSIFICATION_CODE` has two more values beyond A1/A2/B/SM, verified
 > against EPA's AFS documentation: **C** ("Class is unknown") and **E1/E2**. Don't drop or ignore these as
 > parse failures — they're valid codes.
@@ -229,7 +237,7 @@ States do most enforcement. When the EPA "delegates" a program to a state, the s
 
 **Step 1: Compliance monitoring**
 
-* FCE (Full Compliance Evaluation): comprehensive review of a facility's compliance with all applicable requirements. Can be on-site (inspector visits) or off-site (record review). EPA policy says that major sources should get an FCE every 2 years, synthetic minors every 5 (are these targets frequently met)?
+* FCE (Full Compliance Evaluation): comprehensive review of a facility's compliance with all applicable requirements. Can be on-site (inspector visits) or off-site (record review). EPA policy says that major sources should get an FCE every 2 years, synthetic minors every 5.
 * PCE (Partial Compliance Evaluation): focused on a specific aspect. Stack test review, CEM audit, record check.
 * Stack Tests: direct measurement of what is coming out of the stack. The facility usually conducts them, and the agency may view or observe the results.
 * Title V Certification Review: the facility self-certifies annual compliance; the agency reviews it.
@@ -239,13 +247,13 @@ This is the FCE/PCEs table, Stack Tests table, and Title V Certs table. In AFS, 
 > **Data implication.** FCE/PCE are pooled into one "inspections" measure, with `type` preserving the
 > full-vs-partial split. PCEs are largely discretionary (reported only as part of a CMS plan or an HPV
 > discovery), so PCE counts under-represent actual partial reviews and shouldn't be read as a complete census
-> — the "are these targets frequently met?" question is directly testable from `n_fce`/`n_inspections` against
-> the 2-year/5-year CMS cadence, but hasn't been run yet.
+> — whether the 2-year/5-year FCE cadence is actually met is directly testable from `n_fce`/`n_inspections`
+> against that schedule, but hasn't been run yet.
 
 **Step 2: Violation found (the inspection or review reveals noncompliance)**
 
-* FRV (Federally Reportable Violation): serious enough that the state must report it to the EPA (reporting thresholds?), but doesn't necessarily trigger the full federal enforcement response. Threshold is lower.
-* HPV (High Priority Violation): the most serious category. Triggers EPA's enforcement response policy, which sets timelines for how quickly the violation must be addressed.
+* FRV (Federally Reportable Violation): a violation of a federally enforceable CAA requirement (NSPS, NESHAP, MACT, NSR, PSD, an approved SIP, or Title V) that must be reported to EPA. Per EPA's FRV reporting guidance, the reportable-source universe is defined, not open-ended: Title V major sources; synthetic minor sources at or above 80% of the Title V major-source threshold; sources covered by an alternative Compliance Monitoring Strategy (CMS) plan; and any source with an identified HPV.
+* HPV (High Priority Violation): the most serious category — a subset of FRVs meeting the more stringent criteria in EPA's Enforcement Response to High Priority Violations Policy: a violation likely to pose a significant risk to human health or the environment, or one that may harm EPA's or the state's ability to implement CAA programs. Triggers EPA's enforcement response policy, which sets timelines for how quickly the violation must be addressed.
    * Examples: failing to obtain a required permit, violating emissions limits detected via stack test, chronic violators.
    * HPVs start a clock. Once a facility is designated "HPV" (day zero), EPA's policy says that it should be addressed within a specific timeframe.
       * This is the Violation History Table (ICIS) and HPV History Table (AFS). ICIS tracks both FRV and HPV; AFS tracks HPVs.
@@ -289,4 +297,18 @@ This is the Formal Actions Table.
 
 **Step 5: Resolution.** The violation is resolved, the facility returns to compliance, pays the penalty, and implements the required controls. The "HPV_RESOLVED_DATE" marks this.
 
-Most compliance happens through the threat of enforcement, not enforcement itself. Idea of 'marginal deterrence,' where the regulator underpenalizes small violations to create strong marginal incentives to avoid large violations.
+## See also
+
+This brief covers the institutional *why*; for how those facts turn into specific construction choices and
+numbers:
+
+- [`briefs/database_overviews.md`](database_overviews.md) — what each database (ICIS-Air, AFS, combined
+  emissions, the compliance pipeline) contains, what's missing, and how the files join.
+- [`briefs/datasets/dataset_construction_decisions.md`](datasets/dataset_construction_decisions.md) — every
+  dataset-construction decision (R/O/P/H-numbered) for the current nine-dataset layer.
+- [`briefs/panel/panel_construction_decisions.md`](panel/panel_construction_decisions.md) — construction
+  decisions (`PB1`–`PB8`) for the current two-panel layer.
+- The per-dataset profile briefs under [`briefs/datasets/`](datasets/) (`regulatory_dataset_profile.md`,
+  `hpv_profile.md`, `coordinates_profile.md`, `pipeline_profile.md`, `emissions_profile.md`) and
+  [`briefs/panel/panel_profile.md`](panel/panel_profile.md) — general profile writeups with the headline
+  numbers behind the "Data implication" call-outs above.

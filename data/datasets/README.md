@@ -1,12 +1,13 @@
-# data/datasets — the eight deliverable datasets
+# data/datasets — the nine deliverable datasets
 
-Built by [`code/04_datasets`](../../code/04_datasets/README.md) from the processed assets. All files are
+Built by [`code/03_datasets`](../../code/03_datasets/README.md) from the processed assets. All files are
 gzip-compressed CSV, **gitignored**, rebuilt from code. Every column is `UPPER_SNAKE_CASE`; every dataset is
 built over the **full** facility universe (no ever-active screen, no sample restriction — that's a filter
-the user applies downstream). This layer is this repo's main product; it coexists with, rather than
-supersedes, the single wide panel approach in [`data/panels/`](../panels/README.md) (`code/03_panel_building`)
-— eight purpose-built full-universe tables here (dataset 5, attainment, is intentionally skipped — see
-below) vs. three sample facility × year panels there.
+the user applies downstream). This layer is this repo's main product; the panel layer in
+[`data/panels/`](../panels/README.md) (`code/04_panel_building`) is built **on top of** it (as of
+2026-07-28) rather than being an independent, coexisting layer — nine purpose-built full-universe tables
+here (dataset 5, attainment, is intentionally skipped — see below) feed the two continuous facility × year
+panels there.
 
 | file | grain | what | built by |
 |------|-------|------|----------|
@@ -18,9 +19,27 @@ below) vs. three sample facility × year panels there.
 | `coordinates.csv.gz` | facility | **dataset 4** — FRS lat/lon, derived `COUNTY_FIPS` (point-in-polygon), and coordinate-vs-ICIS-county error diagnostics (`COORD_COUNTY_DIST_KM`, `COORD_GROSS_ERROR`). | `06_coordinates.R` |
 | `pipeline.csv.gz` | facility × year | **dataset 6** — EPA ECHO CAA Compliance Pipeline: violation counts split HPV/FRV, how many trace to a linked evaluation or enforcement action, self-disclosure count, EA-penalty count/sum, and eval→violation / violation→enforcement lag in days. Joins **1:1** to `regulatory.csv.gz`. | `07_pipeline.R` |
 | `emissions.csv.gz` | facility × year | **dataset 7** — annual pollutant quantities (VOC/PM10/PM2.5/NOx/SO2/CO/HAP in lbs; GHG in MTCO2e) from EIS/TRIS/E-GGRT/CAMDBS, joined via `REGISTRY_ID` (cross-program, not `PGM_SYS_ID`). `IS_SHARED_REGISTRY` flags facilities that share an FRS id with another `PGM_SYS_ID` — don't sum across those without accounting for it. Joins **1:1** to `regulatory.csv.gz`. | `08_emissions.R` |
+| `wayback_only_facilities.csv.gz` | facility × year (2015–2025 only) | **dataset 1b** — supplementary, NOT part of the numbered 0–7 sequence and joins to nothing else in this layer. The ~15,302 facilities Wayback has seen operating-status snapshots for that are entirely absent from the current ICIS-AIR extract (zero ICIS events or attributes of any kind). Carries `OP_STATUS_CODE`/`OP_STATUS_DESC`/`OPERATING`/`WAYBACK_OBSERVED` (year-varying) + `ENTERED_YEAR`/`EXITED_YEAR`/`EXIT_SOURCE`/`LEFT_CENSORED`/`RIGHT_CENSORED` (facility-level). Added 2026-07-28 (decision `O7`) so a user doesn't have to hand-join the raw Wayback layer to recover this population. | `02_operating.R` |
 
 Dataset 5 (`attainment`, PM2.5 2012 nonattainment, facility × year) does not exist in this layer — the
-number is skipped intentionally; see decision W10 in `briefs/panel/panel_construction_decisions.md`.
+number is skipped intentionally; see decision W10 in
+`archive/panel_building_legacy/briefs/panel/panel_construction_decisions.md`.
+
+## Source assets & time-type
+
+What each dataset is actually built from, and whether that source is a historical/event log (many dated
+records per facility) or a current snapshot (one undated record per facility, no history) — full detail in
+`briefs/datasets/dataset_construction_decisions.md`'s per-Part "Source" notes:
+
+| dataset | source | time-type |
+|---|---|---|
+| `regulatory` | `data/processed/{inspections,violations,formal_actions,informal_actions,certs,stacktests}.csv.gz` (event-grain) + `{facilities,pollutants,programs}.csv.gz` (snapshot-grain) | historical (events) + current snapshot (attributes) |
+| `operating` / `wayback_only_facilities` | `data/processed/wayback_{facility_status,facility_spells,program_status}.csv.gz` (11 archived annual captures) + `programs.csv.gz`'s `BEGIN_DATE` | historical (11 yearly snapshots, 2015–2025) |
+| `hpv_spells` / `hpv_active` | `data/processed/violations.csv.gz` | historical (event-grain) |
+| `penalties` | `data/processed/formal_actions.csv.gz` | historical (event-grain) |
+| `coordinates` | `data/raw/frs/FRS_FACILITIES.csv` + `data/raw/us_counties/us_counties.shp` + `facilities.csv.gz` | current snapshot (FRS/ICIS) + static reference (shapefile) |
+| `pipeline` | `data/raw/PIPELINE_CAA_00_COMPLETE.csv` (automated weekly refresh as of 2026-07-27) | historical (event-grain) |
+| `emissions` | `data/processed/emissions.csv.gz` (raw `POLL_RPT_COMBINED_EMISSIONS.csv`) | historical, but uneven — EIS triennial (2008/2011/2014/2017/2020), TRIS/CAMDBS/E-GGRT annual from 2015 |
 
 ## Joining
 
@@ -40,7 +59,7 @@ physical site, see `briefs/datasets/multi_facility_settlement_decision.md` §5).
 
 **Construction rationale, decision codes, and verification results:**
 [`briefs/datasets/dataset_construction_decisions.md`](../../briefs/datasets/dataset_construction_decisions.md) — organized by
-dataset (Parts A–F), each with a coding-decisions table and a verification table from independent audits run
+dataset (Parts A–H), each with a coding-decisions table and a verification table from independent audits run
 each build session. **Column/field definitions** for the underlying raw sources:
-[`docs/data_dictionary.md`](../../docs/data_dictionary.md); for the **built/derived columns in these eight
+[`docs/data_dictionary.md`](../../docs/data_dictionary.md); for the **built/derived columns in these nine
 files** (every `N_*` count, flag, and derived field, column by column): [`docs/data_dictionary_derived.md`](../../docs/data_dictionary_derived.md).

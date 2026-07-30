@@ -3,9 +3,10 @@
 > Not yet resolved — this extends **P5** in `dataset_construction_decisions.md`
 > ("Multi-facility settlement structure EXPOSED, not resolved... neither 'take one value' nor 'sum' is
 > universally right") with the dollar-magnitude evidence needed to actually decide. See also **E4** /
-> **F2** in `../panel/panel_construction_decisions.md`, which already established the same rule for the panel
-> layer (`build_panel()`'s penalty block sums over `dup==0` only — a narrower fix for row-level duplication,
-> not the cross-facility broadcast this brief is about).
+> **F2** in `../../archive/panel_building_legacy/briefs/panel/panel_construction_decisions.md`, which already
+> established the same rule for the (now-archived, frozen) panel layer (`build_panel()`'s penalty block sums
+> over `dup==0` only — a narrower fix for row-level duplication, not the cross-facility broadcast this brief
+> is about).
 
 ## Question
 

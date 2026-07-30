@@ -2,9 +2,10 @@
 
 > Not yet resolved — this is evidence for a decision you haven't made, not a record of one already made (see
 > `../panel/panel_construction_decisions.md` / `dataset_construction_decisions.md` for those). Related to **D-A2** in
-> `../panel/panel_open_questions.md`, an earlier open question about interim operating-status proxies, written before
-> the wayback reconstruction existed. See also `afs_crosswalk_feasibility.md` — a different candidate pre-2015
-> signal (AFS historical compliance status), gated on a facility-id crosswalk rather than a date field.
+> `../../archive/panel_building_legacy/briefs/panel/panel_open_questions.md`, an earlier open question about
+> interim operating-status proxies, written before the wayback reconstruction existed — not all of it still
+> applies to the current two-panel layer. See also `afs_crosswalk_feasibility.md` — a different candidate
+> pre-2015 signal (AFS historical compliance status), gated on a facility-id crosswalk rather than a date field.
 
 ## Question
 

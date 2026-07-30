@@ -30,6 +30,33 @@ Web summaries retrieved 2026-07-17. See the download index at <https://echo.epa.
 
 ---
 
+## Grain and time-type, at a glance
+
+Every raw source below is either a **snapshot** (one current row per facility/enrollment, undated or
+current-only, no history) or **historical/event-log** (one row per dated event or per period, accumulating
+over time). This governs what's derivable: a snapshot source can only ever produce time-invariant
+("current attributes") derived columns; only a historical source can produce a genuinely year-varying one.
+
+| source | grain (one row = ) | time-type |
+|---|---|---|
+| `ICIS-AIR_FACILITIES.csv` | one facility (`PGM_SYS_ID`) | snapshot — current attributes only, no history |
+| `ICIS-AIR_PROGRAMS.csv` | one facility × program enrollment | snapshot-ish — has `BEGIN_DATE` (enrollment start) but no end date |
+| `ICIS-AIR_PROGRAM_SUBPARTS.csv` | one facility × program × subpart | snapshot — no dates of its own (inherits program's `BEGIN_DATE`) |
+| `ICIS-AIR_POLLUTANTS.csv` | one facility × pollutant profile | snapshot — undated, "ever reported" only |
+| `ICIS-AIR_FCES_PCES.csv` | one inspection (FCE/PCE) event | historical — event-grain |
+| `ICIS-AIR_STACK_TESTS.csv` | one stack-test event | historical — event-grain |
+| `ICIS-AIR_TITLEV_CERTS.csv` | one cert record (per program/pollutant) | historical — event-grain (high duplication, ~81%) |
+| `ICIS-AIR_FORMAL_ACTIONS.csv` | one formal enforcement action | historical — event-grain |
+| `ICIS-AIR_INFORMAL_ACTIONS.csv` | one informal enforcement action | historical — event-grain |
+| `ICIS-AIR_VIOLATION_HISTORY.csv` | one violation record | historical — event-grain |
+| `POLL_RPT_COMBINED_EMISSIONS.csv` | `REPORTING_YEAR × REGISTRY_ID × PGM_SYS_ACRNM × PGM_SYS_ID × POLLUTANT_NAME` | historical, but **uneven** — EIS (90% of rows) is triennial (2008/2011/2014/2017/2020), TRIS/CAMDBS/E-GGRT annual from 2015 on |
+| `AFS_FACILITIES.csv` | one AFS facility | snapshot, **frozen as of 2014** (AFS was superseded by ICIS-Air) |
+| `AIR_PROGRAM.csv` (AFS) | one facility × program | snapshot-ish, frozen as of 2014 |
+| `AFS_ACTIONS.csv` | one action/activity event | historical, but frozen — real coverage ramps through ~2013 then drops to near-zero after 2014 (verified against `DATE_ACHIEVED`) |
+| `AFS_AIR_PRG_HIST_COMPLIANCE.csv` | one plant × program × quarter | historical — quarterly time series, frozen as of 2014 |
+| `AFS_HPV_HISTORY.csv` | one HPV record | historical, frozen as of 2014 |
+| `PIPELINE_CAA_00_COMPLETE.csv` | one violation (pre-joined to its evaluation/enforcement chain) | historical — event-grain; automated weekly refresh as of 2026-07-27 (was a static manual extract before that) |
+
 ## ICIS-Air
 
 Raw files in `data/raw/ICIS-AIR_downloads/`. All join on `PGM_SYS_ID`.
@@ -167,7 +194,7 @@ Formal enforcement actions and penalties.
 | `STATE_EPA_FLAG` | Char | 1 | Responsible agency (E/S/L) |
 | `ENF_TYPE_CODE` | Char | 7 | "Code that identifies the type of action being taken" |
 | `ENF_TYPE_DESC` | Char | 100 | Enforcement type description |
-| `SETTLEMENT_ENTERED_DATE` | Date | 7 | "Date the settlement is signed and entered by the Clerk of the Court" |
+| `SETTLEMENT_ENTERED_DATE` | Date | 7 | "Date the settlement is signed by the presiding Judge and entered by the Clerk of the Court" |
 | `PENALTY_AMOUNT` | Num |  | "Amount of the civil penalty assessed or agreed to by a facility" |
 
 ### `ICIS-AIR_INFORMAL_ACTIONS.csv`
@@ -447,7 +474,10 @@ Dictionary.
 ### `AFS_ACTIONS.csv`
 
 Compliance-monitoring and enforcement events, rolled up to plant level. Per EPA, Action/Activity Data cover
-inspections, enforcement actions, etc., **1978 to present**.
+inspections, enforcement actions, etc., **1978 to present** — that "present" is EPA's own program-design
+language, not this repo's coverage: this repo's frozen extract's `DATE_ACHIEVED` values ramp up through
+~2013 then crash to near-zero after 2014 (**data:** confirmed against `data/raw/afs_downloads/AFS_ACTIONS.csv`),
+consistent with AFS being frozen as of 2014.
 
 | Field | Type | Len | Description |
 |---|---|---|---|
@@ -473,7 +503,7 @@ enforcement actions. The National Action Type field translates region-specific a
 corresponding EPA national activity code. … The lead agency for a national action is indicated within its
 description. The most commonly used codes for inspections are: FF, FS, FE, FZ, 1A, & 5C for full inspections,
 and EM, EO, ES, EX, PC, PO, PP, PR, PS & PX for partial inspections. The most commonly used codes for formal
-enforcement actions are: 1B, 2D, 6B, 7A, 7E, 7F, 8A, 8C, & 9A." The AFS PDF tabulates ≈100 national action
+enforcement actions are: 1B, 2D, 6B, 7A, 7E, 7F, 8A, 8C, & 9A." The AFS PDF tabulates 71 national action
 codes (a subset "limited to compliance monitoring and enforcement activities"); this download contains ~110
 distinct values. Not reproduced here — each row carries its own `NATIONAL_ACTION_DESC`; see the AFS PDF for
 the full list.
@@ -499,10 +529,10 @@ for a violation or administrative penalty."
 | `GC1` | Fail to Obtain PSD or NSR Permit and/or a Permit for Major Mods to Either |
 | `GC2` | Viol. of Air Toxics Req. Resulting in Either EE or Viol. Op Parm Restricts |
 | `GC3` | Viol. by SM of Emis Lim or Perm. Condition Effecting Srces PSD, NSR or T5 |
-| `GC4` | Viol. of Substantive Term of any S/L or Fed Order, Consent Decree or AO |
+| `GC4` | Viol. of any Substantive Term of any S/L or Fed Order, Consent Decree or AO |
 | `GC5` | Substantial Viol. of T5 Cert. Obligation, e.g., Failure to Submit a Cert |
 | `GC6` | Substantial Violation of Srces Obligation to Submit T5 Permit Application |
-| `GC7` | Test/Monitor/Records/Reporting Viol. that Interfere w/Enf or Cmst |
+| `GC7` | Test/Monitor/Records/Reporting Viol. that Substan. Interfere w/Enf or Cmst |
 | `GC8` | Viol. of Allw Emis. Limit Detected during a Reference Method Stack Test |
 | `GC9` | Clean Air Act (CAA) Violations by Chronic or Recalcitrant Violators |
 | `G10` | Substantial Violation of Clean Air Act Section 112(R) Requirements |
@@ -527,7 +557,9 @@ for a violation or administrative penalty."
 
 ### `AFS_AIR_PRG_HIST_COMPLIANCE.csv`
 
-Quarterly compliance status per plant–program (**FY2007 to present** per EPA). One row per plant–program–quarter.
+Quarterly compliance status per plant–program (**FY2007 to present** per EPA — again EPA's program-design
+language; this repo's frozen extract ends ~2014, per `briefs/datasets/afs_crosswalk_feasibility.md`). One
+row per plant–program–quarter.
 
 | Field | Type | Len | Description |
 |---|---|---|---|
@@ -571,7 +603,7 @@ its meaning in `HPV_RESOLVED_DESC`.
 
 `POLLUTANT_CODE`, `ALL_VIOLATING_POLL_CODES`, and the `AIR_PROGRAM.csv` pollutant code use a shared ~300-value
 code list (Appendix 1 of the AFS PDF) — e.g. `AB` Asbestos, `CO` Carbon Monoxide, `SO2` Sulfur Dioxide, `PB`
-Lead, `PM25` "Particulate Matter < 2.5 Um", `VOC` Volatile Organic Compounds. Not reproduced here; each AFS
+Lead, `PM2.5` "Particulate Matter < 2.5 Um", `VOC` Volatile Organic Compounds. Not reproduced here; each AFS
 row also carries the pollutant's CAS number (`CHEMICAL_ABSTRACT_SERVICE_NMBR`) where one exists. See the AFS
 Data Element Dictionary, Appendix 1, for the full mapping.
 
@@ -579,11 +611,13 @@ Data Element Dictionary, Appendix 1, for the full mapping.
 
 ## CAA Compliance Pipeline
 
-> **Repo note:** `PIPELINE_CAA_00_COMPLETE.csv` was added to `data/raw/` on 2026-07-23 (66,655 rows, matching
-> the predecessor extract's count below). It is cleaned to `data/processed/pipeline.csv.gz` (spec in
-> `code/02_cleaning/02_cleaning_parameters.R`) and built into the facility × year dataset 6, `pipeline`, by
-> `code/04_datasets/07_pipeline.R` — see `briefs/datasets/dataset_construction_decisions.md` Part G for
-> coding decisions and verification.
+> **Repo note:** `PIPELINE_CAA_00_COMPLETE.csv` was first added to `data/raw/` on 2026-07-23 as a manual
+> extract (66,655 rows, matching the predecessor extract's count below). It has since been superseded by
+> `01_download.R`'s automated fetch (as of 2026-07-27: **66,723 rows** — see decision `PL3` in
+> `briefs/datasets/dataset_construction_decisions.md` Part G). It is cleaned to
+> `data/processed/pipeline.csv.gz` (spec in `code/02_cleaning/02_cleaning_parameters.R`) and built into the
+> facility × year dataset 6, `pipeline`, by `code/03_datasets/07_pipeline.R` — see
+> `briefs/datasets/dataset_construction_decisions.md` Part G for coding decisions and verification.
 
 ### `PIPELINE_CAA_00_COMPLETE.csv`
 
@@ -623,7 +657,7 @@ row (**data**).
 |---|---|---|---|
 | `VIOL_FLAG` | Char | 1 | Flag indicating a violation on the row |
 | `VIOL_SORT_ORDER` | Num |  | Internal ordering of the violation |
-| `FOUND_VIOLATION` | Char | 1 | "Flag indicating if violation was found." **data:** Y for all 66,655 rows |
+| `FOUND_VIOLATION` | Char | 1 | "Flag indicating if violation was found." **data:** Y for all rows in the predecessor extract (66,655 rows, 2026-07-23); not re-verified against the current automated 66,723-row extract |
 | `VIOL_ACTIVITY_ID` | Num |  | Violation activity identifier (key linking violations to CMAs and/or EAs). **data + EPA:** some rows carry system-generated IDs (prefixes `9906`/`9913`) that "did not have an actual violation activity identification number" and were "system generated for purposes of creating the pipeline table" |
 | `VIOL_TYPE` | Char | 40 | Violation type. **data:** HPV, FRV, plus placeholder values (blank, and "Linked to Viol. Below") on the system-generated rows |
 | `VIOL_TYPE_SORT` | Num |  | Internal ordering by violation type |

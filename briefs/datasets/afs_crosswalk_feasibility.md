@@ -2,7 +2,7 @@
 
 > Not yet resolved — this is evidence for a decision you haven't made, not a record of one already made (see
 > `panel/panel_construction_decisions.md` / `dataset_construction_decisions.md` for those). Related to
-> **D-A2** in `../panel/panel_open_questions.md` (interim operating-status proxies) and a companion piece to
+> **D-A2** in `../../archive/panel_building_legacy/briefs/panel/panel_open_questions.md` (interim operating-status proxies) and a companion piece to
 > `begin_year_operating_proxy.md` (the other pre-2015 candidate signal already investigated) — read that one
 > first if you haven't; this asks a *prerequisite* question for a different candidate signal, not the same
 > question again.
