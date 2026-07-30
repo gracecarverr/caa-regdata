@@ -18,7 +18,7 @@ major_synmin,STATE,KS,1123,0.0245
 major_synmin,STATE,TN,1115,0.0243
 major_synmin,STATE,FL,1097,0.0239
 major_synmin,STATE,MA,1086,0.0237
-major_synmin,STATE,AR,1022,0.0223
+major_synmin,STATE,AR,1021,0.0223
 major_synmin,STATE,IL,827,0.018
 major_synmin,STATE,AL,814,0.0177
 major_synmin,STATE,WI,721,0.0157
@@ -48,7 +48,7 @@ major_synmin,STATE,WY,150,0.0033
 major_synmin,STATE,RI,150,0.0033
 major_synmin,STATE,MT,108,0.0024
 major_synmin,STATE,DC,52,0.0011
-major_synmin,EPA_REGION,6,9127,0.199
+major_synmin,EPA_REGION,6,9126,0.1989
 major_synmin,EPA_REGION,4,8262,0.1801
 major_synmin,EPA_REGION,5,6629,0.1445
 major_synmin,EPA_REGION,2,4845,0.1056
@@ -58,7 +58,7 @@ major_synmin,EPA_REGION,8,3180,0.0693
 major_synmin,EPA_REGION,1,2278,0.0497
 major_synmin,EPA_REGION,9,2188,0.0477
 major_synmin,EPA_REGION,10,803,0.0175
-major_synmin,AIR_POLLUTANT_CLASS_DESC,Synthetic Minor Emissions,30729,0.6699
+major_synmin,AIR_POLLUTANT_CLASS_DESC,Synthetic Minor Emissions,30728,0.6699
 major_synmin,AIR_POLLUTANT_CLASS_DESC,Major Emissions,15144,0.3301
 major_synmin,FACILITY_TYPE,Privately owned,22404,0.7383
 major_synmin,FACILITY_TYPE,Non-government,4680,0.1542

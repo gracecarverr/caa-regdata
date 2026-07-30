@@ -1,0 +1,599 @@
+<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Briefs — CAA Regulatory Data</title><meta name='description' content="Twelve institutional briefs on the Clean Air Act's regulatory structure and the EPA data systems this project draws on, each ending in what it implies for the data."><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=Merriweather:wght@300;700&family=Merriweather+Sans:wght@300;600;700&display=swap' rel='stylesheet'><style>
+:root{
+  --navy:#003349; --navy-dark:#001f2e; --accent:#933f71; --accent-dark:#612141;
+  --bg:#ffffff; --bg-alt:#f2f4f7; --ink:#0f131f; --text:#333333; --muted:#727f9f; --border:#e3e7f0;
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:'Merriweather Sans',system-ui,sans-serif;font-weight:300;color:var(--text);
+  background:var(--bg);}
+a{color:var(--accent);}
+
+/* ---- masthead + mnav: two-tier top banner (every page) -- a plain white identity band (site eyebrow,
+   big serif site title/home-link, one-line subtitle) above a separate nav-links band. ------------------ */
+.masthead{background:#fff;padding:1.5rem 1.2rem 1.3rem;}
+.masthead-inner{max-width:1100px;margin:0 auto;}
+.masthead .eyebrow{text-transform:uppercase;letter-spacing:.13em;font-size:.76rem;color:var(--accent);
+  font-weight:700;margin:0 0 .5rem;}
+.mast-title{margin:0 0 .35rem;}
+.mast-title a{font-family:'Merriweather',Georgia,serif;font-weight:300;font-size:1.85rem;color:var(--navy);
+  text-decoration:none;letter-spacing:.01em;}
+.mast-title a:hover{color:var(--accent-dark);}
+.mast-sub{margin:0;font-size:.98rem;color:var(--muted);max-width:640px;line-height:1.5;}
+
+.mnav{background:#fff;border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.mnav-inner{max-width:1100px;margin:0 auto;padding:.7rem 1.2rem;display:flex;gap:1.5rem;flex-wrap:wrap;
+  font-weight:600;font-size:.92rem;}
+.mnav-inner a{color:var(--accent);text-decoration:none;padding:.15rem 0;border-bottom:2px solid transparent;}
+.mnav-inner a:hover{color:var(--accent-dark);border-bottom-color:var(--accent-dark);}
+.mnav-inner a.active{color:var(--navy);border-bottom-color:var(--accent-dark);}
+
+.hero{background:linear-gradient(160deg,var(--navy) 0%,var(--navy-dark) 100%);color:#fff;
+  padding:3rem 1.2rem 2.4rem;}
+.hero-photo{background-size:cover;background-position:center;padding:5rem 1.2rem 3.2rem;}
+.hero-inner{max-width:1100px;margin:0 auto;position:relative;}
+.hero .eyebrow{text-transform:uppercase;letter-spacing:.13em;font-size:.76rem;color:rgba(255,255,255,.66);
+  font-weight:700;margin:0 0 .7rem;}
+.hero h1{font-family:'Merriweather',Georgia,serif;font-weight:300;font-size:2.5rem;
+  line-height:1.18;margin:0 0 .7rem;}
+.hero p{font-size:1.05rem;max-width:760px;color:#dde1ec;margin:0;line-height:1.55;}
+.hero .photo-credit{font-size:.7rem;color:rgba(255,255,255,.55);max-width:none;margin:1.6rem 0 0;
+  font-style:italic;}
+
+.cta{margin-top:1.4rem;display:flex;flex-wrap:wrap;gap:.8rem;}
+.btn{display:inline-block;padding:.6rem 1.2rem;font-size:.88rem;font-weight:600;color:#fff;
+  border:1px solid rgba(255,255,255,.55);text-decoration:none;transition:border-color .15s ease,background-color .15s ease;}
+.btn:hover{border-color:#fff;background:rgba(255,255,255,.08);}
+
+main{max-width:1100px;margin:0 auto;padding:2.4rem 1.2rem 3rem;}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1.1rem;margin:1.6rem 0 2.4rem;}
+.card{border:1px solid var(--border);border-top:3px solid var(--navy);background:#fff;padding:1.2rem 1.3rem;}
+.card h3{font-family:'Merriweather',Georgia,serif;font-weight:300;margin:.1rem 0 .4rem;font-size:1.15rem;
+  color:var(--navy);}
+.card p{font-size:.92rem;color:var(--muted);margin:0 0 .8rem;line-height:1.45;}
+.card a{color:var(--accent);font-weight:600;font-size:.88rem;text-decoration:none;}
+.card a:hover{color:var(--accent-dark);text-decoration:underline;}
+
+/* ---- card-badge: small numbered label above a card's title (e.g. 'Brief 00') -- Briefs page's landing
+   grid only, as of this writing. Reuses .card's border/padding as-is, no separate component. ------------ */
+.card-badge{display:block;font-family:'Merriweather',Georgia,serif;font-weight:700;font-size:.78rem;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin:0 0 .35rem;}
+
+/* ---- srccard: external-source link groups (Home's Public EPA Sources section only) -- a .card whose
+   body is a short list of links instead of one description + one CTA. -------------------------------- */
+.srccard{padding-bottom:.6rem;}
+.src-row{margin:0 0 1rem;}
+.src-row:last-child{margin-bottom:0;}
+.src-row .src-name{display:block;font-weight:600;font-size:.95rem;color:var(--accent);text-decoration:none;
+  margin-bottom:.15rem;}
+.src-row .src-name:hover{color:var(--accent-dark);text-decoration:underline;}
+.src-row p{margin:0;font-size:.88rem;color:var(--muted);line-height:1.45;}
+
+/* ---- stage-grid: numbered pipeline-stage cards (Home only) -- informational, not navigation, so no
+   CTA link and an accent-top border distinguishes them from the navy-top nav .card above. -------------- */
+.sec-h2{font-family:'Merriweather',Georgia,serif;font-weight:300;color:var(--navy);font-size:1.5rem;
+  margin:0 0 .3rem;}
+.sec-lede{font-size:.92rem;color:var(--muted);margin:0;line-height:1.5;}
+.stage-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.1rem;
+  margin:1.6rem 0 2.4rem;}
+.stage-card{border:1px solid var(--border);border-top:3px solid var(--accent);background:#fff;
+  padding:1.2rem 1.3rem;}
+.stage-step{display:block;font-family:'Merriweather',Georgia,serif;font-weight:700;font-size:1.4rem;
+  color:var(--accent);line-height:1;margin-bottom:.3rem;}
+.stage-card h3{font-family:'Merriweather',Georgia,serif;font-weight:300;margin:.1rem 0 .4rem;
+  font-size:1.15rem;color:var(--navy);}
+.stage-card p{font-size:.92rem;color:var(--muted);margin:0;line-height:1.45;}
+
+.prose h2{font-family:'Merriweather',Georgia,serif;font-weight:300;color:var(--navy);
+  border-top:1px solid var(--border);padding-top:1.6rem;margin-top:2.4rem;font-size:1.5rem;text-align:left;}
+.prose h2:first-child{border-top:none;padding-top:0;margin-top:0;}
+.prose h3{font-family:'Merriweather',Georgia,serif;font-weight:300;color:var(--navy);margin-top:1.7rem;
+  font-size:1.18rem;}
+.prose p,.prose li{line-height:1.62;}
+.prose blockquote{border-left:3px solid var(--accent);margin:1.1rem 0;padding:.35rem 1.1rem;color:var(--muted);
+  background:var(--bg-alt);}
+.prose table{border-collapse:collapse;width:100%;margin:1rem 0;font-size:.92em;}
+.prose th,.prose td{border:1px solid var(--border);padding:.5rem .7rem;text-align:left;vertical-align:top;}
+.prose th{background:var(--bg-alt);}
+.prose code{font-family:ui-monospace,Menlo,monospace;background:var(--bg-alt);padding:.05rem .3rem;font-size:.9em;}
+
+/* ---- doc-nav (Home's institutional-overview sections, Raw Data's per-source sections): docs-site-style
+   sidebar + content pane. One title list on the left (sticky), one pane visible at a time on the right.
+   Needs doc_nav_script (below) to switch panes and support #hash deep-linking -- everything else on this
+   site is plain HTML/CSS with no JS, but a click-to-switch sidebar has no static-HTML equivalent. ------- */
+.doc-nav{display:flex;gap:2.2rem;align-items:flex-start;margin-top:.4rem;}
+.doc-sidebar{flex:0 0 230px;display:flex;flex-direction:column;gap:.1rem;position:sticky;top:1rem;
+  border-right:1px solid var(--border);padding-right:1.1rem;}
+.doc-sidebar-link{display:block;padding:.6rem .7rem;color:var(--text);text-decoration:none;font-size:.93rem;
+  border-left:3px solid transparent;transition:background-color .15s ease,color .15s ease,border-color .15s ease;}
+.doc-sidebar-link:hover{background:var(--bg-alt);color:var(--navy);}
+.doc-sidebar-link.active{background:var(--bg-alt);color:var(--accent);border-left-color:var(--accent);font-weight:600;}
+.doc-sidebar-group{font-size:.72rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--muted);padding:.9rem .7rem .25rem;}
+.doc-sidebar-group:first-child{padding-top:0;}
+.doc-content{flex:1;min-width:0;overflow-x:auto;}
+@media (max-width:820px){
+  .doc-nav{flex-direction:column;gap:0;}
+  .doc-sidebar{flex:none;position:static;top:auto;flex-direction:row;flex-wrap:wrap;gap:.3rem;
+    border-right:none;border-bottom:1px solid var(--border);padding:0 0 .8rem;margin-bottom:1rem;}
+  .doc-sidebar-link{border-left:none;border-bottom:3px solid transparent;padding:.4rem .6rem;}
+  .doc-sidebar-link.active{border-left-color:transparent;border-bottom-color:var(--accent);}
+  .doc-sidebar-group{width:100%;padding:.5rem .2rem 0;}
+}
+
+.section-note{background:var(--bg-alt);border:1px solid var(--border);border-left:3px solid var(--accent);
+  padding:.9rem 1.1rem;margin:1.4rem 0;font-size:.92em;line-height:1.55;}
+
+/* ---- dict-xref: small jump-to-the-live-version pointer at the end of a dictionary.html pane ----------- */
+.dict-xref{margin:1rem 0 0;padding:.55rem .8rem;background:var(--bg-alt);border-left:3px solid var(--accent);
+  font-size:.85em;}
+.dict-xref a{font-weight:600;text-decoration:none;}
+.dict-xref a:hover{text-decoration:underline;}
+
+.stat-table{border-collapse:collapse;width:100%;margin:.6rem 0 .5rem;font-size:.9em;}
+.stat-table th,.stat-table td{border:1px solid var(--border);padding:.45rem .7rem;text-align:right;}
+.stat-table th{background:var(--navy);color:#fff;font-weight:600;text-align:right;}
+.stat-table td:first-child,.stat-table th:first-child{text-align:left;}
+.stat-table caption{caption-side:top;text-align:left;font-weight:300;color:var(--navy);
+  font-family:'Merriweather',Georgia,serif;font-size:1.15rem;margin:2rem 0 .4rem;}
+.stat-table caption:first-of-type{margin-top:.4rem;}
+.table-note{font-size:.85em;color:var(--muted);margin:-.1rem 0 1.8rem;line-height:1.5;}
+
+.site-footer{border-top:1px solid var(--border);margin-top:1rem;padding:1.4rem 1.2rem;text-align:center;
+  color:var(--muted);font-size:.82rem;}
+.site-footer code{font-family:ui-monospace,Menlo,monospace;background:#eef0f4;padding:.1rem .35rem;}
+
+/* ---- raw-data page: scoped table styling -------------------------------------------------------------- */
+.raw-data h2{margin:0 0 .3rem;font-family:'Merriweather',Georgia,serif;font-weight:300;color:var(--navy);
+  font-size:1.5rem;}
+.raw-data .src{color:var(--muted);font-size:.85em;margin:.1rem 0;font-family:ui-monospace,Menlo,monospace;}
+.raw-data .desc{margin:.4rem 0 .6rem;max-width:860px;}
+.raw-data .obs{font-weight:bold;margin:.3rem 0;}
+.raw-data .inv{color:var(--muted);font-size:.84em;margin:.2rem 0 1rem;max-width:920px;}
+.raw-data table{border-collapse:collapse;width:100%;margin:.5rem 0 1rem;font-size:.9em;}
+.raw-data th{text-align:left;border:1px solid var(--border);padding:5px 8px;vertical-align:middle;}
+.raw-data td{text-align:right;border:1px solid var(--border);padding:5px 8px;vertical-align:middle;}
+.raw-data td.l,.raw-data .var{text-align:left;}
+.raw-data .vd{font-weight:normal;color:var(--muted);font-size:.92em;}
+.raw-data table.cat th{background:var(--navy);color:#fff;} .raw-data table.num th{background:var(--accent);color:#fff;}
+.raw-data .note{font-size:.86em;color:#3d444d;margin:.35rem 0;line-height:1.4;}
+.raw-data .dupes{font-size:.9em;margin:1rem 0 .3rem;line-height:1.4;}
+
+@media (max-width:700px){
+  .hero h1{font-size:1.9rem;}
+  .mast-title a{font-size:1.5rem;}
+  .mnav-inner{gap:.9rem;font-size:.85rem;}
+}
+</style></head><body><header class='masthead'><div class='masthead-inner'><p class='eyebrow'>Clean Air Act · Stationary Sources</p><h1 class='mast-title'><a href='index.html'>CAA Regulatory Data Infrastructure</a></h1><p class='mast-sub'>Facility-level data on stationary-source air pollution, assembled from public EPA sources.</p></div></header><nav class='mnav'><div class='mnav-inner'><a href='index.html'>Home</a><a href='briefs.html' class='active'>Briefs</a><a href='raw_data.html'>Raw Data</a><a href='databases.html'>Datasets</a><a href='panels.html'>Panels</a><a href='dictionary.html'>Dictionary</a></div></nav><div class='hero'><div class='hero-inner'><p class='eyebrow'>Twelve Briefs</p><h1>Institutional Briefs</h1><p>The data in this project are administrative records produced by a regulatory program, so a column only means what the rule behind it says it means. These briefs record those rules — the Clean Air Act's own structure, plus the data systems and identifiers that carry it into this project's files — each ending in what it implies for the data.</p></div></div><main><div class='cards'><div class='card'><span class='card-badge'>Brief 00</span><h3>General Information</h3><p>Comprehensive federal law that regulates air emissions from stationary and mobile sources. Authorizes the EPA to establish National Ambient Air Quality Standards (NAAQS).</p><a href='#general-information'>Read →</a></div><div class='card'><span class='card-badge'>Brief 01</span><h3>NAAQS</h3><p>The National Ambient Air Quality Standards (NAAQS) are the foundation of the CAA. Set under section 108, EPA designates a set of &amp;quot;criteria pollutants&amp;quot; (currently ozone, particulate matter (PM2.5 and PM10), sulfur dioxide, nitrogen dioxide, carbon monoxide, and lead). Under section 109, NAAQS are set for each.</p><a href='#naaqs'>Read →</a></div><div class='card'><span class='card-badge'>Brief 02</span><h3>State Implementation Plans (SIPs)</h3><p>Section 110. Each state writes a plan showing how it will achieve and maintain the National Ambient Air Quality Standards (NAAQS).</p><a href='#state-implementation-plans-sips'>Read →</a></div><div class='card'><span class='card-badge'>Brief 03</span><h3>Stationary Source Programs</h3><p>Stationary-source regulation runs on: standard-setting programs that say how clean a source must be (NSPS, NESHAP/MACT, SIP limits), and permitting programs that bind those standards onto a specific facility and make them federally enforceable (NSR/PSD at construction, Title V during operation).</p><a href='#stationary-source-programs'>Read →</a></div><div class='card'><span class='card-badge'>Brief 04</span><h3>PSD and NSR</h3><p>Preconstruction permitting (New Source Review, NSR). Permitting half of the new source track. NSR splits geographically by attainment status:</p><a href='#psd-and-nsr'>Read →</a></div><div class='card'><span class='card-badge'>Brief 05</span><h3>Title V: Operating Permits (compliance backbone)</h3><p>Data implication. The Title V certs table (TITLEV_CERTS) is ~81% duplicate rows (one raw row per
+program/pollutant on the same certification), so a certification count (n_certs) differs sharply from the
+raw row count — the panel now surfaces this with n_certs_dup rather than silently deduping. Separately,
+&amp;quot;required annual&amp;quot; does not mean &amp;quot;always observed&amp;quot;: among operating Major Emissions facilities, only
+72.5% have a reported cert in 2025 (9,428 of 13,012), down from 77.5% in 2015 — a gap consistent with
+reporting lag in the ICIS extract (older certs for the same facilities exist through 2020–2024) rather
+than confirmed non-compliance.</p><a href='#title-v-operating-permits-compliance-backbone'>Read →</a></div><div class='card'><span class='card-badge'>Brief 06</span><h3>Layers of CAA Regulation</h3><p>Title V sits on top of both. It doesn't create new requirements, it consolidates everything a facility owes into a single permit.</p><a href='#layers-of-caa-regulation'>Read →</a></div><div class='card'><span class='card-badge'>Brief 07</span><h3>Facility Classification</h3><p>Some basic terms:</p><a href='#facility-classification'>Read →</a></div><div class='card'><span class='card-badge'>Brief 08</span><h3>The Enforcement Process</h3><p>States do most enforcement. When the EPA &amp;quot;delegates&amp;quot; a program to a state, the state takes the primary responsibility for permitting, inspecting, and enforcing the program. EPA retains oversight and backstop authority (it can step in if the state isn't doing its job).</p><a href='#the-enforcement-process'>Read →</a></div><div class='card'><span class='card-badge'>Brief 09</span><h3>Facility Identifiers and Crosswalks</h3><p>A single physical facility can carry several different ID numbers, one per data system, because each
+system was built independently and at a different time. Joining across systems means picking the right key
+for the join, not assuming any one ID is universal.</p><a href='#facility-identifiers-and-crosswalks'>Read →</a></div><div class='card'><span class='card-badge'>Brief 10</span><h3>The Data Systems: ICIS-Air, AFS, and the Compliance Pipeline</h3><p>This project draws on four EPA data systems that were never designed to be used together. Each has its own
+facility key, its own coverage window, and its own idea of what a &amp;quot;record&amp;quot; is — see
+Facility Identifiers and Crosswalks for how they join.</p><a href='#the-data-systems-icis-air-afs-and-the-compliance-pipeline'>Read →</a></div><div class='card'><span class='card-badge'>Brief 11</span><h3>Pollutants and Source Classification</h3><p>CAA regulation runs on two pollutant vocabularies at once — NAAQS's criteria pollutants (see
+NAAQS) and Section 112's hazardous air pollutants (see
+Stationary Source Programs) — and the data records both the same way: as a
+row in a pollutant-level table, not as a fact about a facility as a whole.</p><a href='#pollutants-and-source-classification'>Read →</a></div></div><div class='prose'><div class='doc-nav'><nav class='doc-sidebar'><a href='#general-information' class='doc-sidebar-link' data-target='general-information'>General Information</a><a href='#naaqs' class='doc-sidebar-link' data-target='naaqs'>NAAQS</a><a href='#state-implementation-plans-sips' class='doc-sidebar-link' data-target='state-implementation-plans-sips'>State Implementation Plans (SIPs)</a><a href='#stationary-source-programs' class='doc-sidebar-link' data-target='stationary-source-programs'>Stationary Source Programs</a><a href='#psd-and-nsr' class='doc-sidebar-link' data-target='psd-and-nsr'>PSD and NSR</a><a href='#title-v-operating-permits-compliance-backbone' class='doc-sidebar-link' data-target='title-v-operating-permits-compliance-backbone'>Title V: Operating Permits (compliance backbone)</a><a href='#layers-of-caa-regulation' class='doc-sidebar-link' data-target='layers-of-caa-regulation'>Layers of CAA Regulation</a><a href='#facility-classification' class='doc-sidebar-link' data-target='facility-classification'>Facility Classification</a><a href='#the-enforcement-process' class='doc-sidebar-link' data-target='the-enforcement-process'>The Enforcement Process</a><a href='#facility-identifiers-and-crosswalks' class='doc-sidebar-link' data-target='facility-identifiers-and-crosswalks'>Facility Identifiers and Crosswalks</a><a href='#the-data-systems-icis-air-afs-and-the-compliance-pipeline' class='doc-sidebar-link' data-target='the-data-systems-icis-air-afs-and-the-compliance-pipeline'>The Data Systems: ICIS-Air, AFS, and the Compliance Pipeline</a><a href='#pollutants-and-source-classification' class='doc-sidebar-link' data-target='pollutants-and-source-classification'>Pollutants and Source Classification</a></nav><div class='doc-content'><div class='doc-pane' id='general-information'><h2>General Information</h2><p>Comprehensive federal law that regulates air emissions from stationary and mobile sources. Authorizes the EPA to establish National Ambient Air Quality Standards (NAAQS).</p>
+<ul>
+<li>First passed in 1963, but the operative version was created by the 1970 amendments (same year EPA was established). Substantial expansions in 1977 and 1990.</li>
+<li>Cooperative federalism: the federal EPA sets standards, and the states do most of the implementation and enforcement, subject to federal approval/backstop.</li>
+<li>Distinguishes between mobile sources (cars, trucks, planes) and stationary sources (power plants, factories, refineries).</li>
+</ul>
+<blockquote>
+<p><strong>Data implication.</strong> This project covers <strong>stationary sources only</strong>. Cooperative federalism shows up
+directly in the data as <code>STATE_EPA_FLAG</code> / <code>agency</code> on every event asset (<code>E</code>/<code>S</code>/<code>L</code> = EPA / State / Local
+— see <code>docs/data_dictionary.md</code>) — enforcement counts pool across levels of government unless deliberately
+split by agency.</p>
+</blockquote>
+</div><div class='doc-pane' id='naaqs'><h2>NAAQS</h2><p>The National Ambient Air Quality Standards (NAAQS) are the foundation of the CAA. Set under section 108, EPA designates a set of &quot;criteria pollutants&quot; (currently ozone, particulate matter (PM2.5 and PM10), sulfur dioxide, nitrogen dioxide, carbon monoxide, and lead). Under section 109, NAAQS are set for each.</p>
+<ul>
+<li>Primary standards: protect public health. Secondary standards: protect welfare (crops, visibility, materials).</li>
+<li>NAAQS are about ambient air quality in a geographic area, not about any individual stack.</li>
+<li>Areas are classified as attainment (meeting the standard), nonattainment (not meeting it), or unclassifiable. These designations trigger different regulatory regimes.</li>
+<li>Nonattainment areas are further graded by severity, which drives how strict the requirements are.</li>
+<li>Official designations are re-evaluated by the EPA whenever the NAAQS are updated. The EPA is legally required to review the NAAQS for all criteria air pollutants at least every 5 years.</li>
+</ul>
+<blockquote>
+<p><strong>Data implication.</strong> Attainment status is a <strong>place × time × pollutant</strong> attribute, not a facility
+attribute, and facilities would be placed into an area by coordinate (sub-county), not county FIPS. This
+repo does not build an attainment asset — that work lives in the sibling <code>CAA_Project</code> repo.</p>
+</blockquote>
+</div><div class='doc-pane' id='state-implementation-plans-sips'><h2>State Implementation Plans (SIPs)</h2><p>Section 110. Each state writes a plan showing how it will achieve and maintain the National Ambient Air Quality Standards (NAAQS).</p>
+<ul>
+<li>If a state fails to produce an adequate plan, EPA can impose a Federal Implementation Plan.</li>
+</ul>
+<blockquote>
+<p><strong>Data implication.</strong> SIP enrollment (<code>prog_sip</code>) is the most common program flag in the data — ~90% of
+active facilities carry it, consistent with &quot;applies to essentially everyone.&quot; It's an <strong>ever-enrolled</strong>,
+time-invariant flag with no end date, so it can't date <em>when</em> a facility came under its SIP obligations.</p>
+</blockquote>
+</div><div class='doc-pane' id='stationary-source-programs'><h2>Stationary Source Programs</h2><p>Stationary-source regulation runs on: standard-setting programs that say how clean a source must be (NSPS, NESHAP/MACT, SIP limits), and permitting programs that bind those standards onto a specific facility and make them federally enforceable (NSR/PSD at construction, Title V during operation).</p>
+<ul>
+<li>
+<p>Section 111: New Source Performance Standards (NSPS). Technology-based, nationally uniform emissions standards set by source category (power plants, cement kilns, etc).</p>
+</li>
+<li>
+<p>NSPS apply to sources that are newly constructed or that undergo &quot;modification.&quot;</p>
+</li>
+<li>
+<p>An existing source is not subject to NSPS unless it undergoes &quot;modification&quot; or &quot;reconstruction&quot; as defined under 40 CFR Part 60; an unmodified existing source remains subject only to its prior requirements (e.g. SIP limits), not the newer NSPS standard for its category.</p>
+</li>
+<li>
+<p>NSPS standards are largely &quot;self-implementing&quot;; they bind the source directly whether or not they've been written into a permit yet.</p>
+</li>
+<li>
+<p>Section 112: NESHAP and MACT: two regulatory generations under the same statutory section. Emissions of hazardous air pollutants (HAPs). Older Part 61 NESHAPs are pollutant-by-pollutant standards. (pre-1990 approach). Part 63 standards are MACT standards
+created by 1990 amendments (set category-by-category at the level already being achieved by the lower-emitting sources of an industrial sector). A separate track for toxic air pollutants regulated through technology-based standards rather than ambient standards.</p>
+</li>
+<li>
+<p>1990 amendments revised section 112 to require issuance of technology-based standards for
+major sources and certain area sources.</p>
+</li>
+<li>
+<p>Major sources: a stationary source or group of stationary sources that emit or have potential to emit 10 tons per year or more of a HAP or 25 tons per year or more of a combination of HAPs.</p>
+</li>
+<li>
+<p>For major sources, section 112 requires EPA to establish emission standards that require the maximum degree of reduction in emissions of HAPs. Commonly referred to as &quot;maximum achievable control technology&quot; or MACT standards.</p>
+</li>
+<li>
+<p>Area source: stationary source that is not a major source.</p>
+</li>
+<li>
+<p>Section 110: SIP - State Implementation Plans as an enforceable source of limits. The SIP itself is a direct source of federally enforceable emission limits on individual facilities.</p>
+</li>
+<li>
+<p>Each SIP must include a permit program to regulate the modification and construction of any stationary source of air pollution.</p>
+</li>
+</ul>
+<blockquote>
+<p><strong>Data implication.</strong> <code>prog_nsps</code> pools <strong>both</strong> the major-source code (<code>CAANSPS</code>) and the non-major code
+(<code>CAANSPSM</code>) into one flag, so it doesn't by itself distinguish major/area-source NSPS status.
+<code>prog_mact</code>/<code>prog_neshap</code> are separate flags; the area-source GACT (Generally Available Control
+Technology — the area-source-scale counterpart to MACT) code (<code>CAAGACTM</code>) is deliberately <strong>not</strong>
+folded into <code>prog_mact</code>. All are static/ever-enrolled (see SIP note above).</p>
+</blockquote>
+</div><div class='doc-pane' id='psd-and-nsr'><h2>PSD and NSR</h2><p>Preconstruction permitting (New Source Review, NSR). Permitting half of the new source track. NSR splits geographically by attainment status:</p>
+<ul>
+<li>PSD (Prevention of Significant Deterioration): applies in attainment/unclassifiable areas. New or modified major sources must install Best Available Control Technology (BACT) and show their emissions won't deteriorate air quality beyond allowed increments. Major-source thresholds here are 100 tons/year for 28 source categories and 250 tons/year otherwise.</li>
+<li>Nonattainment NSR (NNSR) applies in nonattainment areas and is stricter: new/modified major sources must meet the Lowest Achievable Emissions Rate (LAER) and obtain emission offsets from existing sources, so net area emissions do not rise.</li>
+<li>Major-source thresholds are lower and become stricter with the severity of nonattainment.</li>
+</ul>
+<blockquote>
+<p><strong>Data implication.</strong> These are <em>preconstruction</em> permits, which the panel's year-varying program-active
+flags now encode directly: <code>prog_nsr_active</code> / <code>prog_psd_active</code> are active not only while a facility is
+<strong>operating</strong> (status code <code>OPR</code> = Operating, <code>TMP</code> = Temporarily closed, <code>SEA</code> = Seasonal — all count as
+&quot;in service&quot;) but also while it's <strong>planned or under construction</strong> (<code>PLN</code> = Planned, <code>CNS</code> = Under
+construction) — unlike the other program-active flags (SIP, Title V, NSPS, MACT, NESHAP, FESOP, and
+GACT/CFC where carried), which require the facility to actually be operating. A facility can therefore read
+<code>prog_nsr_active = 1</code> while <code>operating = 0</code> in the same year — that's not a contradiction, it reflects that
+the NSR/PSD obligation attaches before operation begins. This is an intentional divergence from <code>operating</code>, not a bug.</p>
+</blockquote>
+</div><div class='doc-pane' id='title-v-operating-permits-compliance-backbone'><h2>Title V: Operating Permits (compliance backbone)</h2><ul>
+<li>Title V does not set new emission limits, but it consolidates all of a major source's existing obligations (NSPS, NESHAP/MACT, SIP, NSR/PSD terms) into one enforceable operating permit.</li>
+<li>Threshold: 100 tons per year potential-to-emit of a regulated pollutant, lower in nonattainment areas and for HAPs.</li>
+<li>Required annual compliance certification: source attests to its own compliance.</li>
+<li>Failure to apply for a Title V permit or failure to submit the annual compliance certification is itself a federally reportable violation.</li>
+</ul>
+<blockquote>
+<p><strong>Data implication.</strong> The Title V certs table (<code>TITLEV_CERTS</code>) is <strong>~81% duplicate rows</strong> (one raw row per
+program/pollutant on the same certification), so a certification count (<code>n_certs</code>) differs sharply from the
+raw row count — the panel now surfaces this with <code>n_certs_dup</code> rather than silently deduping. Separately,
+&quot;required annual&quot; does not mean &quot;always observed&quot;: among <strong>operating Major Emissions facilities</strong>, only
+<strong>72.5%</strong> have a reported cert in 2025 (9,428 of 13,012), down from 77.5% in 2015 — a gap consistent with
+<strong>reporting lag</strong> in the ICIS extract (older certs for the same facilities exist through 2020–2024) rather
+than confirmed non-compliance.</p>
+</blockquote>
+</div><div class='doc-pane' id='layers-of-caa-regulation'><h2>Layers of CAA Regulation</h2><h3>Layer 1: Two Logics of CAA Regulation</h3>
+<ol>
+<li>Ambient-based (NAAQS -&gt; SIPS). &quot;The air in this area must be clean.&quot; EPA sets the standard, states figure out how to meet it. The SIP is the vehicle. Geographically driven, the same factory faces different requirements depending on whether it is located in an attainment or nonattainment area.</li>
+<li>Source-based (technology standards). &quot;This type of facility must control emissions this much.&quot; Doesn't matter where you are; if you are a cement plant, you meet the cement standard. NSPS, NESHAP/MACT, and the preconstruction permits (PSD/NSR) all work this way.</li>
+</ol>
+<p>Title V sits on top of both. It doesn't create new requirements, it consolidates everything a facility owes into a single permit.</p>
+<h3>Layer 2: Which Program Does What?</h3>
+<p>A facility going through its regulatory life:</p>
+<ul>
+<li>Before it's built: Does it need a construction permit?</li>
+<li>In a clean-air area -&gt; PSD, prevention of significant deterioration (best available control technology)</li>
+<li>In a dirty-air area -&gt; NNSR, new source review (lowest-achievable emission rate + offsets)</li>
+<li>These are one-time permits, not ongoing programs. A source is subject to this regulation until it faces modification, which could change its designation potentially.</li>
+<li>Once it's operating: what ongoing standards apply?</li>
+<li>SIPs (State Implementation Plans): applies to essentially everyone. The state's plan for meeting the National Ambient Air Quality Standards (NAAQS). Federally enforceable.</li>
+<li>The state figures out which facilities need to do what (might set emission limits on specific plants, require certain control technologies, monitoring requirements). Different facilities in the same state can face very different SIP obligations depending on their size, industry, and location.</li>
+<li>NSPS (New Source Performance Standards): applies if you're a new or modified source in a listed industrial category. Technology-based emission limits. &quot;New&quot; means built after the standard was published for your category.</li>
+<li>Applies the moment you're a new source in a covered category.</li>
+<li>NESHAP (National Emissions Standards for Hazardous Air Pollutants) (Part 61): original hazardous air pollutant standards. A short list of specific toxics (asbestos, benzene, beryllium, vinyl chloride, etc.)</li>
+<li>Subject when you start operating.</li>
+<li>MACT (Part 63): 1990 amendments replaced the old NESHAP approach with industry-wide technology standards for ~187 HAPs. &quot;Maximum Achievable Control Technology.&quot; Big one for toxics.</li>
+<li>FESOP (Federally Enforceable State Operating Permit): mechanism for states to cap a source's potential emissions below major source thresholds, making it a synthetic minor. Keeps small sources out of Title V.</li>
+<li>If it's a major source:</li>
+<li>Title V: must hold a comprehensive operating permit. Must submit annual compliance certifications. This is the permitting program, not a substantive standard. Bundles everything else into one document.</li>
+<li>Acid Rain (Title IV): only electric utilities. SO2/NOx cap-and-trade. CAMD (EPA's Clean Air Markets
+Division, the emissions-trading data source — <code>CAMDBS</code> in the emissions dataset's program-acronym
+column) data in emissions dataset.</li>
+<li>Major source thresholds are set per pollutant. The facility-level classification is the &quot;worst case&quot;: if you're major for one pollutant, you're a major facility. Regulatory burden is pollutant-specific.</li>
+</ul>
+<blockquote>
+<p><strong>Data implication.</strong> &quot;Once it's operating&quot; is directly measurable via the year-varying <code>operating</code> flag
+(<code>1</code> iff status ∈ {OPR, TMP, SEA}, 2015–2025 only; <code>NA</code> before 2015 — no snapshot exists to assert a status).
+The &quot;before it's built&quot; / &quot;once it's operating&quot; split is exactly the NSR/PSD-vs-the-rest program-active
+distinction described under <strong>PSD and NSR</strong> above.</p>
+</blockquote>
+</div><div class='doc-pane' id='facility-classification'><h2>Facility Classification</h2><h3>What the Classifications Mean</h3>
+<p>Some basic terms:</p>
+<ul>
+<li>SIC (Standard Industrial Classification): older system (1930s-1990s). 4-digit codes (e.g. 2911 is petroleum refining, 4911 is electric services).</li>
+<li>NAICS (North American Industry Classification System): replaced SIC in 1997. 6-digit codes, more granular. Harmonized across the U.S., Canada, and Mexico.</li>
+<li>NSPS and MACT standards are written for specific source categories.</li>
+</ul>
+<p><strong>Major source.</strong> A facility whose actual or potential emissions exceed the threshold for at least one pollutant. Potential is key, it means what the facility could emit if it ran at full capacity, 24/7, 365 days per year, with no controls.</p>
+<p>The threshold depends on the program:</p>
+<ul>
+<li>SIP (State Implementation Plan) / Title V (criteria pollutants): 100 tons/year of any single criteria pollutant in attainment areas. In nonattainment areas, the threshold drops to 50, 25, or even 10 tons/year depending on how badly the area misses the National Ambient Air Quality Standards (NAAQS).</li>
+<li>HAPs (hazardous air pollutants, Section 112): 10 tons/year of any single HAP or 25 tons/year of all HAPs combined.</li>
+<li>PSD (Prevention of Significant Deterioration): 100 tons/year for sources in 28 listed industrial categories, 250 tons/year for everything else.</li>
+<li>Acid Rain: specific to electric utilities based on capacity and fuel type.</li>
+</ul>
+<p>A facility can be major under one program's threshold and not another. Facility-level classification reflects the highest classification across all applicable programs and pollutants.</p>
+<p>What being major means:</p>
+<ul>
+<li>Subject to Title V permitting, must hold a comprehensive operating permit, pay permit fees, and submit annual compliance certifications</li>
+<li>Higher inspection priority, EPA policy targets FCEs (Full Compliance Evaluations) every 2 years for major sources</li>
+<li>More likely to trigger PSD/NSR review for modifications</li>
+<li>More extensive monitoring, recordkeeping, and reporting requirements</li>
+<li>More likely to face formal enforcement if violations are found</li>
+<li>Subject to MACT standards for applicable HAP categories</li>
+</ul>
+<blockquote>
+<p><strong>Data implication.</strong> &quot;Facility-level classification is the worst case&quot; matches <code>AIR_POLLUTANT_CLASSIFICATION_CODE</code>
+in the Facilities table exactly (facility-level worst-case); the same field name in the Pollutants table is
+the <strong>pollutant-specific</strong> classification, so don't conflate the two tables' meaning of the same column
+name. Class is read from the <strong>current snapshot only</strong> and applied to every panel year (time-invariant) —
+a facility that changed class over 2005–2025 shows only its latest class throughout.</p>
+</blockquote>
+<p><strong>Synthetic Minor.</strong> A facility whose uncontrolled potential emissions would exceed the major source threshold, but which has accepted legally binding, federally enforceable limits on its operations or emissions that keep it below the threshold. The facility voluntarily constrains itself (through a FESOP — Federally Enforceable State Operating Permit — or an SIP permit with enforceable conditions) in exchange for a lighter regulatory treatment.</p>
+<ul>
+<li>This is a deliberate regulatory choice by the facility. Limits might cap production hours, restrict fuel types, require specific control equipment, or directly cap emission rates.</li>
+<li>Limits must be federally enforceable, not just a promise, but a binding permit condition that EPA or state can act on.</li>
+</ul>
+<p>What being a synthetic minor means:</p>
+<ul>
+<li>Avoids Title V permitting (main incentive, Title V permits are expensive and burdensome)</li>
+<li>Lower inspection priority (EPA targets FCEs every 5 years instead of 2)</li>
+<li>Still subject to NSPS and MACT if applicable to the source category</li>
+<li>Still subject to SIP requirements</li>
+<li>Enforceable limits themselves become compliance obligations. Violating the limit is an enforceable violation and can bump you back up to major</li>
+</ul>
+<p><strong>Minor Source.</strong> Actual and potential emissions are below all major source thresholds without needing enforceable limits. The lightest regulatory burden.</p>
+<p>What being a minor source means:</p>
+<ul>
+<li>No Title V permit required</li>
+<li>Lowest inspection priority, many minor sources go years or decades without an FCE</li>
+<li>Still subject to SIP requirements (everyone is)</li>
+<li>Still subject to NSPS and MACT if applicable, being minor doesn't exempt you from technology standards for your source category</li>
+<li>May still need state-level operating permit (varies by state)</li>
+<li>Minimal federal reporting requirements</li>
+</ul>
+<blockquote>
+<p><strong>Data implication.</strong> Minor sources are the class this project's compliance data represents <em>worst</em>: EPA's
+Minimum Data Requirements (MDR, Jan 2012) mandate reporting for Title V majors, synthetic minors, Part 61
+NESHAP minors, and any facility separately triggered by a CMS plan, formal action, or active HPV — ordinary
+minors are largely <strong>absent</strong> from compliance/enforcement records unless one of those triggers fires. So
+facility-year coverage in this data is <strong>endogenous to size/class</strong>, not a clean random sample of all
+sources — load-bearing for any denominator or selection argument.</p>
+</blockquote>
+<p>&quot;AIR_POLLUTANT_CLASSIFICATION_CODE&quot; in Facilities table gives facility-level &quot;worst case.&quot; In the Pollutants table, the same field is the pollutant-specific classification. In AFS, the equivalent is &quot;EPA_CLASSIFICATION_CODE.&quot; A1 (actual or potential controlled &gt;100 tons/year), A2 (actual &lt;100, potential &gt;100), B (potential uncontrolled &lt;100), SM (synthetic minor).</p>
+<blockquote>
+<p><strong>Data implication.</strong> AFS's <code>EPA_CLASSIFICATION_CODE</code> has two more values beyond A1/A2/B/SM, verified
+against EPA's AFS documentation: <strong>C</strong> (&quot;Class is unknown&quot;) and <strong>E1/E2</strong>. Don't drop or ignore these as
+parse failures — they're valid codes.</p>
+</blockquote>
+</div><div class='doc-pane' id='the-enforcement-process'><h2>The Enforcement Process</h2><h3>Who Enforces?</h3>
+<p>States do most enforcement. When the EPA &quot;delegates&quot; a program to a state, the state takes the primary responsibility for permitting, inspecting, and enforcing the program. EPA retains oversight and backstop authority (it can step in if the state isn't doing its job).</p>
+<ul>
+<li>In the data, this is the &quot;STATE_EPA_FLAG.&quot;</li>
+<li>Local agencies (air quality management districts, mostly in California and a few other states) handle some share too.</li>
+</ul>
+<h3>The Enforcement Pipeline</h3>
+<p><strong>Step 1: Compliance monitoring</strong></p>
+<ul>
+<li>FCE (Full Compliance Evaluation): comprehensive review of a facility's compliance with all applicable requirements. Can be on-site (inspector visits) or off-site (record review). EPA policy says that major sources should get an FCE every 2 years, synthetic minors every 5.</li>
+<li>PCE (Partial Compliance Evaluation): focused on a specific aspect. Stack test review, CEM audit, record check.</li>
+<li>Stack Tests: direct measurement of what is coming out of the stack. The facility usually conducts them, and the agency may view or observe the results.</li>
+<li>Title V Certification Review: the facility self-certifies annual compliance; the agency reviews it.</li>
+</ul>
+<p>This is the FCE/PCEs table, Stack Tests table, and Title V Certs table. In AFS, these are all rows in the actions table differentiated by &quot;NATIONAL_ACTION_TYPE.&quot;</p>
+<blockquote>
+<p><strong>Data implication.</strong> FCE/PCE are pooled into one &quot;inspections&quot; measure, with <code>type</code> preserving the
+full-vs-partial split. PCEs are largely discretionary (reported only as part of a CMS plan or an HPV
+discovery), so PCE counts under-represent actual partial reviews and shouldn't be read as a complete census
+— whether the 2-year/5-year FCE cadence is actually met is directly testable from <code>n_fce</code>/<code>n_inspections</code>
+against that schedule, but hasn't been run yet.</p>
+</blockquote>
+<p><strong>Step 2: Violation found (the inspection or review reveals noncompliance)</strong></p>
+<ul>
+<li>FRV (Federally Reportable Violation): a violation of a federally enforceable CAA requirement (NSPS, NESHAP, MACT, NSR, PSD, an approved SIP, or Title V) that must be reported to EPA. Per EPA's FRV reporting guidance, the reportable-source universe is defined, not open-ended: Title V major sources; synthetic minor sources at or above 80% of the Title V major-source threshold; sources covered by an alternative Compliance Monitoring Strategy (CMS) plan; and any source with an identified HPV.</li>
+<li>HPV (High Priority Violation): the most serious category — a subset of FRVs meeting the more stringent criteria in EPA's Enforcement Response to High Priority Violations Policy: a violation likely to pose a significant risk to human health or the environment, or one that may harm EPA's or the state's ability to implement CAA programs. Triggers EPA's enforcement response policy, which sets timelines for how quickly the violation must be addressed.</li>
+<li>Examples: failing to obtain a required permit, violating emissions limits detected via stack test, chronic violators.</li>
+<li>HPVs start a clock. Once a facility is designated &quot;HPV&quot; (day zero), EPA's policy says that it should be addressed within a specific timeframe.</li>
+<li>This is the Violation History Table (ICIS) and HPV History Table (AFS). ICIS tracks both FRV and HPV; AFS tracks HPVs.</li>
+</ul>
+<blockquote>
+<p><strong>Data implication.</strong> ICIS's <code>hpv</code> flag is read off <code>HPV_DAYZERO_DATE</code> non-blank. An HPV is an <strong>interval</strong>
+<code>[day-zero, resolved]</code>, and <strong>69%</strong> of resolved spells span more than one calendar year — so &quot;HPV <em>status</em> in
+year Y&quot; (<code>hpv_active</code>, interval-based) is a genuinely different question from &quot;HPV <em>recorded</em> in year Y&quot;
+(<code>n_hpv</code>, the year it was determined). They will not agree year-to-year; use the one that matches the
+question. Open/unresolved spells are treated day-zero-year-only (conservative, doesn't assume ongoing
+status through the panel's end).</p>
+</blockquote>
+<p><strong>Step 3: Informal Action.</strong> Agency's first response is typically informal (no legal force, but signals that a problem has been identified).</p>
+<ul>
+<li>Notice of Violation (NOV)</li>
+<li>Warning letter</li>
+<li>Phone call</li>
+<li>Compliance assistance</li>
+</ul>
+<p>Informal actions outnumber formal 3:1 in our data. This is our Informal Actions Table. In AFS, these are action codes like 6A (EPA NOV), 7C (state NOV), and 3E (warning).</p>
+<blockquote>
+<p><strong>Data implication.</strong> The two tiers also diverge sharply in duplicate load: <strong>informal</strong> enforcement rows
+are <strong>~48%</strong> event-key duplicates (near-all byte-identical repeats) versus <strong>~1%</strong> for <strong>formal</strong> — so a raw
+row count overstates informal activity roughly 2× relative to formal. The panel now flags this with
+<code>n_informal_dup</code> / <code>n_formal_dup</code> rather than silently deduping.</p>
+</blockquote>
+<p><strong>Step 4: Formal Action.</strong> If informal action doesn't work, or if the violation is serious enough, the agency escalates to an action with legal force.</p>
+<p>Three tiers:</p>
+<ul>
+<li>Administrative (formal): the agency issues an order. Consent agreements, administrative orders, compliance schedules. The majority are these.</li>
+<li>Judicial: the agency refers the case to court. Consent decrees, civil lawsuits. Rarer, reserved for the most serious or recalcitrant cases.</li>
+<li>Penalties are assessed at this stage. Heavily right-skewed because most cases settle with small penalties and a few major cases drive the mean up.</li>
+</ul>
+<p>This is the Formal Actions Table.</p>
+<blockquote>
+<p><strong>Data implication.</strong> Only <strong>formal</strong> actions carry a penalty (<code>penalty_amount</code>; informal → <code>NA</code>). A single
+multi-facility settlement <strong>repeats the same penalty figure across every co-defendant's row</strong>, so summing
+<code>penalty_amount</code> <strong>across facilities</strong> double- (or multiply-) counts that settlement — this is a live risk,
+not hypothetical: duplicate-row penalty dollars run <strong>4.6%</strong> of the total in the universe panel up to
+<strong>11.6%</strong> in the electric panel (<code>penalty_amount_dup</code> isolates this).</p>
+</blockquote>
+<p><strong>Step 5: Resolution.</strong> The violation is resolved, the facility returns to compliance, pays the penalty, and implements the required controls. The &quot;HPV_RESOLVED_DATE&quot; marks this.</p>
+</div><div class='doc-pane' id='facility-identifiers-and-crosswalks'><h2>Facility Identifiers and Crosswalks</h2><p>A single physical facility can carry several different ID numbers, one per data system, because each
+system was built independently and at a different time. Joining across systems means picking the right key
+for the join, not assuming any one ID is universal.</p>
+<h2>PGM_SYS_ID — the ICIS-Air key</h2>
+<p><code>PGM_SYS_ID</code> is the spine of ICIS-Air: it uniquely identifies every regulated facility and can be used to
+join any of the 10 ICIS-Air files to one another. It identifies a <em>regulated facility</em>, not necessarily a
+<em>physical site</em> — ownership changes and permit restructuring can leave one physical site carrying more than
+one <code>PGM_SYS_ID</code> over time.</p>
+<h2>AFS_ID — the legacy key</h2>
+<p><code>AFS_ID</code> plays the same spine role inside the retired Air Facility System (AFS), frozen as of October 2014.
+<code>AFS_ID</code> and <code>PGM_SYS_ID</code> are different numbering schemes from different eras — neither dataset maps one
+directly to the other. The only path between them runs through <code>REGISTRY_ID</code>, below.</p>
+<h2>REGISTRY_ID — the cross-system key</h2>
+<p><code>REGISTRY_ID</code> is the Facility Registry Service (FRS) ID, and it is the one key meant to identify a
+<em>physical site</em> rather than a program-specific record. EPA's FRS Program Links file maps each
+program-system ID — <code>AFS_ID</code>, an NPDES permit number, other cross-program identifiers — to a shared
+<code>REGISTRY_ID</code>. Every non-ICIS-Air asset this project uses (the combined Emissions dataset, the CAA
+Compliance Pipeline) joins to ICIS-Air through <code>REGISTRY_ID</code>, not <code>PGM_SYS_ID</code>.</p>
+<p>Because <code>REGISTRY_ID</code> targets the physical site while <code>PGM_SYS_ID</code> targets the regulated-facility record,
+the two can disagree in either direction: several <code>PGM_SYS_ID</code>s can point to one <code>REGISTRY_ID</code> (one site,
+several permits over time), and &quot;facility&quot; is therefore ambiguous on its own — a distinct-facility count
+differs depending on which ID you count by.</p>
+<blockquote>
+<p><strong>Data implication.</strong> Any cross-system join in this project (ICIS-Air ↔ Emissions, ICIS-Air ↔ Pipeline)
+uses <code>REGISTRY_ID</code>. The AFS↔FRS crosswalk that would let a pre-2015 AFS record reach a modern
+<code>REGISTRY_ID</code> is incomplete, and its coverage varies by state far more than it varies around any national
+average. This project treats that crosswalk as an open, unresolved decision rather than a settled join —
+see
+<a href="https://github.com/gracecarverr/caa-regdata/blob/main/briefs/datasets/afs_crosswalk_feasibility.md"><code>afs_crosswalk_feasibility.md</code></a>
+for the current coverage figures and the state-by-state breakdown, rather than a single number here.</p>
+</blockquote>
+</div><div class='doc-pane' id='the-data-systems-icis-air-afs-and-the-compliance-pipeline'><h2>The Data Systems: ICIS-Air, AFS, and the Compliance Pipeline</h2><p>This project draws on four EPA data systems that were never designed to be used together. Each has its own
+facility key, its own coverage window, and its own idea of what a &quot;record&quot; is — see
+<a href="#facility-identifiers-and-crosswalks">Facility Identifiers and Crosswalks</a> for how they join.</p>
+<h2>ICIS-Air — the current system</h2>
+<p>EPA's current compliance and enforcement database for stationary sources, in production since October
+2014. Ten linked files, all keyed on <code>PGM_SYS_ID</code>: a facilities table (location, industry codes, emissions
+classification), program and program-subpart assignments, a pollutants table, compliance-monitoring
+records (Full and Partial Compliance Evaluations), stack tests, Title V certifications, and two enforcement
+tables split by seriousness — Formal Actions (consent agreements, administrative orders, judicial actions,
+with legal force) and Informal Actions (notices of violation, warning letters, phone calls, which often
+precede a formal action). A separate violation-history table tracks High Priority Violations (HPVs) and
+Federally Reportable Violations (FRVs) from discovery through resolution. What ICIS-Air does <em>not</em> carry:
+emissions quantities — it tracks which pollutants a facility is associated with, not how much it emitted.</p>
+<h2>AFS — the legacy system</h2>
+<p>The Air Facility System (AFS) is ICIS-Air's predecessor, replaced and frozen as of October 2014. ICIS-Air
+back-loaded migrated AFS history, so pre-2014 ICIS-Air records themselves originate in AFS — but AFS also
+survives as its own standalone frozen tables, keyed on <code>AFS_ID</code>: facility identification, an actions table
+(inspections, enforcement, stack tests, and Title V reviews rolled up to the plant level), quarterly
+historical compliance status by air program (beginning FY2007), and HPV history. That quarterly
+compliance-status table is the one thing AFS offers that ICIS-Air does not — ICIS-Air's own Programs table
+is a current snapshot, so AFS is the only source for tracking a facility's compliance status changing over
+time before 2015.</p>
+<h2>The combined Emissions dataset</h2>
+<p>Not a single EPA system but a facility-level combination of four separately reported programs, joined to
+ICIS-Air via <code>REGISTRY_ID</code>: NEI (the broadest inventory, covering criteria pollutants and HAPs, but
+triennial and estimate-based rather than measured), GHGRP (large emitters only, 25,000+ metric tons
+CO2e/year, annual, self-reported, greenhouse gases only), TRI (facilities in specific industries with 10+
+employees handling any of roughly 770 listed toxic chemicals above threshold quantities, annual, reported
+under a different statute than the CAA), and CAMD (only electric generating units in the cap-and-trade
+programs, annual, SO2/NOx directly measured by continuous emission monitors — the smallest universe but the
+highest measurement quality). Reporting frequency and coverage differ by program, so a facility can appear
+in one without appearing in another for the same year.</p>
+<h2>The CAA Compliance Pipeline</h2>
+<p>A pre-joined, derived view — not an independent data source — linking each violation to the compliance
+evaluation that triggered it and the enforcement action that resolved it, one row per
+evaluation × violation × enforcement-action combination. It shares <code>REGISTRY_ID</code> with ICIS-Air but does not
+carry facility characteristics (industry codes, classification) or emissions data of its own.</p>
+<blockquote>
+<p><strong>Data implication.</strong> ICIS-Air is this project's primary source for anything current (2015 onward); AFS
+is used only for what ICIS-Air cannot provide before that date (quarterly historical compliance status).
+The Compliance Pipeline is a convenience join, not a substitute for the underlying ICIS-Air evaluation,
+violation, and enforcement tables — use it for tracing one enforcement pathway, not for facility-level
+counts, which should come from the underlying tables directly.</p>
+</blockquote>
+</div><div class='doc-pane' id='pollutants-and-source-classification'><h2>Pollutants and Source Classification</h2><p>CAA regulation runs on two pollutant vocabularies at once — NAAQS's criteria pollutants (see
+<a href="#naaqs">NAAQS</a>) and Section 112's hazardous air pollutants (see
+<a href="#stationary-source-programs">Stationary Source Programs</a>) — and the data records both the same way: as a
+row in a pollutant-level table, not as a fact about a facility as a whole.</p>
+<h2>The pollutant record</h2>
+<p><code>ICIS-AIR_POLLUTANTS.csv</code> holds one row per facility × pollutant combination: a numeric pollutant code and
+name, a Substance Registry Services (SRS) ID, a Chemical Abstract Service (CAS) number, and a
+pollutant-specific classification code. A facility regulated for several pollutants appears once per
+pollutant, not once overall — a facility-level count and a pollutant-record count are different things.
+AFS's <code>AIR_PROGRAM.csv</code> carries the equivalent fields (pollutant code, CAS number, pollutant-level
+classification) at the plant-program level.</p>
+<h2>Two classification codes, two scopes</h2>
+<p><code>AIR_POLLUTANT_CLASSIFICATION_CODE</code> appears in both the Facilities table and the Pollutants table, and it
+means something different in each: in Facilities, it's the facility-level &quot;worst case&quot; across every
+pollutant and program the facility is subject to (see
+<a href="#facility-classification">Facility Classification</a> for what major / synthetic minor / minor mean); in
+Pollutants, the same field name is the classification for <em>that one pollutant specifically</em>. The two do not
+have to agree — a facility can be facility-level major on the strength of one pollutant while most of its
+individual pollutant records read minor.</p>
+<h2>Not every emissions program covers the same pollutants</h2>
+<p>The four programs behind this project's combined Emissions dataset (see
+<a href="#the-data-systems-icis-air-afs-and-the-compliance-pipeline">The Data Systems</a>) don't share a pollutant
+scope: NEI covers criteria pollutants and HAPs broadly, GHGRP covers only greenhouse gases, TRI covers a
+fixed list of roughly 770 listed toxic chemicals under a different statute than the CAA, and CAMD covers
+only SO2 and NOx from electric generating units. A pollutant present in one program's records for a
+facility-year has no guarantee of appearing in another's.</p>
+<blockquote>
+<p><strong>Data implication.</strong> Don't read a pollutant-record count, or a facility's absence from one emissions
+program, as a statement about what the facility actually emits — it may reflect which program's scope the
+pollutant falls under, not the facility's activity.</p>
+</blockquote>
+</div></div></div></div><p class='table-note'>Institutional facts are drawn from public EPA/CAA program materials and the project's own source documentation; see each brief's markdown source in <code><a href='https://github.com/gracecarverr/caa-regdata/tree/main/briefs' target='_blank' rel='noopener'>briefs/</a></code> for its citation.</p></main><footer class='site-footer'><p>Automatically generated from the underlying data — no figures are hand-entered. Part of the <a href='https://github.com/gracecarverr/caa-regdata'>caa-regdata</a> reproducible pipeline.</p></footer><script>
+(function(){
+  document.querySelectorAll('.doc-nav').forEach(function(nav){
+    var links = nav.querySelectorAll('.doc-sidebar-link');
+    var panes = nav.querySelectorAll('.doc-pane');
+    function show(id){
+      links.forEach(function(l){ l.classList.toggle('active', l.dataset.target === id); });
+      panes.forEach(function(p){ p.hidden = (p.id !== id); });
+    }
+    links.forEach(function(l){
+      l.addEventListener('click', function(e){
+        e.preventDefault();
+        history.replaceState(null, '', '#' + l.dataset.target);
+        show(l.dataset.target);
+      });
+    });
+    var initial = (location.hash || '').slice(1);
+    if (!initial || !nav.querySelector("[id='" + initial + "']")) initial = links.length ? links[0].dataset.target : null;
+    if (initial) show(initial);
+  });
+  window.addEventListener('hashchange', function(){
+    var id = (location.hash || '').slice(1);
+    if (!id) return;
+    document.querySelectorAll('.doc-nav').forEach(function(nav){
+      var pane = nav.querySelector("[id='" + id + "']");
+      if (!pane) return;
+      nav.querySelectorAll('.doc-sidebar-link').forEach(function(l){ l.classList.toggle('active', l.dataset.target === id); });
+      nav.querySelectorAll('.doc-pane').forEach(function(p){ p.hidden = (p.id !== id); });
+    });
+  });
+})();
+</script></body></html>

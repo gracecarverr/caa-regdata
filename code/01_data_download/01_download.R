@@ -11,12 +11,24 @@
 #   Wayback snapshots (data/raw/ICIS_AIR_WAYBACK/ICIS-AIR_downloads_<year>/, 2015-2017/2019-2025) are
 #   fetched from PINNED per-year capture timestamps, not a live "latest capture" search -- a live search is
 #   exactly what previously produced a false "2016 doesn't reproduce" conclusion (its true match is a capture
-#   5 days older than the latest one that year; 2022 and 2024 have the same pattern). Every pinned timestamp
-#   was confirmed byte-for-byte against the staged files by code/diagnostics/wayback_verify/wayback_verify.R
-#   (run 2026-07-27; see that stage's README and output/wayback_verify/summary_by_year.csv). 2018 is NOT
-#   automated here -- the Internet Archive has ZERO captures of this URL at any status code for 2018 (the
-#   staged "2018" data was found to be a mislabeled duplicate of 2019 and was deleted from data/raw/, W7);
-#   there is no capture to pin.
+#   5 days older than the latest one that year; 2022 has the same pattern). Every pinned timestamp was
+#   confirmed byte-for-byte against the staged files by code/diagnostics/wayback_verify/wayback_verify.R (run
+#   2026-07-27; see that stage's README and output/wayback_verify/summary_by_year.csv). 2018 is NOT automated
+#   here -- the Internet Archive has ZERO captures of this URL at any status code for 2018 (the staged "2018"
+#   data was found to be a mislabeled duplicate of 2019 and was deleted from data/raw/, W7); there is no
+#   capture to pin.
+#
+#   Q4 consistency (2026-07-29): code/02_cleaning/wayback/17-19_*.R interpret one snapshot as "the ~Q4 state
+#   of that year," but only 2016/2020/2021/2022 actually landed in Q4 (Oct-Dec) -- the rest were whatever
+#   capture happened to byte-match what was already staged, chosen with no regard for calendar timing. A
+#   full CDX-API inventory of every 200-status capture of this URL, per year (code/diagnostics/wayback_verify/
+#   wayback_q4_repin.R), found this is NOT a fixable inconsistency for most years -- the Internet Archive
+#   simply never crawled this URL in Q4 of 2015, 2017, 2019, 2023, or 2025 (2019 and 2023 have exactly ONE
+#   200-status capture in their entire calendar year). Those years' pins are already the best -- in most
+#   cases the ONLY -- capture available and are left unchanged. **2024 is the one year with genuine Q4
+#   coverage** (captures on 2024-11-16 and 2024-12-10) and was re-pinned from its old Sep 26 capture to the
+#   Dec 10 one (most-recent-first, matching this file's existing selection convention). See
+#   output/wayback_verify/q4_repin_summary.csv / q4_repin_candidates.csv for the full per-year inventory.
 #
 #   NB: the confirmed capture zips always contain all 10 ICIS-Air tables, but the folders currently staged
 #   on disk for 2022 (9 files) and 2023-2025 (8 files each) were trimmed down at some point after staging --
@@ -232,21 +244,45 @@ if (file.exists(file.path(counties_dir, "us_counties.shp"))) {
 # code/diagnostics/wayback_verify/wayback_verify.R (run 2026-07-27 -- see that stage's README and
 # output/wayback_verify/summary_by_year.csv). NOT a live "latest capture" search: a live search is what
 # produced the false "2016 doesn't match" conclusion in the first place (the true match is 5 days older
-# than 2016's latest capture; 2022 and 2024 have the same pattern), and the Archive's index can grow new,
+# than 2016's latest capture; 2022 has the same pattern), and the Archive's index can grow new,
 # non-matching captures over time. 2018 is excluded -- zero captures of this URL exist at any status code
 # (W7); its data/raw folder was deleted as a mislabeled 2019 duplicate and is not reconstructable here.
+#
+# Q4 re-pin (2026-07-29): code/diagnostics/wayback_verify/wayback_q4_repin.R inventoried every 200-status
+# capture per year to check whether every pin could land in Q4 (Oct-Dec), matching what
+# code/02_cleaning/wayback/README.md documents as the snapshot's intended timing. Only 2024 had a real Q4
+# alternative -- 2015/2017/2019/2023/2025 have ZERO captures of this URL in Q4 at all (2019 and 2023 have
+# exactly one capture in their entire calendar year), so their pins below are already the best/only
+# available and are unchanged. 2024 moved from its old 2024-09-26 pin to 2024-12-10 (most-recent-first
+# among the two Q4 candidates, matching this file's existing selection convention). See
+# output/wayback_verify/q4_repin_summary.csv for the full per-year finding.
 WAYBACK_URL <- "https://echo.epa.gov/files/echodownloads/ICIS-AIR_downloads.zip"  # the ORIGINAL (live) URL --
                                                         # gets prefixed with the Wayback machine's capture syntax below
 WAYBACK_TIMESTAMPS <- c(                               # one pinned capture ID (yyyyMMddHHmmss) per target year;
   "2015" = "20150927111008", "2016" = "20161225101825", "2017" = "20170514071503",  # independently
   "2019" = "20190525005616", "2020" = "20201016201845", "2021" = "20211031083633",  # re-verified live
-  "2022" = "20221129221859", "2023" = "20230601011243", "2024" = "20240926180831",  # 2026-07-27: all 10
-  "2025" = "20250914052608"                                                          # resolve, dates match
+  "2022" = "20221129221859", "2023" = "20230601011243", "2024" = "20241210051325",  # 2026-07-29: 2024
+  "2025" = "20250914052608"                                        # re-pinned to Q4 (Dec 10); rest unchanged
 )
+
+# 2015's capture predates EPA's rename of this table -- its zip contains ICIS-AIR_HPV_HISTORY.csv where
+# every later year (2016 onward) has ICIS-AIR_VIOLATION_HISTORY.csv (confirmed via wayback_verify.R's
+# byte-for-byte match against the actual staged 2015 files, 2026-07-29). Without this override, the
+# idempotency check below would look for a VIOLATION_HISTORY.csv that never exists in 2015's folder and
+# redownload it on every single run.
+wayback_expected_tables <- function(yr) {
+  if (identical(yr, "2015")) {
+    c(setdiff(ICIS_AIR_TABLES, "ICIS-AIR_VIOLATION_HISTORY.csv"), "ICIS-AIR_HPV_HISTORY.csv")
+  } else {
+    ICIS_AIR_TABLES
+  }
+}
+
 for (yr in names(WAYBACK_TIMESTAMPS)) {                # one iteration per pinned year (2018 has no entry, so is skipped)
   yr_dir <- file.path(RAW, "ICIS_AIR_WAYBACK", paste0("ICIS-AIR_downloads_", yr))
   dir.create(yr_dir, showWarnings = FALSE, recursive = TRUE)
-  if (all(file.exists(file.path(yr_dir, ICIS_AIR_TABLES)))) {
+  expected_tables <- wayback_expected_tables(yr)        # per-year table-name list (2015 differs -- see above)
+  if (all(file.exists(file.path(yr_dir, expected_tables)))) {
     # exact-set check (not "any .csv present") -- catches the 2022/2023-2025 trimmed folders noted in the
     # file header and re-fetches them to the full 10-table set, rather than treating the trimmed set as done
     message("  Wayback ", yr, " already present in ", yr_dir, " -- skipping download.")

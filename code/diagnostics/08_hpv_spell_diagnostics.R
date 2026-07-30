@@ -21,7 +21,7 @@
 #   so it does not follow the UPPER_SNAKE_CASE dataset convention (G2). Native columns keep source casing.
 # =========================================================================================================
 library(readr); library(dplyr); library(lubridate)                    # readr for I/O, dplyr for the pipe chain, lubridate for mdy() date parsing
-source(here::here("code/04_datasets/00_parameters.R"))                 # brings in CLEAN (data/processed path) and other shared build constants
+source(here::here("code/03_datasets/00_parameters.R"))                 # brings in CLEAN (data/processed path) and other shared build constants
 OUT <- here::here("output/hpv_spell_diagnostics"); dir.create(OUT, showWarnings = FALSE, recursive = TRUE)  # this diagnostic's own output dir; silent if it already exists
 
 v <- read_csv(file.path(CLEAN, "violations.csv.gz"),                   # cleaned violations extract, ALL enforcement-response tiers (not yet HPV-filtered)

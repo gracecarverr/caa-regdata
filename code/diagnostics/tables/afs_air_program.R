@@ -5,7 +5,12 @@
 library(here); library(readr); library(dplyr)
 
 build_afs_air_program_section <- function() {
-  air <- read_csv(here("data/raw/afs_downloads/AIR_PROGRAM.csv"), show_col_types = FALSE)
+  air <- read_csv(here("data/raw/afs_downloads/AIR_PROGRAM.csv"), show_col_types = FALSE,
+    # CHEMICAL_ABSTRACT_SERVICE_NMBR is a text ID (e.g. "E1732543"), not numeric -- col_guess() samples the
+    # first rows, sees what looks like all-digit values, and guesses col_double(), silently turning any later
+    # non-numeric CAS number into NA (3 rows, confirmed via problems()). Same failure mode as PB8 in
+    # briefs/panel/panel_construction_decisions.md, fixed the same way: pin the type explicitly.
+    col_types = cols(CHEMICAL_ABSTRACT_SERVICE_NMBR = col_character(), .default = col_guess()))
   n_obs <- nrow(air); n_fac <- n_distinct(air$AFS_ID)
 
   pct_miss <- function(x) paste0(round(sum(is.na(x)) / length(x) * 100, 1), "%")

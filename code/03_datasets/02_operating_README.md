@@ -29,36 +29,43 @@ Wayback has seen that the current ICIS roster hasn't (dataset 1b).
   only; the ~15,302 facilities Wayback has captured that are absent from the current ICIS-AIR extract
   entirely. Does **not** join to `regulatory.csv.gz`/`operating.csv.gz`.
 
-Example — 2 rows from `data/datasets/operating.csv.gz` (sampled from the actual file on disk, 2026-07-30,
-filtered to a facility with `ACTIVE==1` and real Wayback status so the columns aren't all-`NA`):
+Example — 3 rows from `data/datasets/operating.csv.gz` (sampled from the actual file on disk, 2026-07-30,
+showing the NEW 2018 bridge-imputed case — `OPERATING_IMPUTED==1`, `OP_STATUS_CODE` still `NA`,
+`WAYBACK_OBSERVED` still `0` since there's no real 2018 snapshot, but `OPERATING`/`ACTIVE`/`ACTIVE_BROAD` all
+correctly resolve):
 
-| PGM_SYS_ID | YEAR | WAYBACK_OBSERVED | OP_STATUS_CODE | OPERATING | ICIS_OBSERVED | ACTIVE | ACTIVE_BROAD |
-|---|---|---|---|---|---|---|---|
-| 010000000901110001 | 2017 | 1 | OPR | 1 | 1 | 1 | 1 |
-| 010000000901110001 | 2019 | 1 | OPR | 1 | 0 | 1 | 1 |
+| PGM_SYS_ID | YEAR | WAYBACK_OBSERVED | OP_STATUS_CODE | OPERATING | OPERATING_IMPUTED | ICIS_OBSERVED | ACTIVE | ACTIVE_BROAD |
+|---|---|---|---|---|---|---|---|---|
+| 010000000901110001 | 2017 | 1 | OPR | 1 | 0 | 1 | 1 | 1 |
+| 010000000901110001 | 2018 | 0 | NA | 1 | **1** | 0 | 1 | 1 |
+| 010000000901110001 | 2019 | 1 | OPR | 1 | 0 | 0 | 1 | 1 |
 
-Other columns in `operating.csv.gz` (27 total): `REGISTRY_ID`, `OP_STATUS_DESC`, the eight `PROG_*_ACTIVE`
+Other columns in `operating.csv.gz` (28 total): `REGISTRY_ID`, `OP_STATUS_DESC`, the eight `PROG_*_ACTIVE`
 flags (`PROG_SIP/TITLEV/NSPS/MACT/NESHAP/FESOP/NSR/PSD_ACTIVE`), `ENTERED_YEAR`, `EXITED_YEAR`,
 `EXIT_SOURCE`, `LEFT_CENSORED`, `RIGHT_CENSORED`, `EARLIEST_PROGRAM_BEGIN_YEAR_RAW`,
-`EARLIEST_PROGRAM_BEGIN_YEAR`, `EMISSIONS_OBSERVED`, `GHG_OBSERVED`.
+`EARLIEST_PROGRAM_BEGIN_YEAR`, `EMISSIONS_OBSERVED`, `GHG_OBSERVED`. **227,634** facility-years have
+`OPERATING_IMPUTED==1` (all in 2018 by construction — `O2`).
 
 Example — 3 rows from `data/datasets/wayback_only_facilities.csv.gz` (sampled from disk, 2026-07-30):
 
-| PGM_SYS_ID | YEAR | WAYBACK_OBSERVED | OP_STATUS_CODE | OPERATING | ENTERED_YEAR | EXIT_SOURCE |
-|---|---|---|---|---|---|---|
-| 01000000E000000030 | 2015 | 0 | NA | NA | NA | NA |
-| 01000000E000000030 | 2016 | 0 | NA | NA | NA | NA |
-| 01000000E000000030 | 2017 | 0 | NA | NA | NA | NA |
+| PGM_SYS_ID | YEAR | WAYBACK_OBSERVED | OP_STATUS_CODE | OPERATING | OPERATING_IMPUTED | ENTERED_YEAR | EXIT_SOURCE |
+|---|---|---|---|---|---|---|---|
+| 01000000E000000030 | 2015 | 0 | NA | NA | 0 | NA | NA |
+| 01000000E000000030 | 2016 | 0 | NA | NA | 0 | NA | NA |
+| 01000000E000000030 | 2017 | 0 | NA | NA | 0 | NA | NA |
 
-Full column list (11): `PGM_SYS_ID`, `YEAR`, `WAYBACK_OBSERVED`, `OP_STATUS_CODE`, `OP_STATUS_DESC`,
-`OPERATING`, `ENTERED_YEAR`, `EXITED_YEAR`, `EXIT_SOURCE`, `LEFT_CENSORED`, `RIGHT_CENSORED`. No
-`REGISTRY_ID`, no `ACTIVE`/`ACTIVE_BROAD` — see O7 below for why.
+Full column list (12): `PGM_SYS_ID`, `YEAR`, `WAYBACK_OBSERVED`, `OP_STATUS_CODE`, `OP_STATUS_DESC`,
+`OPERATING`, `OPERATING_IMPUTED` (NEW 2026-07-30), `ENTERED_YEAR`, `EXITED_YEAR`, `EXIT_SOURCE`,
+`LEFT_CENSORED`, `RIGHT_CENSORED`. No `REGISTRY_ID`, no `ACTIVE`/`ACTIVE_BROAD` — see O7 below for why.
+**2,045** facility-years here have `OPERATING_IMPUTED==1` — the same source file (`wayback_facility_status.
+csv.gz`) feeds both outputs, so the 229,679 total imputed rows split 227,634 (main table) / 2,045
+(wayback-only) exactly by which facilities are still on the current ICIS roster.
 
 ## At a glance
 | | |
 |---|---|
 | **Input** | `data/processed/{wayback_facility_status,wayback_program_status,wayback_facility_spells,facilities,programs}.csv.gz` + `data/datasets/{regulatory,emissions}.csv.gz` |
-| **Output** | `data/datasets/operating.csv.gz` (5,872,965 × 27) + `data/datasets/wayback_only_facilities.csv.gz` (168,322 rows = 15,302 facilities × 11 years) |
+| **Output** | `data/datasets/operating.csv.gz` (5,872,965 × 28) + `data/datasets/wayback_only_facilities.csv.gz` (168,322 rows = 15,302 facilities × 11 years, 12 cols) |
 | **Runtime** | not measured; `operating.csv` uncompressed is ~494MB, largest read is the Wayback status file across 11 snapshot years |
 | **Requires** | `01_regulatory.R` and `08_emissions.R` must run first (this script reads their `data/datasets/` outputs) |
 | **Dependencies** | `readr`, `dplyr`, `tidyr`, `lubridate`, `here` |
@@ -102,11 +109,20 @@ second build before `write_dataset(wb_only, "wayback_only_facilities")`.
   ... they'd be all-`NA` ghosts in the ICIS datasets ... **Why it has a cost:** ~**1,050** (**1,018** per O7's
   exact re-check) are real **mid-window (2016–2025)** disappearances that ds 1's main table cannot see — now
   reachable via `wayback_only_facilities.csv.gz` (O7) instead of a manual raw-layer join."
-- **O2** — "**Strictly raw — NO imputation.** Yearly `operating`/`op_status`/`prog_*_active` are carried for
-  2015–2025 and left **`NA`** for 2005–2014 and any facility-year absent from a snapshot. `WAYBACK_OBSERVED`
-  (1 iff the facility appears in that year's snapshot) is the coverage flag. ... Mirrors ds 0's zero-vs-NA
-  discipline: don't manufacture certainty Wayback lacks. Spells are provided **separately** (O4) so the user
-  can extend downstream by choice, not by baked-in assumption."
+- **O2** — "**Strictly raw — NO imputation**, with **one narrow, dated exception added 2026-07-30** ...
+  Yearly `operating`/`op_status`/`prog_*_active` are carried for 2015–2025 and left **`NA`** for 2005–2014
+  and any facility-year absent from a snapshot. `WAYBACK_OBSERVED` (1 iff the facility appears in that year's
+  snapshot) is the coverage flag. **The exception:** 2018 (no real snapshot for anyone) now gets its
+  `operating` bucket (never `op_status_code`/`op_status_desc`) bridge-imputed for the one case where a
+  facility has a REAL raw 2017 observation AND a REAL raw 2019 observation agreeing on the same bucket —
+  flagged via the new `OPERATING_IMPUTED` column (1 for imputed rows, 0 otherwise, never `NA`), never
+  silently blended into `WAYBACK_OBSERVED` (still correctly `0` for these rows — no real snapshot exists).
+  Mismatched 2017→2019 transitions are NOT touched (`W7a`'s existing 'confirmed non-operating by the next
+  real observation' treatment is untouched by this). 'Real raw' was chosen over LOCF-carried neighbors after
+  checking directly that interior-gap LOCF is vanishingly rare (0.001% of all facility-years). ... Mirrors ds
+  0's zero-vs-NA discipline otherwise: don't manufacture certainty Wayback lacks beyond this one exception.
+  Spells are provided **separately** (O4) so the user can extend downstream by choice, not by baked-in
+  assumption — this exception is narrower and more conservative than that alternative would have been."
 - **O3 (⚠ silent-failure-risk, program-status divergence is by design)** — "**`operating` carried unchanged
   from the cleaning layer** — whitelist flag (1 iff code ∈ {OPR,TMP,SEA}). `PROG_*_ACTIVE` is pinned to an
   **explicit 8-group allowlist** ... via `col_select`, using the cleaning layer's own program-specific active

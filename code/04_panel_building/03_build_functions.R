@@ -54,7 +54,11 @@ read_counts <- function(ids, years) {
 }
 
 # ---- year-varying wayback + activity-evidence block, straight from dataset 1 ------------------------------
-WAYBACK_COLS <- c("OP_STATUS_CODE", "OPERATING",
+# OPERATING_IMPUTED (NEW 2026-07-30): 1 iff this row's OPERATING was 2018-bridge-imputed from matching real
+# 2017/2019 observations (17_wayback_facility_status.R, O2 exception), 0 otherwise, never NA. Straight
+# passthrough, no OBS_SOURCE/code_obs_source() change -- an imputed row already flows through ACTIVE_BROAD
+# exactly like a real one; this column exists purely so a user can filter imputed rows out if they choose.
+WAYBACK_COLS <- c("OP_STATUS_CODE", "OPERATING", "OPERATING_IMPUTED",
                   "PROG_SIP_ACTIVE","PROG_TITLEV_ACTIVE","PROG_NSPS_ACTIVE","PROG_MACT_ACTIVE",
                   "PROG_NESHAP_ACTIVE","PROG_FESOP_ACTIVE","PROG_NSR_ACTIVE","PROG_PSD_ACTIVE")
 ACTIVITY_COLS <- c("ICIS_OBSERVED", "EMISSIONS_OBSERVED", "GHG_OBSERVED", "ACTIVE", "ACTIVE_BROAD")
@@ -86,30 +90,46 @@ read_hpv <- function(ids, years) {
 }
 
 # ---- known-operating-zero fill + OBS_SOURCE ----------------------------------------------------------------
-# A facility-year with ACTIVE_BROAD == 1 (confirmed active via wayback, ICIS, OR emissions/GHG evidence that
-# specific year) but no ICIS event of its own is a TRUE structural zero for every ICIS-sourced count, not an
-# unknown -- fill NA -> 0 across COUNT_COLS (+ HPV_ACTIVE) for those rows. OBS_SOURCE records why:
-#   "event"     = ICIS_OBSERVED == 1 (an ICIS event of some kind this year -- counts are real, not filled)
-#   "operating" = ICIS_OBSERVED == 0 but ACTIVE_BROAD == 1 (no ICIS event, but confirmed active some other way)
-#   "unobserved"= neither (ACTIVE_BROAD is 0 or NA that year -- no confirmed activity, counts stay NA)
-# case_when() checks ICIS_OBSERVED first, so the two branches are mutually exclusive by construction (and by
-# the dataset layer's own invariant: ICIS_OBSERVED == 1 always implies ACTIVE_BROAD == 1, verified when
-# ACTIVE_BROAD was built -- the "event" branch can never wrongly fall through to "operating").
-# This is a FAITHFUL reproduction of the archived pipeline's semantics, not a behavior change: that pipeline
-# also treated a wayback `operating` value of NA identically to 0 (neither triggered its zero-fill) -- here,
-# ACTIVE_BROAD's own 0-vs-NA distinction collapses the same way into the same two-outcome fill decision.
+# REVISED 2026-07-30: OBS_SOURCE is now a FOUR-way split, not three. The dataset layer's ACTIVE_BROAD
+# (operating.csv.gz, O6) already distinguishes "0" (every checked signal -- wayback status, emissions/GHG --
+# POSITIVELY confirms the facility was NOT active that year) from "NA" (nobody has any evidence either way
+# that year). The original case_when() here only tested ACTIVE_BROAD == 1 and let both 0 and NA fall into the
+# same catch-all "unobserved" label -- throwing away a real distinction the dataset layer had already made.
+# Checked directly this session: 33% of major_synmin's "unobserved" facility-years (30,612 of 92,013) had
+# ACTIVE_BROAD == 0 -- confirmed-inactive years wrongly read as "no information." OBS_SOURCE now records:
+#   "event"              = ICIS_OBSERVED == 1 (an ICIS event of some kind this year -- counts are real)
+#   "operating"           = no ICIS event, but ACTIVE_BROAD == 1 (confirmed active some other way)
+#   "confirmed_inactive"  = no ICIS event, ACTIVE_BROAD == 0 (positively confirmed NOT active that year --
+#                           NEW this session; previously mislabeled "unobserved")
+#   "unobserved"          = no ICIS event AND ACTIVE_BROAD is genuinely NA (no evidence either way)
+# A facility-year with ACTIVE_BROAD == 1 OR ACTIVE_BROAD == 0 but no ICIS event of its own is a TRUE
+# structural zero for every ICIS-sourced count, not an unknown, EITHER WAY -- a facility we know was active
+# had no event; a facility we know was inactive obviously had no event either. Both get the same NA -> 0 fill
+# across COUNT_COLS (+ HPV_ACTIVE). Only genuine "unobserved" (ACTIVE_BROAD == NA) keeps NA counts, since
+# there we don't know if the facility was even there to generate events.
+# case_when() checks ICIS_OBSERVED first, so "event" is mutually exclusive with the other three branches by
+# construction (and by the dataset layer's own invariant: ICIS_OBSERVED == 1 always implies ACTIVE_BROAD == 1,
+# verified when ACTIVE_BROAD was built -- "event" can never wrongly fall through to "operating" or
+# "confirmed_inactive"); "operating"/"confirmed_inactive"/"unobserved" are mutually exclusive because
+# ACTIVE_BROAD can only be exactly one of {1, 0, NA} for a given row.
+# NOTE: this is a behavior CHANGE from the archived pipeline's semantics (which this file's original version
+# faithfully reproduced) -- that pipeline treated a wayback `operating` value of NA identically to 0 (neither
+# triggered its zero-fill). Here, ACTIVE_BROAD's own 0-vs-NA distinction is now used for exactly what it was
+# built to encode, rather than being collapsed away again at this layer.
 FILL_COLS <- c(COUNT_COLS, "HPV_ACTIVE")   # PENALTY_AMOUNT/_DUP are DELIBERATELY EXCLUDED (unchanged
-                                            # convention): a known-active, zero-ICIS-event facility-year
-                                            # should read NA for PENALTY_AMOUNT (no confirmed formal action),
-                                            # not 0 -- same as the datasets layer's own R4/O6-era decision.
+                                            # convention): a known-active-or-inactive, zero-ICIS-event
+                                            # facility-year should read NA for PENALTY_AMOUNT (no confirmed
+                                            # formal action), not 0 -- same as the datasets layer's own
+                                            # R4/O6-era decision, now applied to both fill branches alike.
 
 code_obs_source <- function(panel) {
   panel <- panel |> mutate(
     OBS_SOURCE = case_when(
       ICIS_OBSERVED == 1  ~ "event",
       ACTIVE_BROAD == 1   ~ "operating",
-      TRUE                ~ "unobserved"))
-  fill <- panel$OBS_SOURCE == "operating"
+      ACTIVE_BROAD == 0   ~ "confirmed_inactive",   # NEW: positively confirmed not active, no ICIS event
+      TRUE                ~ "unobserved"))           # only when ACTIVE_BROAD is genuinely NA
+  fill <- panel$OBS_SOURCE %in% c("operating", "confirmed_inactive")
   panel[fill, FILL_COLS] <- lapply(panel[fill, FILL_COLS], \(x) coalesce(x, 0L))
   panel
 }

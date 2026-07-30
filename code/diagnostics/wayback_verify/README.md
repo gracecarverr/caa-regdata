@@ -61,3 +61,17 @@ things this was actually built to resolve:
 "try candidates most-recent-first and verify against a known-good hash," exactly what this script does.
 That is a candidate mechanism for folding into `01_download.R`'s automation (recording the confirmed
 `matched_timestamp` per year rather than a live "latest" guess) — a follow-up decision, not made here.
+
+## Update (2026-07-29): Q4 re-pin, and all 10 years now confirmed PASS
+
+`code/01_data_download/01_download.R`'s pins were audited for Q4 (Oct-Dec) consistency
+(`wayback_q4_repin.R`, sibling script in this folder) — only 2024 had a real Q4 alternative and was moved
+from Sep 26 to Dec 10; the other 9 years are unchanged (most have zero Q4 captures at all, see that script's
+README section / `dataset_construction_decisions.md` `O8`). Re-running *this* script afterward against the
+freshly re-downloaded raw files confirmed **all 10 currently-staged years match byte-for-byte**, including
+2024's new pin. Two consecutive runs each hit a transient CDX-API timeout on a different subset of years
+(2015 in one run, 2024/2025 in the other) — every year that succeeded in both runs agreed exactly on
+timestamp/digest/rank, and the two runs' successful years don't overlap in their failures, so the merged
+result in `summary_by_year.csv` is a complete, verified record despite neither individual run finishing
+clean. `wayback_q4_repin.R`'s own `check_completeness()` doesn't do this byte-level check (there's no staged
+ground truth to compare a Q4 capture against) — this script is what actually proves 2024's new pin is correct.

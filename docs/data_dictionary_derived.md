@@ -106,7 +106,8 @@ wherever no Wayback snapshot exists, never imputed (`O2`).
 |---|---|---|---|
 | `WAYBACK_OBSERVED` | flag | `1` iff `wayback_facility_status.csv.gz` has a snapshot for `(PGM_SYS_ID, year)`. Always 0/1, never itself `NA`. | O2 |
 | `OP_STATUS_CODE` / `OP_STATUS_DESC` | passthrough | Wayback-reconstructed operating-status code/description for that year. `NA` for 2005–2014 and any uncovered facility-year. | O2 |
-| `OPERATING` | flag | `1` iff `OP_STATUS_CODE %in% c("OPR","TMP","SEA")`; carried unchanged from the cleaning layer. `NA` outside wayback coverage. | O3 |
+| `OPERATING` | flag | `1` iff `OP_STATUS_CODE %in% c("OPR","TMP","SEA")`; carried unchanged from the cleaning layer, **except** the `OPERATING_IMPUTED==1` rows below, where it's bridge-imputed rather than code-derived. `NA` outside wayback coverage. | O3 |
+| `OPERATING_IMPUTED` | flag (NEW 2026-07-30) | `1` iff this row is 2018 AND `OPERATING` was bridge-imputed from a matching real 2017/2019 observation (both in-service, or both not); `0` otherwise, never `NA`. The one exception to `O2`'s "strictly raw" rule — see `O2` for the full derivation and the checks (panel eligibility, entry/exit spells) that were verified unaffected before adding it. `OP_STATUS_CODE`/`OP_STATUS_DESC` are never fabricated for these rows (stay `NA`) and `WAYBACK_OBSERVED` stays `0` (no real snapshot exists) — this column is the only signal that `OPERATING` is inferred rather than observed here. | **O2** |
 | `PROG_SIP_ACTIVE`, `PROG_TITLEV_ACTIVE`, `PROG_NSPS_ACTIVE`, `PROG_MACT_ACTIVE`, `PROG_NESHAP_ACTIVE`, `PROG_FESOP_ACTIVE`, `PROG_NSR_ACTIVE`, `PROG_PSD_ACTIVE` (8 flags) | flag | From `wayback_program_status.csv.gz`, an explicit 8-group allowlist (chosen to guard against upstream schema drift after `gact`/`cfc` were silently added elsewhere) — "is this program group active in this year's wayback snapshot." `NA` where the facility isn't covered by that year's snapshot. | **O3** |
 | `ENTERED_YEAR` / `EXITED_YEAR` | facility-level | From `wayback_facility_spells.csv.gz` — year the facility's observed operating spell began/ended, broadcast to all 21 rows. `NA` for the ~2,472 ICIS facilities with no wayback spell. | O4 |
 | `EXIT_SOURCE` | categorical | `"cls"` (confirmed closure) / `"dropout"` (last seen operating, then vanished — an upper bound on unexplained exits) / `"other"` / `NA` (no exit observed). Because dataset 1 drops wayback-only facilities, only 2 of 11,801 wayback `dropout` exits survive here — this column is effectively almost pure `"cls"` in this file. | **O4** |
@@ -130,7 +131,7 @@ appear there (confirmed: 0/15,302 have any ICIS event record at all).
 | Field | Type | Definition & derivation | Decision |
 |---|---|---|---|
 | `WAYBACK_OBSERVED` | flag | Same definition as `operating.csv.gz`'s column of the same name, restricted to this facility set. | O7 |
-| `OP_STATUS_CODE` / `OP_STATUS_DESC` / `OPERATING` | passthrough / flag | Same definitions as `operating.csv.gz`'s columns of the same name. | O7 |
+| `OP_STATUS_CODE` / `OP_STATUS_DESC` / `OPERATING` / `OPERATING_IMPUTED` | passthrough / flag | Same definitions as `operating.csv.gz`'s columns of the same name. | O7, O2 |
 | `ENTERED_YEAR` / `EXITED_YEAR` / `EXIT_SOURCE` / `LEFT_CENSORED` / `RIGHT_CENSORED` | facility-level | Same definitions as `operating.csv.gz`'s columns of the same name — the pre-done version of the manual join `O1a` used to point users to. | O7 |
 
 No `ACTIVE`/`ACTIVE_BROAD`-style column here: `ICIS_OBSERVED` and `EMISSIONS_OBSERVED`/`GHG_OBSERVED` are
@@ -325,22 +326,23 @@ logic, same zero-vs-NA gate (`ICIS_OBSERVED`), no re-derivation at this layer. N
 | Field | Type | Definition & derivation | Decision |
 |---|---|---|---|
 | `ANY_INSPECTIONS` / `ANY_VIOLATIONS` / `ANY_ENFORCEMENT` / `ANY_CERTS` | flag | `1` iff the matching `N_*` count `> 0`; NA-safe (`NA > 0` is `NA`, so an unobserved facility-year reads `NA` here too, never a silent `0`). | — |
-| `OP_STATUS_CODE` / `OPERATING` / `PROG_SIP_ACTIVE` … `PROG_PSD_ACTIVE` (8 flags, same set as the facility-level `PROG_*` above) / `ICIS_OBSERVED` / `EMISSIONS_OBSERVED` / `GHG_OBSERVED` / `ACTIVE` / `ACTIVE_BROAD` | passthrough / flag | Direct passthrough of their identically-named `operating.csv.gz` columns (Part 1) — no panel-specific re-derivation. `PROG_NSR_ACTIVE`/`PROG_PSD_ACTIVE` inherit the dataset layer's preconstruction-program rule (`{PLN,CNS}` counts as active, since these permits attach before a source operates). | O2, O3, O6 |
+| `OP_STATUS_CODE` / `OPERATING` / `OPERATING_IMPUTED` / `PROG_SIP_ACTIVE` … `PROG_PSD_ACTIVE` (8 flags, same set as the facility-level `PROG_*` above) / `ICIS_OBSERVED` / `EMISSIONS_OBSERVED` / `GHG_OBSERVED` / `ACTIVE` / `ACTIVE_BROAD` | passthrough / flag | Direct passthrough of their identically-named `operating.csv.gz` columns (Part 1) — no panel-specific re-derivation. `PROG_NSR_ACTIVE`/`PROG_PSD_ACTIVE` inherit the dataset layer's preconstruction-program rule (`{PLN,CNS}` counts as active, since these permits attach before a source operates). `OPERATING_IMPUTED` lets a user identify/exclude the 2018 bridge-imputed rows (`O2`) if they want raw-observation-only analysis. | O2, O3, O6 |
 | `HPV_ACTIVE` | flag | Direct passthrough of `hpv_active.csv.gz` (Part 1) — the R2 interval-overlap collapse, `H5`/`H6`/`H7` zero-vs-NA discipline. **No `HPV_ACTIVE_1MO` variant** — `hpv_active.csv.gz` never shipped it, and recomputing a third implementation of the same interval logic was explicitly ruled out. | H5–H7, PB7 |
-| `OBS_SOURCE` | categorical | The one piece of real logic this layer adds. `"event"` = `ICIS_OBSERVED == 1` (a real ICIS record that year); `"operating"` = no ICIS event but `ACTIVE_BROAD == 1` (confirmed active some other way — a genuine structural zero); `"unobserved"` = neither. **Revised 2026-07-29 (`PB2`/`PB4`):** under the old all-11-years eligibility screen, `"unobserved"` was impossible by construction; under the current ≥1-year rule it's real and substantial, since a facility can qualify via one year while other years in its 11-year rectangle have no confirmed activity. | PB4 |
+| `OBS_SOURCE` | categorical | The one piece of real logic this layer adds. **Revised 2026-07-30 (`PB4`):** now a four-way split. `"event"` = `ICIS_OBSERVED == 1` (a real ICIS record that year); `"operating"` = no ICIS event but `ACTIVE_BROAD == 1` (confirmed active some other way — a genuine structural zero); `"confirmed_inactive"` = no ICIS event but `ACTIVE_BROAD == 0` (every checked signal — wayback status, emissions/GHG reporting — positively confirms the facility was NOT active that year — also a genuine structural zero, previously mislabeled `"unobserved"`); `"unobserved"` = no ICIS event and `ACTIVE_BROAD` is genuinely `NA` (no evidence either way that year — the only truly unknown case). `ACTIVE_BROAD`'s own 0-vs-`NA` distinction (`O6`) was already computed correctly upstream; this split just stops discarding it. Checked directly: 33% of major_synmin's pre-fix `"unobserved"` facility-years (30,612 of 92,013) actually had `ACTIVE_BROAD == 0`. **Revised 2026-07-29 (`PB2`/`PB4`):** under the old all-11-years eligibility screen, `"unobserved"`-type rows were impossible by construction; under the current ≥1-year rule they're real and substantial, since a facility can qualify via one year while other years in its 11-year rectangle have no confirmed activity. | PB4 |
 
-**The known-operating-zero fill:** for rows with `OBS_SOURCE == "operating"`, every `N_*` count and
-`HPV_ACTIVE` is filled `NA → 0` (a confirmed-active facility-year with no ICIS event is a true zero, not
-unknown). `PENALTY_AMOUNT`/`PENALTY_AMOUNT_DUP` are **deliberately excluded** from this fill — a known-active,
-zero-ICIS-event facility-year still reads `NA` for `PENALTY_AMOUNT` (no confirmed formal action), matching
-the dataset layer's own `R4` convention.
+**The known-operating-zero fill:** for rows with `OBS_SOURCE %in% c("operating", "confirmed_inactive")`,
+every `N_*` count and `HPV_ACTIVE` is filled `NA → 0` — a facility-year we know was active, or know was
+inactive, with no ICIS event is a true zero either way, not unknown. `PENALTY_AMOUNT`/`PENALTY_AMOUNT_DUP` are
+**deliberately excluded** from this fill in both branches — a known-outcome, zero-ICIS-event facility-year
+still reads `NA` for `PENALTY_AMOUNT` (no confirmed formal action), matching the dataset layer's own `R4`
+convention.
 
 ### Cross-cutting notes (Part 2)
 
 - **`OBS_SOURCE` is context-dependent**, same as its predecessor concept was: within an already-filtered
   `"operating"` subsample, `OBS_SOURCE == "event"` is mechanically equivalent to "some count > 0" —
   conditioning on it there is conditioning on the outcome. Across the full panel it carries independent
-  information by separating `"unobserved"` from real zeros.
+  information by separating `"unobserved"`/`"confirmed_inactive"` from real, event-generating activity.
 - **This layer carries no separate HPV-count column of its own** (unlike the old `hpv_active`/`hpv_active_1mo`
   vs. a spine-level recorded-year count) — `N_HPV` (an event count, from `regulatory.csv.gz`) and `HPV_ACTIVE`
   (an interval-overlap status, from `hpv_active.csv.gz`) answer different questions and will disagree year to

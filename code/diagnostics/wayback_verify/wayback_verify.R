@@ -43,11 +43,18 @@ TARGET_URL      <- "https://echo.epa.gov/files/echodownloads/ICIS-AIR_downloads.
 REQUEST_DELAY_S <- 1.5
 EXHAUSTIVE      <- identical(tolower(Sys.getenv("EXHAUSTIVE", "false")), "true")
 
-# expectations documented in 01_download.R's header / code/01_data_download/README.md as of this script's
-# writing -- used only to flag divergence in the console summary, never to alter behavior
+# expectations documented in 01_download.R's header / code/01_data_download/README.md -- used only to flag
+# divergence in the console summary, never to alter behavior. Updated 2026-07-29 after the Q4 re-pin
+# (dataset_construction_decisions.md O8): all 10 currently-staged years are now confirmed PASS, established
+# across two runs this session (each hit a transient CDX-API timeout on a different subset of years -- 2015
+# failed-then-passed in one run, 2024/2025 failed-then-passed in the other, with zero disagreement on any
+# year that succeeded in both -- see output/wayback_verify/summary_by_year.csv). 2018 stays
+# NO_CAPTURES_ANY_STATUS (it isn't a staged folder, so never appears in the loop below, but the entry
+# documents the finding for anyone reading this constant).
 DOCUMENTED_STATUS <- c(
-  "2015" = "PASS", "2016" = "FAIL", "2017" = "PASS", "2018" = "NO_CAPTURES_ANY_STATUS",
-  "2019" = "PASS", "2020" = "PASS", "2025" = "PASS"
+  "2015" = "PASS", "2016" = "PASS", "2017" = "PASS", "2018" = "NO_CAPTURES_ANY_STATUS",
+  "2019" = "PASS", "2020" = "PASS", "2021" = "PASS", "2022" = "PASS", "2023" = "PASS",
+  "2024" = "PASS", "2025" = "PASS"
 )
 
 pace <- function() Sys.sleep(REQUEST_DELAY_S)

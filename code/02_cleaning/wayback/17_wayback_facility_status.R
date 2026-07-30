@@ -20,6 +20,26 @@
 #   Interior gaps (facility absent from a MIDDLE snapshot but present before & after) are LOCF-filled within
 #   the observed span [first_snap, last_snap]; ~0.3% of facility-programs, rarer for facilities. Years before
 #   a facility's first snapshot or after its last are NOT emitted here (left/right edges handled downstream).
+#
+#   REVISED 2026-07-30 (explicit user decision, O2 exception): 2018's `operating` (NOT `op_status_code`/
+#   `op_status_desc` -- see below) is now BRIDGE-IMPUTED for the one narrow case where 2017 and 2019 agree:
+#   a facility with a REAL raw 2017 snapshot AND a REAL raw 2019 snapshot showing the SAME operating bucket
+#   (both in-service {OPR,TMP,SEA}, or both not {CLS,PLN,CNS,NER,NED,NES,LDF}) gets that shared value imputed
+#   into its 2018 row, flagged via the new `operating_imputed` column (1 for imputed rows, 0 everywhere else,
+#   never NA). Mismatched pairs (e.g. operating in 2017, closed by 2019) are NOT touched -- that transition-
+#   timing case is already handled deliberately by 18_wayback_facility_spells.R's "2017-op -> 2018-gap ->
+#   2019-closed" exit-classification logic (W7), and this rule must not interfere with it.
+#   "Real raw" means present in that year's ACTUAL ICIS-AIR_FACILITIES.csv snapshot -- NOT an LOCF-carried
+#   value from an earlier year. Checked directly this session before deciding: interior-gap LOCF is
+#   vanishingly rare (29 of 2,506,480 non-NA facility-years across the whole 2015-2025 window, 0.001%; only
+#   14 of ~229,000 2017/2019 opr-opr/cls-cls-matching pairs involve an LOCF year at all) -- raw-only costs
+#   essentially nothing and avoids compounding one imputation (LOCF) inside another (this bridge).
+#   op_status_code/op_status_desc are DELIBERATELY LEFT NA for imputed rows -- we only know the coarse
+#   in-service-vs-not bucket agreed on both sides, not which specific code applied in 2018, and fabricating
+#   one would silently overstate precision. This also matters downstream: 18_wayback_facility_spells.R's
+#   exit-transition classifier treats `!is.na(op_status_code)` as "real evidence" -- keeping it NA here means
+#   an imputed row is invisible to that logic, so entry/exit spells are provably unaffected by this change
+#   (verified this session by reading that script; also empirically diffed post-rebuild, see its README).
 # =========================================================================================================
 library(readr); library(dplyr); library(data.table)
 
@@ -54,13 +74,42 @@ full[, `:=`(op_status_code = locf(op_status_code), op_status_desc = locf(op_stat
 # with no span overlap never gets a 2018 row at all (same edge convention as pre-2015/post-2025).
 full[year == 2018L, `:=`(op_status_code = NA_character_, op_status_desc = NA_character_)]
 
+# ---- 2018 bridge imputation (operating bucket only; REAL raw 2017 & 2019 observations only) ---------------
+# See the header note above for full rationale/verification. Built from `dt` -- the pre-LOCF, pre-densify
+# stack (one row per facility per REAL snapshot year only) -- NOT `full`/`status` below, which mix in
+# LOCF-carried and 2018-reset rows; using `dt` guarantees op2017/op2019 are always real observations, never
+# an LOCF-carried value from an earlier year (per this session's raw-only decision).
+op17 <- dt[year == 2017L, .(PGM_SYS_ID, op2017 = as.integer(op_status_code %in% OPERATING_CODES))]
+op19 <- dt[year == 2019L, .(PGM_SYS_ID, op2019 = as.integer(op_status_code %in% OPERATING_CODES))]
+bridge <- merge(op17, op19, by = "PGM_SYS_ID")[op2017 == op2019, .(PGM_SYS_ID, operating_bridge = op2017)]
+  # only facilities with a REAL 2017 AND a REAL 2019 row survive the merge (inner join); of those, only
+  # matching pairs (both operating, or both not) survive the op2017==op2019 filter -- mismatched pairs (a
+  # real transition somewhere in [2017,2019]) are deliberately left out, per W7's existing handling of that
+  # case (18_wayback_facility_spells.R).
+
 status <- as_tibble(full) |>
   mutate(operating = if_else(is.na(op_status_code), NA_integer_,
                              as.integer(op_status_code %in% OPERATING_CODES))) |>
+  left_join(bridge, by = "PGM_SYS_ID") |>
+  mutate(
+    # operating_imputed is 1 iff this is a 2018 row with no real snapshot (op_status_code NA, true for every
+    # 2018 row at this point) AND the facility has a resolved bridge value -- 0 everywhere else, never NA.
+    operating_imputed = as.integer(year == 2018L & is.na(op_status_code) & !is.na(operating_bridge)),
+    operating          = if_else(operating_imputed == 1L, operating_bridge, operating)) |>
+  select(-operating_bridge) |>
   arrange(PGM_SYS_ID, year)
+
+stopifnot(
+  "operating_imputed is NA somewhere (should always be a real 0/1)" = !anyNA(status$operating_imputed),
+  "operating_imputed==1 row exists outside year 2018" =
+    all(status$year[status$operating_imputed == 1L] == 2018L),
+  "operating_imputed==1 row has a non-NA op_status_code (should never fabricate a specific code)" =
+    all(is.na(status$op_status_code[status$operating_imputed == 1L])),
+  "operating_imputed==1 row has NA operating (bridge should always resolve to a real 0/1)" =
+    !anyNA(status$operating[status$operating_imputed == 1L]))
 
 dir.create(here::here("data/processed"), showWarnings = FALSE, recursive = TRUE)
 write_csv(status, here::here("data/processed/wayback_facility_status.csv.gz"))
-cat(sprintf("wayback_facility_status: %d facility-years | %d facilities | %d-%d | operating share %.3f\n",
+cat(sprintf("wayback_facility_status: %d facility-years | %d facilities | %d-%d | operating share %.3f | %s 2018 rows bridge-imputed (opr-opr/cls-cls)\n",
             nrow(status), n_distinct(status$PGM_SYS_ID), min(status$year), max(status$year),
-            mean(status$operating, na.rm = TRUE)))
+            mean(status$operating, na.rm = TRUE), format(sum(status$operating_imputed), big.mark = ",")))

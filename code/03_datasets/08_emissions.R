@@ -1,5 +1,5 @@
 # =========================================================================================================
-# code/04_datasets/08_emissions.R -- DATASET 7: emissions. Facility x year, built from the combined pollutant
+# code/03_datasets/08_emissions.R -- DATASET 7: emissions. Facility x year, built from the combined pollutant
 #   report (data/processed/emissions.csv.gz, from EIS/TRIS/E-GGRT/CAMDBS -- see docs/data_dictionary.md).
 #   Every line below is commented, matching the standard set for this workflow (07_pipeline.R).
 #
@@ -48,7 +48,7 @@
 library(readr)                                            # read_csv / write_csv
 library(dplyr)                                            # filter / mutate / group_by / summarise / join
 library(tidyr)                                            # expand_grid, for the full facility x year rectangle
-source(here::here("code/04_datasets/00_parameters.R"))    # YEARS, CLEAN, DATASETS, write_dataset()
+source(here::here("code/03_datasets/00_parameters.R"))    # YEARS, CLEAN, DATASETS, write_dataset()
 
 # ---- exact pollutant-name strings for the six ds0-comparable categories (see the double-counting note above)
 POLLUTANT_MAP <- c(VOC = "Volatile organic compounds",              # single variant, no ambiguity

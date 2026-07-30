@@ -1,5 +1,5 @@
 # =========================================================================================================
-# code/04_datasets/04_hpv_active.R -- DATASET 2b: hpv_active. Facility x year. The directly-usable HPV status
+# code/03_datasets/04_hpv_active.R -- DATASET 2b: hpv_active. Facility x year. The directly-usable HPV status
 #   flag, a deterministic R2 collapse of hpv_spells (dataset 2). Joins 1:1 to regulatory / operating.
 #
 #   in : data/datasets/hpv_spells.csv.gz, data/datasets/regulatory.csv.gz, data/processed/facilities.csv.gz
@@ -28,7 +28,7 @@
 #     NA : not covered and NOT ICIS-observed -> unknown, same discipline as every ds 0 count.
 # =========================================================================================================
 library(readr); library(dplyr); library(tidyr); library(lubridate)
-source(here::here("code/04_datasets/00_parameters.R"))
+source(here::here("code/03_datasets/00_parameters.R"))
 
 # ---- R2 spell -> covered facility-years -----------------------------------------------------------------
 DZ_MIN <- 1970L; DZ_MAX <- 2025L                             # plausible day-zero year range (H4 screen)

@@ -1,0 +1,3343 @@
+<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Dictionary — CAA Regulatory Data</title><meta name='description' content="Field-by-field reference for every raw EPA source and every derived column this pipeline builds, cross-linked to the live summary statistics and dataset pages."><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=Merriweather:wght@300;700&family=Merriweather+Sans:wght@300;600;700&display=swap' rel='stylesheet'><style>
+:root{
+  --navy:#003349; --navy-dark:#001f2e; --accent:#933f71; --accent-dark:#612141;
+  --bg:#ffffff; --bg-alt:#f2f4f7; --ink:#0f131f; --text:#333333; --muted:#727f9f; --border:#e3e7f0;
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:'Merriweather Sans',system-ui,sans-serif;font-weight:300;color:var(--text);
+  background:var(--bg);}
+a{color:var(--accent);}
+
+/* ---- masthead + mnav: two-tier top banner (every page) -- a plain white identity band (site eyebrow,
+   big serif site title/home-link, one-line subtitle) above a separate nav-links band. ------------------ */
+.masthead{background:#fff;padding:1.5rem 1.2rem 1.3rem;}
+.masthead-inner{max-width:1100px;margin:0 auto;}
+.masthead .eyebrow{text-transform:uppercase;letter-spacing:.13em;font-size:.76rem;color:var(--accent);
+  font-weight:700;margin:0 0 .5rem;}
+.mast-title{margin:0 0 .35rem;}
+.mast-title a{font-family:'Merriweather',Georgia,serif;font-weight:300;font-size:1.85rem;color:var(--navy);
+  text-decoration:none;letter-spacing:.01em;}
+.mast-title a:hover{color:var(--accent-dark);}
+.mast-sub{margin:0;font-size:.98rem;color:var(--muted);max-width:640px;line-height:1.5;}
+
+.mnav{background:#fff;border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.mnav-inner{max-width:1100px;margin:0 auto;padding:.7rem 1.2rem;display:flex;gap:1.5rem;flex-wrap:wrap;
+  font-weight:600;font-size:.92rem;}
+.mnav-inner a{color:var(--accent);text-decoration:none;padding:.15rem 0;border-bottom:2px solid transparent;}
+.mnav-inner a:hover{color:var(--accent-dark);border-bottom-color:var(--accent-dark);}
+.mnav-inner a.active{color:var(--navy);border-bottom-color:var(--accent-dark);}
+
+.hero{background:linear-gradient(160deg,var(--navy) 0%,var(--navy-dark) 100%);color:#fff;
+  padding:3rem 1.2rem 2.4rem;}
+.hero-photo{background-size:cover;background-position:center;padding:5rem 1.2rem 3.2rem;}
+.hero-inner{max-width:1100px;margin:0 auto;position:relative;}
+.hero .eyebrow{text-transform:uppercase;letter-spacing:.13em;font-size:.76rem;color:rgba(255,255,255,.66);
+  font-weight:700;margin:0 0 .7rem;}
+.hero h1{font-family:'Merriweather',Georgia,serif;font-weight:300;font-size:2.5rem;
+  line-height:1.18;margin:0 0 .7rem;}
+.hero p{font-size:1.05rem;max-width:760px;color:#dde1ec;margin:0;line-height:1.55;}
+.hero .photo-credit{font-size:.7rem;color:rgba(255,255,255,.55);max-width:none;margin:1.6rem 0 0;
+  font-style:italic;}
+
+.cta{margin-top:1.4rem;display:flex;flex-wrap:wrap;gap:.8rem;}
+.btn{display:inline-block;padding:.6rem 1.2rem;font-size:.88rem;font-weight:600;color:#fff;
+  border:1px solid rgba(255,255,255,.55);text-decoration:none;transition:border-color .15s ease,background-color .15s ease;}
+.btn:hover{border-color:#fff;background:rgba(255,255,255,.08);}
+
+main{max-width:1100px;margin:0 auto;padding:2.4rem 1.2rem 3rem;}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1.1rem;margin:1.6rem 0 2.4rem;}
+.card{border:1px solid var(--border);border-top:3px solid var(--navy);background:#fff;padding:1.2rem 1.3rem;}
+.card h3{font-family:'Merriweather',Georgia,serif;font-weight:300;margin:.1rem 0 .4rem;font-size:1.15rem;
+  color:var(--navy);}
+.card p{font-size:.92rem;color:var(--muted);margin:0 0 .8rem;line-height:1.45;}
+.card a{color:var(--accent);font-weight:600;font-size:.88rem;text-decoration:none;}
+.card a:hover{color:var(--accent-dark);text-decoration:underline;}
+
+/* ---- card-badge: small numbered label above a card's title (e.g. 'Brief 00') -- Briefs page's landing
+   grid only, as of this writing. Reuses .card's border/padding as-is, no separate component. ------------ */
+.card-badge{display:block;font-family:'Merriweather',Georgia,serif;font-weight:700;font-size:.78rem;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin:0 0 .35rem;}
+
+/* ---- srccard: external-source link groups (Home's Public EPA Sources section only) -- a .card whose
+   body is a short list of links instead of one description + one CTA. -------------------------------- */
+.srccard{padding-bottom:.6rem;}
+.src-row{margin:0 0 1rem;}
+.src-row:last-child{margin-bottom:0;}
+.src-row .src-name{display:block;font-weight:600;font-size:.95rem;color:var(--accent);text-decoration:none;
+  margin-bottom:.15rem;}
+.src-row .src-name:hover{color:var(--accent-dark);text-decoration:underline;}
+.src-row p{margin:0;font-size:.88rem;color:var(--muted);line-height:1.45;}
+
+/* ---- stage-grid: numbered pipeline-stage cards (Home only) -- informational, not navigation, so no
+   CTA link and an accent-top border distinguishes them from the navy-top nav .card above. -------------- */
+.sec-h2{font-family:'Merriweather',Georgia,serif;font-weight:300;color:var(--navy);font-size:1.5rem;
+  margin:0 0 .3rem;}
+.sec-lede{font-size:.92rem;color:var(--muted);margin:0;line-height:1.5;}
+.stage-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.1rem;
+  margin:1.6rem 0 2.4rem;}
+.stage-card{border:1px solid var(--border);border-top:3px solid var(--accent);background:#fff;
+  padding:1.2rem 1.3rem;}
+.stage-step{display:block;font-family:'Merriweather',Georgia,serif;font-weight:700;font-size:1.4rem;
+  color:var(--accent);line-height:1;margin-bottom:.3rem;}
+.stage-card h3{font-family:'Merriweather',Georgia,serif;font-weight:300;margin:.1rem 0 .4rem;
+  font-size:1.15rem;color:var(--navy);}
+.stage-card p{font-size:.92rem;color:var(--muted);margin:0;line-height:1.45;}
+
+.prose h2{font-family:'Merriweather',Georgia,serif;font-weight:300;color:var(--navy);
+  border-top:1px solid var(--border);padding-top:1.6rem;margin-top:2.4rem;font-size:1.5rem;text-align:left;}
+.prose h2:first-child{border-top:none;padding-top:0;margin-top:0;}
+.prose h3{font-family:'Merriweather',Georgia,serif;font-weight:300;color:var(--navy);margin-top:1.7rem;
+  font-size:1.18rem;}
+.prose p,.prose li{line-height:1.62;}
+.prose blockquote{border-left:3px solid var(--accent);margin:1.1rem 0;padding:.35rem 1.1rem;color:var(--muted);
+  background:var(--bg-alt);}
+.prose table{border-collapse:collapse;width:100%;margin:1rem 0;font-size:.92em;}
+.prose th,.prose td{border:1px solid var(--border);padding:.5rem .7rem;text-align:left;vertical-align:top;}
+.prose th{background:var(--bg-alt);}
+.prose code{font-family:ui-monospace,Menlo,monospace;background:var(--bg-alt);padding:.05rem .3rem;font-size:.9em;}
+
+/* ---- doc-nav (Home's institutional-overview sections, Raw Data's per-source sections): docs-site-style
+   sidebar + content pane. One title list on the left (sticky), one pane visible at a time on the right.
+   Needs doc_nav_script (below) to switch panes and support #hash deep-linking -- everything else on this
+   site is plain HTML/CSS with no JS, but a click-to-switch sidebar has no static-HTML equivalent. ------- */
+.doc-nav{display:flex;gap:2.2rem;align-items:flex-start;margin-top:.4rem;}
+.doc-sidebar{flex:0 0 230px;display:flex;flex-direction:column;gap:.1rem;position:sticky;top:1rem;
+  border-right:1px solid var(--border);padding-right:1.1rem;}
+.doc-sidebar-link{display:block;padding:.6rem .7rem;color:var(--text);text-decoration:none;font-size:.93rem;
+  border-left:3px solid transparent;transition:background-color .15s ease,color .15s ease,border-color .15s ease;}
+.doc-sidebar-link:hover{background:var(--bg-alt);color:var(--navy);}
+.doc-sidebar-link.active{background:var(--bg-alt);color:var(--accent);border-left-color:var(--accent);font-weight:600;}
+.doc-sidebar-group{font-size:.72rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--muted);padding:.9rem .7rem .25rem;}
+.doc-sidebar-group:first-child{padding-top:0;}
+.doc-content{flex:1;min-width:0;overflow-x:auto;}
+@media (max-width:820px){
+  .doc-nav{flex-direction:column;gap:0;}
+  .doc-sidebar{flex:none;position:static;top:auto;flex-direction:row;flex-wrap:wrap;gap:.3rem;
+    border-right:none;border-bottom:1px solid var(--border);padding:0 0 .8rem;margin-bottom:1rem;}
+  .doc-sidebar-link{border-left:none;border-bottom:3px solid transparent;padding:.4rem .6rem;}
+  .doc-sidebar-link.active{border-left-color:transparent;border-bottom-color:var(--accent);}
+  .doc-sidebar-group{width:100%;padding:.5rem .2rem 0;}
+}
+
+.section-note{background:var(--bg-alt);border:1px solid var(--border);border-left:3px solid var(--accent);
+  padding:.9rem 1.1rem;margin:1.4rem 0;font-size:.92em;line-height:1.55;}
+
+/* ---- dict-xref: small jump-to-the-live-version pointer at the end of a dictionary.html pane ----------- */
+.dict-xref{margin:1rem 0 0;padding:.55rem .8rem;background:var(--bg-alt);border-left:3px solid var(--accent);
+  font-size:.85em;}
+.dict-xref a{font-weight:600;text-decoration:none;}
+.dict-xref a:hover{text-decoration:underline;}
+
+.stat-table{border-collapse:collapse;width:100%;margin:.6rem 0 .5rem;font-size:.9em;}
+.stat-table th,.stat-table td{border:1px solid var(--border);padding:.45rem .7rem;text-align:right;}
+.stat-table th{background:var(--navy);color:#fff;font-weight:600;text-align:right;}
+.stat-table td:first-child,.stat-table th:first-child{text-align:left;}
+.stat-table caption{caption-side:top;text-align:left;font-weight:300;color:var(--navy);
+  font-family:'Merriweather',Georgia,serif;font-size:1.15rem;margin:2rem 0 .4rem;}
+.stat-table caption:first-of-type{margin-top:.4rem;}
+.table-note{font-size:.85em;color:var(--muted);margin:-.1rem 0 1.8rem;line-height:1.5;}
+
+.site-footer{border-top:1px solid var(--border);margin-top:1rem;padding:1.4rem 1.2rem;text-align:center;
+  color:var(--muted);font-size:.82rem;}
+.site-footer code{font-family:ui-monospace,Menlo,monospace;background:#eef0f4;padding:.1rem .35rem;}
+
+/* ---- raw-data page: scoped table styling -------------------------------------------------------------- */
+.raw-data h2{margin:0 0 .3rem;font-family:'Merriweather',Georgia,serif;font-weight:300;color:var(--navy);
+  font-size:1.5rem;}
+.raw-data .src{color:var(--muted);font-size:.85em;margin:.1rem 0;font-family:ui-monospace,Menlo,monospace;}
+.raw-data .desc{margin:.4rem 0 .6rem;max-width:860px;}
+.raw-data .obs{font-weight:bold;margin:.3rem 0;}
+.raw-data .inv{color:var(--muted);font-size:.84em;margin:.2rem 0 1rem;max-width:920px;}
+.raw-data table{border-collapse:collapse;width:100%;margin:.5rem 0 1rem;font-size:.9em;}
+.raw-data th{text-align:left;border:1px solid var(--border);padding:5px 8px;vertical-align:middle;}
+.raw-data td{text-align:right;border:1px solid var(--border);padding:5px 8px;vertical-align:middle;}
+.raw-data td.l,.raw-data .var{text-align:left;}
+.raw-data .vd{font-weight:normal;color:var(--muted);font-size:.92em;}
+.raw-data table.cat th{background:var(--navy);color:#fff;} .raw-data table.num th{background:var(--accent);color:#fff;}
+.raw-data .note{font-size:.86em;color:#3d444d;margin:.35rem 0;line-height:1.4;}
+.raw-data .dupes{font-size:.9em;margin:1rem 0 .3rem;line-height:1.4;}
+
+@media (max-width:700px){
+  .hero h1{font-size:1.9rem;}
+  .mast-title a{font-size:1.5rem;}
+  .mnav-inner{gap:.9rem;font-size:.85rem;}
+}
+</style></head><body><header class='masthead'><div class='masthead-inner'><p class='eyebrow'>Clean Air Act · Stationary Sources</p><h1 class='mast-title'><a href='index.html'>CAA Regulatory Data Infrastructure</a></h1><p class='mast-sub'>Facility-level data on stationary-source air pollution, assembled from public EPA sources.</p></div></header><nav class='mnav'><div class='mnav-inner'><a href='index.html'>Home</a><a href='briefs.html'>Briefs</a><a href='raw_data.html'>Raw Data</a><a href='databases.html'>Datasets</a><a href='panels.html'>Panels</a><a href='dictionary.html' class='active'>Dictionary</a></div></nav><div class='hero'><div class='hero-inner'><p class='eyebrow'>Field-Level Reference</p><h1>Data Dictionary</h1><p>Every raw EPA source field this pipeline reads, and every column it computes or derives — one pane per file, cross-linked to the live summary statistics on Raw Data and to the construction notes on Datasets and Panels wherever a matching section exists.</p></div></div><main><div class='section-note'>Two layers, hand-maintained against EPA's published dictionaries and this repo's build code, not generated: <b>raw source fields</b> (verbatim EPA definitions) feeding <a href='raw_data.html'>Raw Data</a>, and <b>derived/computed columns</b> feeding <a href='databases.html'>Datasets</a> and <a href='panels.html'>Panels</a>. This page only reformats <code>docs/data_dictionary.md</code> and <code>docs/data_dictionary_derived.md</code> — they remain the source of truth; edit them, not this page.</div><div class='prose'><p>Field-level documentation for every raw source in this repository, verified against EPA's official
+published data dictionaries. Each entry lists the source CSV, a one-line description, and every field
+with its type/length (where EPA publishes them) and definition.</p>
+<p><strong>Sources (EPA ECHO data downloads):</strong></p>
+<ul>
+<li>ICIS-Air — <a href="https://echo.epa.gov/tools/data-downloads/icis-air-download-summary">https://echo.epa.gov/tools/data-downloads/icis-air-download-summary</a></li>
+<li>Air Emissions — <a href="https://echo.epa.gov/tools/data-downloads/air-emissions-download-summary">https://echo.epa.gov/tools/data-downloads/air-emissions-download-summary</a></li>
+<li>CAA Compliance Pipeline — <a href="https://echo.epa.gov/tools/data-downloads/caa-pipeline-download-summary">https://echo.epa.gov/tools/data-downloads/caa-pipeline-download-summary</a></li>
+<li>AFS (Air Facility System, pre-2014) — <em>AFS Data Element Dictionary</em> PDF, dated <strong>February 2015</strong>,
+<a href="https://echo.epa.gov/system/files/AFS_Data_Download.pdf">https://echo.epa.gov/system/files/AFS_Data_Download.pdf</a></li>
+</ul>
+<p>Web summaries retrieved 2026-07-17. See the download index at <a href="https://echo.epa.gov/tools/data-downloads/">https://echo.epa.gov/tools/data-downloads/</a>.</p>
+<blockquote>
+<p><strong>Scope note.</strong> This file covers <strong>raw source fields only</strong>. For the created/derived variables in
+<code>data/datasets/</code> and <code>data/panels/</code> (event counts, zero-vs-NA flags, wayback status, HPV interval status,
+coordinates, etc.), see <a href="data_dictionary_derived.md"><code>data_dictionary_derived.md</code></a>.</p>
+</blockquote>
+<blockquote>
+<p><strong>Conventions.</strong> Text in &quot;quotation marks&quot; is quoted <strong>verbatim</strong> from EPA's published dictionary for
+that field. A <strong>data:</strong> note marks a fact verified directly against the file as downloaded in this repo
+(<code>data/raw/…</code>). Field names, order, types, and lengths were checked against the actual CSV headers in
+this repo and against EPA's published tables; where the two diverge it is noted inline.</p>
+</blockquote>
+<blockquote>
+<p><strong>Provenance note:</strong> this file was ported from the predecessor CAA_Project, then re-verified against the
+EPA sources above. The original generator script and source PDFs are <strong>not yet ported into this repo</strong> —
+until they are, treat this dictionary as a maintained-by-hand reference. Per-asset counts and
+institutional caveats live in <code>data/processed/README.md</code>.</p>
+</blockquote>
+<p>Column-by-column documentation for every <strong>created/derived</strong> variable in this repo — the nine built datasets
+in <a href="../data/datasets/README.md"><code>data/datasets/</code></a> (built by <a href="../code/03_datasets/README.md"><code>code/03_datasets</code></a>)
+and the two facility × year panels in <a href="../data/panels/README.md"><code>data/panels/</code></a> (built by
+<a href="../code/04_panel_building/README.md"><code>code/04_panel_building</code></a>). For <strong>raw</strong> EPA source fields, see
+<a href="data_dictionary.md"><code>data_dictionary.md</code></a>; this file only covers columns that are computed, aggregated, or
+recoded by this repo's build code. This file gives the <em>what/how</em> for each column, not the full rationale behind every construction choice.</p>
+<blockquote>
+<p><strong>Verified against code.</strong> Checked directly against the build scripts and this repo's own <code>.csv.gz</code> headers as of 2026-07-27; the panel layer (Part 2) will be re-verified once an in-progress Wayback-snapshot refresh lands upstream.</p>
+</blockquote>
+<div class='doc-nav'><nav class='doc-sidebar'><div class='doc-sidebar-group'>Raw · Overview</div><a href='#raw-grain-and-time-type-at-a-glance' class='doc-sidebar-link' data-target='raw-grain-and-time-type-at-a-glance'>Grain and time-type, at a glance</a><div class='doc-sidebar-group'>Raw · ICIS-Air</div><a href='#raw-icis-air-facilities-csv' class='doc-sidebar-link' data-target='raw-icis-air-facilities-csv'>ICIS-AIR_FACILITIES.csv</a><a href='#raw-icis-air-programs-csv' class='doc-sidebar-link' data-target='raw-icis-air-programs-csv'>ICIS-AIR_PROGRAMS.csv</a><a href='#raw-icis-air-program-subparts-csv' class='doc-sidebar-link' data-target='raw-icis-air-program-subparts-csv'>ICIS-AIR_PROGRAM_SUBPARTS.csv</a><a href='#raw-icis-air-pollutants-csv' class='doc-sidebar-link' data-target='raw-icis-air-pollutants-csv'>ICIS-AIR_POLLUTANTS.csv</a><a href='#raw-icis-air-fces-pces-csv' class='doc-sidebar-link' data-target='raw-icis-air-fces-pces-csv'>ICIS-AIR_FCES_PCES.csv</a><a href='#raw-icis-air-stack-tests-csv' class='doc-sidebar-link' data-target='raw-icis-air-stack-tests-csv'>ICIS-AIR_STACK_TESTS.csv</a><a href='#raw-icis-air-titlev-certs-csv' class='doc-sidebar-link' data-target='raw-icis-air-titlev-certs-csv'>ICIS-AIR_TITLEV_CERTS.csv</a><a href='#raw-icis-air-formal-actions-csv' class='doc-sidebar-link' data-target='raw-icis-air-formal-actions-csv'>ICIS-AIR_FORMAL_ACTIONS.csv</a><a href='#raw-icis-air-informal-actions-csv' class='doc-sidebar-link' data-target='raw-icis-air-informal-actions-csv'>ICIS-AIR_INFORMAL_ACTIONS.csv</a><a href='#raw-icis-air-violation-history-csv' class='doc-sidebar-link' data-target='raw-icis-air-violation-history-csv'>ICIS-AIR_VIOLATION_HISTORY.csv</a><div class='doc-sidebar-group'>Raw · Air Emissions</div><a href='#raw-poll-rpt-combined-emissions-csv' class='doc-sidebar-link' data-target='raw-poll-rpt-combined-emissions-csv'>POLL_RPT_COMBINED_EMISSIONS.csv</a><div class='doc-sidebar-group'>Raw · AFS (Air Facility System — pre-2014)</div><a href='#raw-afs-facilities-csv' class='doc-sidebar-link' data-target='raw-afs-facilities-csv'>AFS_FACILITIES.csv</a><a href='#raw-air-program-csv' class='doc-sidebar-link' data-target='raw-air-program-csv'>AIR_PROGRAM.csv</a><a href='#raw-afs-actions-csv' class='doc-sidebar-link' data-target='raw-afs-actions-csv'>AFS_ACTIONS.csv</a><a href='#raw-afs-air-prg-hist-compliance-csv' class='doc-sidebar-link' data-target='raw-afs-air-prg-hist-compliance-csv'>AFS_AIR_PRG_HIST_COMPLIANCE.csv</a><a href='#raw-afs-hpv-history-csv' class='doc-sidebar-link' data-target='raw-afs-hpv-history-csv'>AFS_HPV_HISTORY.csv</a><a href='#raw-afs-pollutant-codes-appendix-1' class='doc-sidebar-link' data-target='raw-afs-pollutant-codes-appendix-1'>AFS pollutant codes</a><div class='doc-sidebar-group'>Raw · CAA Compliance Pipeline</div><a href='#raw-pipeline-caa-00-complete-csv' class='doc-sidebar-link' data-target='raw-pipeline-caa-00-complete-csv'>PIPELINE_CAA_00_COMPLETE.csv</a><div class='doc-sidebar-group'>Derived · Overview</div><a href='#derived-conventions-used-throughout' class='doc-sidebar-link' data-target='derived-conventions-used-throughout'>Conventions used throughout</a><div class='doc-sidebar-group'>Derived · Datasets</div><a href='#derived-regulatory-csv-gz-dataset-0-facility-year-icis-air-only' class='doc-sidebar-link' data-target='derived-regulatory-csv-gz-dataset-0-facility-year-icis-air-only'>regulatory.csv.gz</a><a href='#derived-operating-csv-gz-dataset-1-facility-year-wayback-reconstruction' class='doc-sidebar-link' data-target='derived-operating-csv-gz-dataset-1-facility-year-wayback-reconstruction'>operating.csv.gz</a><a href='#derived-wayback-only-facilities-csv-gz-dataset-1b-facility-year-2015-2025-only' class='doc-sidebar-link' data-target='derived-wayback-only-facilities-csv-gz-dataset-1b-facility-year-2015-2025-only'>wayback_only_facilities.csv.gz</a><a href='#derived-hpv-spells-csv-gz-dataset-2-spell-grain-uncollapsed' class='doc-sidebar-link' data-target='derived-hpv-spells-csv-gz-dataset-2-spell-grain-uncollapsed'>hpv_spells.csv.gz</a><a href='#derived-hpv-active-csv-gz-dataset-2b-facility-year-interval-overlap-collapse-of-hpv-spells' class='doc-sidebar-link' data-target='derived-hpv-active-csv-gz-dataset-2b-facility-year-interval-overlap-collapse-of-hpv-spells'>hpv_active.csv.gz</a><a href='#derived-penalties-csv-gz-dataset-3-one-row-per-formal-enforcement-action' class='doc-sidebar-link' data-target='derived-penalties-csv-gz-dataset-3-one-row-per-formal-enforcement-action'>penalties.csv.gz</a><a href='#derived-coordinates-csv-gz-dataset-4-one-row-per-facility' class='doc-sidebar-link' data-target='derived-coordinates-csv-gz-dataset-4-one-row-per-facility'>coordinates.csv.gz</a><a href='#derived-pipeline-csv-gz-dataset-6-facility-year-epa-echo-caa-compliance-pipeline' class='doc-sidebar-link' data-target='derived-pipeline-csv-gz-dataset-6-facility-year-epa-echo-caa-compliance-pipeline'>pipeline.csv.gz</a><a href='#derived-emissions-csv-gz-dataset-7-facility-year-combined-pollutant-report-eis-tris-e-ggrt-camdbs' class='doc-sidebar-link' data-target='derived-emissions-csv-gz-dataset-7-facility-year-combined-pollutant-report-eis-tris-e-ggrt-camdbs'>emissions.csv.gz</a><div class='doc-sidebar-group'>Derived · Panels</div><a href='#derived-facility-filters-panel-specs' class='doc-sidebar-link' data-target='derived-facility-filters-panel-specs'>Facility filters</a><a href='#derived-facility-level-attributes-constant-across-all-11-rows-of-a-pgm-sys-id' class='doc-sidebar-link' data-target='derived-facility-level-attributes-constant-across-all-11-rows-of-a-pgm-sys-id'>Facility-level attributes</a><a href='#derived-year-varying-block-facility-year-build-panel' class='doc-sidebar-link' data-target='derived-year-varying-block-facility-year-build-panel'>Year-varying block</a></nav><div class='doc-content'><div class='doc-pane' id='raw-grain-and-time-type-at-a-glance'><h2>Grain and time-type, at a glance</h2><p>Every raw source below is either a <strong>snapshot</strong> (one current row per facility/enrollment, undated or
+current-only, no history) or <strong>historical/event-log</strong> (one row per dated event or per period, accumulating
+over time). This governs what's derivable: a snapshot source can only ever produce time-invariant
+(&quot;current attributes&quot;) derived columns; only a historical source can produce a genuinely year-varying one.</p>
+<table>
+<thead>
+<tr>
+<th>source</th>
+<th>grain (one row = )</th>
+<th>time-type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ICIS-AIR_FACILITIES.csv</code></td>
+<td>one facility (<code>PGM_SYS_ID</code>)</td>
+<td>snapshot — current attributes only, no history</td>
+</tr>
+<tr>
+<td><code>ICIS-AIR_PROGRAMS.csv</code></td>
+<td>one facility × program enrollment</td>
+<td>snapshot-ish — has <code>BEGIN_DATE</code> (enrollment start) but no end date</td>
+</tr>
+<tr>
+<td><code>ICIS-AIR_PROGRAM_SUBPARTS.csv</code></td>
+<td>one facility × program × subpart</td>
+<td>snapshot — no dates of its own (inherits program's <code>BEGIN_DATE</code>)</td>
+</tr>
+<tr>
+<td><code>ICIS-AIR_POLLUTANTS.csv</code></td>
+<td>one facility × pollutant profile</td>
+<td>snapshot — undated, &quot;ever reported&quot; only</td>
+</tr>
+<tr>
+<td><code>ICIS-AIR_FCES_PCES.csv</code></td>
+<td>one inspection (FCE/PCE) event</td>
+<td>historical — event-grain</td>
+</tr>
+<tr>
+<td><code>ICIS-AIR_STACK_TESTS.csv</code></td>
+<td>one stack-test event</td>
+<td>historical — event-grain</td>
+</tr>
+<tr>
+<td><code>ICIS-AIR_TITLEV_CERTS.csv</code></td>
+<td>one cert record (per program/pollutant)</td>
+<td>historical — event-grain (high duplication, ~81%)</td>
+</tr>
+<tr>
+<td><code>ICIS-AIR_FORMAL_ACTIONS.csv</code></td>
+<td>one formal enforcement action</td>
+<td>historical — event-grain</td>
+</tr>
+<tr>
+<td><code>ICIS-AIR_INFORMAL_ACTIONS.csv</code></td>
+<td>one informal enforcement action</td>
+<td>historical — event-grain</td>
+</tr>
+<tr>
+<td><code>ICIS-AIR_VIOLATION_HISTORY.csv</code></td>
+<td>one violation record</td>
+<td>historical — event-grain</td>
+</tr>
+<tr>
+<td><code>POLL_RPT_COMBINED_EMISSIONS.csv</code></td>
+<td><code>REPORTING_YEAR × REGISTRY_ID × PGM_SYS_ACRNM × PGM_SYS_ID × POLLUTANT_NAME</code></td>
+<td>historical, but <strong>uneven</strong> — EIS (90% of rows) is triennial (2008/2011/2014/2017/2020), TRIS/CAMDBS/E-GGRT annual from 2015 on</td>
+</tr>
+<tr>
+<td><code>AFS_FACILITIES.csv</code></td>
+<td>one AFS facility</td>
+<td>snapshot, <strong>frozen as of 2014</strong> (AFS was superseded by ICIS-Air)</td>
+</tr>
+<tr>
+<td><code>AIR_PROGRAM.csv</code> (AFS)</td>
+<td>one facility × program</td>
+<td>snapshot-ish, frozen as of 2014</td>
+</tr>
+<tr>
+<td><code>AFS_ACTIONS.csv</code></td>
+<td>one action/activity event</td>
+<td>historical, but frozen — real coverage ramps through ~2013 then drops to near-zero after 2014 (verified against <code>DATE_ACHIEVED</code>)</td>
+</tr>
+<tr>
+<td><code>AFS_AIR_PRG_HIST_COMPLIANCE.csv</code></td>
+<td>one plant × program × quarter</td>
+<td>historical — quarterly time series, frozen as of 2014</td>
+</tr>
+<tr>
+<td><code>AFS_HPV_HISTORY.csv</code></td>
+<td>one HPV record</td>
+<td>historical, frozen as of 2014</td>
+</tr>
+<tr>
+<td><code>PIPELINE_CAA_00_COMPLETE.csv</code></td>
+<td>one violation (pre-joined to its evaluation/enforcement chain)</td>
+<td>historical — event-grain; automated weekly refresh as of 2026-07-27 (was a static manual extract before that)</td>
+</tr>
+</tbody>
+</table>
+</div><div class='doc-pane' id='raw-icis-air-facilities-csv'><h2>ICIS-AIR_FACILITIES.csv</h2><p>Raw files in <code>data/raw/ICIS-AIR_downloads/</code>. All join on <code>PGM_SYS_ID</code>.</p>
+<p>Facility and source-level identification data for air pollution sources.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Len</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PGM_SYS_ID</code></td>
+<td>Char</td>
+<td>30</td>
+<td>&quot;An alphanumeric program system identifier of varying length which uniquely identifies each air source&quot;</td>
+</tr>
+<tr>
+<td><code>REGISTRY_ID</code></td>
+<td>Char</td>
+<td>12</td>
+<td>Facility Registry Service (FRS) ID linking regulatory records</td>
+</tr>
+<tr>
+<td><code>FACILITY_NAME</code></td>
+<td>Char</td>
+<td>80</td>
+<td>&quot;Official or legal name of the plant&quot;</td>
+</tr>
+<tr>
+<td><code>STREET_ADDRESS</code></td>
+<td>Char</td>
+<td>35</td>
+<td>&quot;First line of the street address or other specific identifier&quot;</td>
+</tr>
+<tr>
+<td><code>CITY</code></td>
+<td>Char</td>
+<td>60</td>
+<td>City where plant is physically located</td>
+</tr>
+<tr>
+<td><code>COUNTY_NAME</code></td>
+<td>Char</td>
+<td>100</td>
+<td>County where plant is physically located</td>
+</tr>
+<tr>
+<td><code>STATE</code></td>
+<td>Char</td>
+<td>2</td>
+<td>&quot;Two-character postal abbreviation code to identify the state&quot;</td>
+</tr>
+<tr>
+<td><code>ZIP_CODE</code></td>
+<td>Char</td>
+<td>14</td>
+<td>Five- or nine-digit zip code</td>
+</tr>
+<tr>
+<td><code>EPA_REGION</code></td>
+<td>Char</td>
+<td>2</td>
+<td>EPA Regional office code (01–10)</td>
+</tr>
+<tr>
+<td><code>SIC_CODES</code></td>
+<td>Char</td>
+<td>4000</td>
+<td>&quot;Four-character Standard Industrial Classification code&quot; (may hold several)</td>
+</tr>
+<tr>
+<td><code>NAICS_CODES</code></td>
+<td>Char</td>
+<td>4000</td>
+<td>&quot;North American Industry Classification System code&quot; (may hold several)</td>
+</tr>
+<tr>
+<td><code>FACILITY_TYPE_CODE</code></td>
+<td>Char</td>
+<td>3</td>
+<td>Government or private facility type code (COR, FDF, STF, …)</td>
+</tr>
+<tr>
+<td><code>AIR_POLLUTANT_CLASS_CODE</code></td>
+<td>Char</td>
+<td>3</td>
+<td>Source emissions classification (MAJ/SMI/MIN/UNK/OTH/NAP)</td>
+</tr>
+<tr>
+<td><code>AIR_POLLUTANT_CLASS_DESC</code></td>
+<td>Char</td>
+<td>100</td>
+<td>Description of pollutant classification</td>
+</tr>
+<tr>
+<td><code>AIR_OPERATING_STATUS_CODE</code></td>
+<td>Char</td>
+<td>5</td>
+<td>Operational condition code. <strong>data:</strong> the 6 values OPR/CLS/TMP/PLN/CNS/SEA appear</td>
+</tr>
+<tr>
+<td><code>AIR_OPERATING_STATUS_DESC</code></td>
+<td>Char</td>
+<td>100</td>
+<td>Description of operating status</td>
+</tr>
+<tr>
+<td><code>CURRENT_HPV</code></td>
+<td>Char</td>
+<td>80</td>
+<td>High Priority Violator status and enforcement information</td>
+</tr>
+<tr>
+<td><code>LOCAL_CONTROL_REGION_CODE</code></td>
+<td>Char</td>
+<td>3</td>
+<td>Local Control Region code with jurisdiction</td>
+</tr>
+<tr>
+<td><code>LOCAL_CONTROL_REGION_NAME</code></td>
+<td>Char</td>
+<td>100</td>
+<td>Local Control Region name</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Field-name note.</strong> The repo's <code>ICIS-AIR_FACILITIES.csv</code> uses <code>LOCAL_CONTROL_REGION_CODE</code> /
+<code>LOCAL_CONTROL_REGION_NAME</code> (verified against the CSV header). EPA's <em>current</em> web summary now lists these
+as <code>AIR_LOCAL_CONTROL_REGION_CODE</code> / <code>AIR_LOCAL_CONTROL_REGION_NAME</code> — a newer schema than the download in
+this repo. The un-prefixed names above are authoritative for the files here.</p>
+</blockquote>
+<p class='dict-xref'><a href='raw_data.html#facilities'>Variable coverage &amp; summary stats →</a></p></div><div class='doc-pane' id='raw-icis-air-programs-csv'><h2>ICIS-AIR_PROGRAMS.csv</h2><p>Air regulatory programs applicable to facilities.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Len</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PGM_SYS_ID</code></td>
+<td>Char</td>
+<td>30</td>
+<td>Program system identifier linking to facilities</td>
+</tr>
+<tr>
+<td><code>PROGRAM_CODE</code></td>
+<td>Char</td>
+<td>9</td>
+<td>&quot;Nine-character code used to identify the regulatory air program&quot;</td>
+</tr>
+<tr>
+<td><code>PROGRAM_DESC</code></td>
+<td>Char</td>
+<td>100</td>
+<td>Description of the air program</td>
+</tr>
+<tr>
+<td><code>AIR_OPERATING_STATUS_CODE</code></td>
+<td>Char</td>
+<td>5</td>
+<td>Operational condition for the air program</td>
+</tr>
+<tr>
+<td><code>AIR_OPERATING_STATUS_DESC</code></td>
+<td>Char</td>
+<td>100</td>
+<td>Description of program operating status</td>
+</tr>
+<tr>
+<td><code>BEGIN_DATE</code></td>
+<td>Date</td>
+<td></td>
+<td>&quot;Date that data were entered in the program system&quot;</td>
+</tr>
+<tr>
+<td><code>UPDATED_DATE</code></td>
+<td>Date</td>
+<td></td>
+<td>&quot;Date the corresponding information was last updated&quot;</td>
+</tr>
+</tbody>
+</table>
+<p class='dict-xref'><a href='raw_data.html#programs'>Variable coverage &amp; summary stats →</a></p></div><div class='doc-pane' id='raw-icis-air-program-subparts-csv'><h2>ICIS-AIR_PROGRAM_SUBPARTS.csv</h2><p>Air program subparts detailing specific regulatory requirements.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Len</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PGM_SYS_ID</code></td>
+<td>Char</td>
+<td>30</td>
+<td>Program system identifier</td>
+</tr>
+<tr>
+<td><code>PROGRAM_CODE</code></td>
+<td>Char</td>
+<td>9</td>
+<td>Air program code</td>
+</tr>
+<tr>
+<td><code>PROGRAM_DESC</code></td>
+<td>Char</td>
+<td>100</td>
+<td>Program description</td>
+</tr>
+<tr>
+<td><code>AIR_PROGRAM_SUBPART_CODE</code></td>
+<td>Char</td>
+<td>20</td>
+<td>&quot;Field indicating applicable air program subparts&quot;</td>
+</tr>
+<tr>
+<td><code>AIR_PROGRAM_SUBPART_DESC</code></td>
+<td>Char</td>
+<td>200</td>
+<td>Description of the subpart</td>
+</tr>
+</tbody>
+</table>
+<p class='dict-xref'><a href='raw_data.html#program_subparts'>Variable coverage &amp; summary stats →</a></p></div><div class='doc-pane' id='raw-icis-air-pollutants-csv'><h2>ICIS-AIR_POLLUTANTS.csv</h2><p>Pollutants tracked at the air program level.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Len</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PGM_SYS_ID</code></td>
+<td>Char</td>
+<td>30</td>
+<td>Program system identifier</td>
+</tr>
+<tr>
+<td><code>POLLUTANT_CODE</code></td>
+<td>Num</td>
+<td></td>
+<td>&quot;Numeric code that identifies a pollutant tracked at the air program level&quot;</td>
+</tr>
+<tr>
+<td><code>POLLUTANT_DESC</code></td>
+<td>Char</td>
+<td>2000</td>
+<td>Pollutant description</td>
+</tr>
+<tr>
+<td><code>SRS_ID</code></td>
+<td>Char</td>
+<td>9</td>
+<td>&quot;Substance Registry Services ID of the pollutant&quot;</td>
+</tr>
+<tr>
+<td><code>CHEMICAL_ABSTRACT_SERVICE_NMBR</code></td>
+<td>Char</td>
+<td>9</td>
+<td>&quot;Chemical abstract service number (CAS) for the pollutant&quot;</td>
+</tr>
+<tr>
+<td><code>AIR_POLLUTANT_CLASS_CODE</code></td>
+<td>Char</td>
+<td>3</td>
+<td>Pollutant emissions classification</td>
+</tr>
+<tr>
+<td><code>AIR_POLLUTANT_CLASS_DESC</code></td>
+<td>Char</td>
+<td>100</td>
+<td>Emissions classification description</td>
+</tr>
+</tbody>
+</table>
+<p class='dict-xref'><a href='raw_data.html#pollutants'>Variable coverage &amp; summary stats →</a></p></div><div class='doc-pane' id='raw-icis-air-fces-pces-csv'><h2>ICIS-AIR_FCES_PCES.csv</h2><p>Full Compliance Evaluations (FCEs) and Partial Compliance Evaluations (PCEs).</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Len</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PGM_SYS_ID</code></td>
+<td>Char</td>
+<td>30</td>
+<td>Program system identifier</td>
+</tr>
+<tr>
+<td><code>ACTIVITY_ID</code></td>
+<td>Num</td>
+<td></td>
+<td>&quot;Unique identifier for an activity performed at or related to a particular site&quot;</td>
+</tr>
+<tr>
+<td><code>STATE_EPA_FLAG</code></td>
+<td>Char</td>
+<td>1</td>
+<td>Agency in charge (E = EPA, S = State, L = Local)</td>
+</tr>
+<tr>
+<td><code>ACTIVITY_TYPE_CODE</code></td>
+<td>Char</td>
+<td>3</td>
+<td>Activity type code; value is INS (inspection) in this table</td>
+</tr>
+<tr>
+<td><code>ACTIVITY_TYPE_DESC</code></td>
+<td>Char</td>
+<td>100</td>
+<td>Description of activity type</td>
+</tr>
+<tr>
+<td><code>COMP_MONITOR_TYPE_CODE</code></td>
+<td>Char</td>
+<td>3</td>
+<td>Compliance monitoring type (FCE: FOO/FFO; PCE: PCE/PFF/PFR/POC/POF/POI/POM/POR/POV)</td>
+</tr>
+<tr>
+<td><code>COMP_MONITOR_TYPE_DESC</code></td>
+<td>Char</td>
+<td>100</td>
+<td>Compliance monitoring type description</td>
+</tr>
+<tr>
+<td><code>ACTUAL_END_DATE</code></td>
+<td>Date</td>
+<td>10</td>
+<td>&quot;Calendar date of the listed inspection (MM/DD/YYYY)&quot;</td>
+</tr>
+<tr>
+<td><code>PROGRAM_CODES</code></td>
+<td>Char</td>
+<td>4000</td>
+<td>Applicable regulatory program codes</td>
+</tr>
+<tr>
+<td><code>ACTIVITY_PURPOSE_DESC</code></td>
+<td>Char</td>
+<td>100</td>
+<td>&quot;Description of the purpose of the compliance evaluation&quot;</td>
+</tr>
+</tbody>
+</table>
+<p class='dict-xref'><a href='raw_data.html#inspections'>Variable coverage &amp; summary stats →</a></p></div><div class='doc-pane' id='raw-icis-air-stack-tests-csv'><h2>ICIS-AIR_STACK_TESTS.csv</h2><p>Stack test results and compliance monitoring data.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Len</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PGM_SYS_ID</code></td>
+<td>Char</td>
+<td>30</td>
+<td>Program system identifier</td>
+</tr>
+<tr>
+<td><code>ACTIVITY_ID</code></td>
+<td>Num</td>
+<td></td>
+<td>Activity identifier</td>
+</tr>
+<tr>
+<td><code>COMP_MONITOR_TYPE_CODE</code></td>
+<td>Char</td>
+<td>3</td>
+<td>Compliance monitoring type (value is CST in this table)</td>
+</tr>
+<tr>
+<td><code>COMP_MONITOR_TYPE_DESC</code></td>
+<td>Char</td>
+<td>100</td>
+<td>Monitoring type description</td>
+</tr>
+<tr>
+<td><code>STATE_EPA_FLAG</code></td>
+<td>Char</td>
+<td>1</td>
+<td>Responsible agency (E/S/L)</td>
+</tr>
+<tr>
+<td><code>ACTUAL_END_DATE</code></td>
+<td>Date</td>
+<td>7</td>
+<td>Test completion date</td>
+</tr>
+<tr>
+<td><code>POLLUTANT_CODES</code></td>
+<td>Char</td>
+<td>4000</td>
+<td>Numeric pollutant codes tested</td>
+</tr>
+<tr>
+<td><code>POLLUTANT_DESCS</code></td>
+<td>Char</td>
+<td>4000</td>
+<td>Descriptions of tested pollutants</td>
+</tr>
+<tr>
+<td><code>AIR_STACK_TEST_STATUS_CODE</code></td>
+<td>Char</td>
+<td>3</td>
+<td>Stack test result. <strong>data:</strong> FAI/PSS/PEN/INC/NA observed</td>
+</tr>
+<tr>
+<td><code>AIR_STACK_TEST_STATUS_DESC</code></td>
+<td>Char</td>
+<td>100</td>
+<td>Stack test status description</td>
+</tr>
+</tbody>
+</table>
+<p class='dict-xref'><a href='raw_data.html#stacktests'>Variable coverage &amp; summary stats →</a></p></div><div class='doc-pane' id='raw-icis-air-titlev-certs-csv'><h2>ICIS-AIR_TITLEV_CERTS.csv</h2><p>Title V operating permit annual compliance certifications.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Len</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PGM_SYS_ID</code></td>
+<td>Char</td>
+<td>30</td>
+<td>Program system identifier</td>
+</tr>
+<tr>
+<td><code>ACTIVITY_ID</code></td>
+<td>Num</td>
+<td></td>
+<td>Activity identifier</td>
+</tr>
+<tr>
+<td><code>COMP_MONITOR_TYPE_CODE</code></td>
+<td>Char</td>
+<td>3</td>
+<td>Compliance monitoring type code</td>
+</tr>
+<tr>
+<td><code>COMP_MONITOR_TYPE_DESC</code></td>
+<td>Char</td>
+<td>100</td>
+<td>Monitoring type description</td>
+</tr>
+<tr>
+<td><code>STATE_EPA_FLAG</code></td>
+<td>Char</td>
+<td>1</td>
+<td>Responsible agency (E/S/L)</td>
+</tr>
+<tr>
+<td><code>ACTUAL_END_DATE</code></td>
+<td>Date</td>
+<td>7</td>
+<td>Certification date</td>
+</tr>
+<tr>
+<td><code>FACILITY_RPT_DEVIATION_FLAG</code></td>
+<td>Char</td>
+<td>1</td>
+<td>&quot;Flag indicating whether the facility reported any deviations during Title V&quot;</td>
+</tr>
+</tbody>
+</table>
+<p class='dict-xref'><a href='raw_data.html#certs'>Variable coverage &amp; summary stats →</a></p></div><div class='doc-pane' id='raw-icis-air-formal-actions-csv'><h2>ICIS-AIR_FORMAL_ACTIONS.csv</h2><p>Formal enforcement actions and penalties.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Len</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PGM_SYS_ID</code></td>
+<td>Char</td>
+<td>30</td>
+<td>Program system identifier</td>
+</tr>
+<tr>
+<td><code>ACTIVITY_ID</code></td>
+<td>Num</td>
+<td></td>
+<td>Activity identifier</td>
+</tr>
+<tr>
+<td><code>ENF_IDENTIFIER</code></td>
+<td>Char</td>
+<td>25</td>
+<td>&quot;Number used to uniquely identify multiple occurrences of an enforcement action&quot;</td>
+</tr>
+<tr>
+<td><code>ACTIVITY_TYPE_CODE</code></td>
+<td>Char</td>
+<td>3</td>
+<td>Civil enforcement activity type (AFR = Administrative Formal, JDC = Judicial)</td>
+</tr>
+<tr>
+<td><code>ACTIVITY_TYPE_DESC</code></td>
+<td>Char</td>
+<td>100</td>
+<td>Activity type description</td>
+</tr>
+<tr>
+<td><code>STATE_EPA_FLAG</code></td>
+<td>Char</td>
+<td>1</td>
+<td>Responsible agency (E/S/L)</td>
+</tr>
+<tr>
+<td><code>ENF_TYPE_CODE</code></td>
+<td>Char</td>
+<td>7</td>
+<td>&quot;Code that identifies the type of action being taken&quot;</td>
+</tr>
+<tr>
+<td><code>ENF_TYPE_DESC</code></td>
+<td>Char</td>
+<td>100</td>
+<td>Enforcement type description</td>
+</tr>
+<tr>
+<td><code>SETTLEMENT_ENTERED_DATE</code></td>
+<td>Date</td>
+<td>7</td>
+<td>&quot;Date the settlement is signed by the presiding Judge and entered by the Clerk of the Court&quot;</td>
+</tr>
+<tr>
+<td><code>PENALTY_AMOUNT</code></td>
+<td>Num</td>
+<td></td>
+<td>&quot;Amount of the civil penalty assessed or agreed to by a facility&quot;</td>
+</tr>
+</tbody>
+</table>
+<p class='dict-xref'><a href='raw_data.html#formal_actions'>Variable coverage &amp; summary stats →</a></p></div><div class='doc-pane' id='raw-icis-air-informal-actions-csv'><h2>ICIS-AIR_INFORMAL_ACTIONS.csv</h2><p>Informal enforcement actions and compliance orders.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Len</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PGM_SYS_ID</code></td>
+<td>Char</td>
+<td>30</td>
+<td>Program system identifier</td>
+</tr>
+<tr>
+<td><code>ACTIVITY_ID</code></td>
+<td>Num</td>
+<td></td>
+<td>Activity identifier</td>
+</tr>
+<tr>
+<td><code>ENF_IDENTIFIER</code></td>
+<td>Char</td>
+<td>25</td>
+<td>Enforcement case identifier</td>
+</tr>
+<tr>
+<td><code>ACTIVITY_TYPE_CODE</code></td>
+<td>Char</td>
+<td>3</td>
+<td>Civil enforcement activity type (AIF = Administrative Informal)</td>
+</tr>
+<tr>
+<td><code>ACTIVITY_TYPE_DESC</code></td>
+<td>Char</td>
+<td>100</td>
+<td>Activity type description</td>
+</tr>
+<tr>
+<td><code>STATE_EPA_FLAG</code></td>
+<td>Char</td>
+<td>1</td>
+<td>Responsible agency (E/S/L)</td>
+</tr>
+<tr>
+<td><code>ENF_TYPE_CODE</code></td>
+<td>Char</td>
+<td>7</td>
+<td>Enforcement action type code (e.g., NOV, DAWL)</td>
+</tr>
+<tr>
+<td><code>ENF_TYPE_DESC</code></td>
+<td>Char</td>
+<td>100</td>
+<td>Enforcement type description</td>
+</tr>
+<tr>
+<td><code>ACHIEVED_DATE</code></td>
+<td>Date</td>
+<td>7</td>
+<td>&quot;Date on which an Informal Enforcement Action is achieved&quot;</td>
+</tr>
+<tr>
+<td><code>OFFICIAL_FLG</code></td>
+<td>Char</td>
+<td>1</td>
+<td>Official action flag (Y/N)</td>
+</tr>
+</tbody>
+</table>
+<p class='dict-xref'><a href='raw_data.html#informal_actions'>Variable coverage &amp; summary stats →</a></p></div><div class='doc-pane' id='raw-icis-air-violation-history-csv'><h2>ICIS-AIR_VIOLATION_HISTORY.csv</h2><p>High Priority Violations (HPVs) and Federally Reportable Violations (FRVs) case-file data.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Len</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PGM_SYS_ID</code></td>
+<td>Char</td>
+<td>30</td>
+<td>Program system identifier</td>
+</tr>
+<tr>
+<td><code>ACTIVITY_ID</code></td>
+<td>Num</td>
+<td></td>
+<td>Activity identifier</td>
+</tr>
+<tr>
+<td><code>AGENCY_TYPE_DESC</code></td>
+<td>Char</td>
+<td>100</td>
+<td>&quot;Environmental agency responsible for CAA compliance and enforcement&quot;</td>
+</tr>
+<tr>
+<td><code>STATE_CODE</code></td>
+<td>Char</td>
+<td>2</td>
+<td>State identifier</td>
+</tr>
+<tr>
+<td><code>AIR_LCON_CODE</code></td>
+<td>Char</td>
+<td>3</td>
+<td>Local Control Region code</td>
+</tr>
+<tr>
+<td><code>COMP_DETERMINATION_UID</code></td>
+<td>Char</td>
+<td>25</td>
+<td>&quot;Unique identifier for the case file activity&quot;</td>
+</tr>
+<tr>
+<td><code>ENF_RESPONSE_POLICY_CODE</code></td>
+<td>Char</td>
+<td>3</td>
+<td>Enforcement response policy type (HPV/FRV)</td>
+</tr>
+<tr>
+<td><code>PROGRAM_CODES</code></td>
+<td>Char</td>
+<td>4000</td>
+<td>Applicable program codes</td>
+</tr>
+<tr>
+<td><code>PROGRAM_DESCS</code></td>
+<td>Char</td>
+<td>4000</td>
+<td>Program descriptions</td>
+</tr>
+<tr>
+<td><code>POLLUTANT_CODES</code></td>
+<td>Char</td>
+<td>4000</td>
+<td>Associated pollutant codes</td>
+</tr>
+<tr>
+<td><code>POLLUTANT_DESCS</code></td>
+<td>Char</td>
+<td>4000</td>
+<td>Pollutant descriptions</td>
+</tr>
+<tr>
+<td><code>EARLIEST_FRV_DETERM_DATE</code></td>
+<td>Date</td>
+<td>7</td>
+<td>&quot;Earliest determination date of a Federally Reportable Violation&quot;</td>
+</tr>
+<tr>
+<td><code>HPV_DAYZERO_DATE</code></td>
+<td>Date</td>
+<td>7</td>
+<td>&quot;Date facility entered High Priority Violator status (MM/DD/YYYY)&quot;</td>
+</tr>
+<tr>
+<td><code>HPV_RESOLVED_DATE</code></td>
+<td>Date</td>
+<td>7</td>
+<td>&quot;Date facility resolved High Priority Violator status (MM/DD/YYYY)&quot;</td>
+</tr>
+<tr>
+<td><code>DSCV_PATHWAY_DATE</code></td>
+<td>Date</td>
+<td></td>
+<td>&quot;Date the violation was discovered&quot;</td>
+</tr>
+<tr>
+<td><code>NFTC_PATHWAY_DATE</code></td>
+<td>Date</td>
+<td></td>
+<td>&quot;Date the facility was notified&quot;</td>
+</tr>
+</tbody>
+</table>
+<p class='dict-xref'><a href='raw_data.html#violations'>Variable coverage &amp; summary stats →</a></p></div><div class='doc-pane' id='raw-poll-rpt-combined-emissions-csv'><h2>POLL_RPT_COMBINED_EMISSIONS.csv</h2><p>Raw file in <code>data/raw/POLL_RPT_COMBINED_EMISSIONS.csv</code>. Facility-level emissions aggregates, organized by
+pollutant and program. Per EPA, the dataset combines air emissions from four EPA programs: the National
+Emissions Inventory (NEI), the Greenhouse Gas Reporting Program (GHGRP), the Toxics Release Inventory (TRI),
+and Clean Air Markets (CAMD). Joins to the other sources on <code>REGISTRY_ID</code> (FRS) and/or <code>PGM_SYS_ID</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Len</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>REPORTING_YEAR</code></td>
+<td>Num</td>
+<td></td>
+<td>&quot;The calendar year of the emission&quot; (availability varies by program)</td>
+</tr>
+<tr>
+<td><code>REGISTRY_ID</code></td>
+<td>Varchar2</td>
+<td>36</td>
+<td>&quot;The Facility Registry Service (FRS) ID of the facility&quot;</td>
+</tr>
+<tr>
+<td><code>PGM_SYS_ACRNM</code></td>
+<td>Varchar2</td>
+<td>60</td>
+<td>Source emissions-program acronym (EIS / E-GGRT / TRIS / CAMDBS)</td>
+</tr>
+<tr>
+<td><code>PGM_SYS_ID</code></td>
+<td>Varchar2</td>
+<td>90</td>
+<td>Program system identifier (format varies by air program)</td>
+</tr>
+<tr>
+<td><code>POLLUTANT_NAME</code></td>
+<td>Varchar2</td>
+<td>100</td>
+<td>&quot;The name of the pollutant being tracked for air emissions&quot;</td>
+</tr>
+<tr>
+<td><code>ANNUAL_EMISSION</code></td>
+<td>Num</td>
+<td></td>
+<td>&quot;The value of the pollutant emission for the facility and reporting year&quot;</td>
+</tr>
+<tr>
+<td><code>UNIT_OF_MEASURE</code></td>
+<td>Varchar2</td>
+<td>15</td>
+<td>Units of <code>ANNUAL_EMISSION</code> (pounds; MTCO2e/year for GHG data)</td>
+</tr>
+<tr>
+<td><code>NEI_TYPE</code></td>
+<td>Varchar2</td>
+<td>10</td>
+<td>Pollutant classification (CAP / GHG / HAP / OTH)</td>
+</tr>
+<tr>
+<td><code>NEI_HAP_VOC_FLAG</code></td>
+<td>Varchar2</td>
+<td>20</td>
+<td>&quot;HAP-VOC&quot; indicates the pollutant is a volatile organic compound</td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>PGM_SYS_ACRNM</code></strong> — source program:</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Program</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>EIS</code></td>
+<td>Emissions Inventory System (National Emissions Inventory, NEI)</td>
+</tr>
+<tr>
+<td><code>E-GGRT</code></td>
+<td>Greenhouse Gas Reporting Program (GHGRP)</td>
+</tr>
+<tr>
+<td><code>TRIS</code></td>
+<td>Toxics Release Inventory System (TRI)</td>
+</tr>
+<tr>
+<td><code>CAMDBS</code></td>
+<td>Clean Air Markets Division Business System (CAMD)</td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>NEI_TYPE</code></strong> — pollutant class: <code>CAP</code> criteria air pollutant · <code>GHG</code> greenhouse gas ·
+<code>HAP</code> hazardous air pollutant · <code>OTH</code> other.</p>
+<blockquote>
+<p><strong>Coverage (per EPA):</strong> reporting-year availability differs by program — CAMD and TRI from 2008, GHGRP
+from 2010, and NEI released on a triennial cycle. Verify actual year coverage in this repo against the file.</p>
+</blockquote>
+<p class='dict-xref'><a href='raw_data.html#emissions'>Variable coverage &amp; summary stats →</a></p></div><div class='doc-pane' id='raw-afs-facilities-csv'><h2>AFS_FACILITIES.csv</h2><p>Raw files in <code>data/raw/afs_downloads/</code>. Definitions, types, lengths, and code tables below are transcribed
+from EPA's <em>AFS Data Element Dictionary</em> (February 2015). Per EPA, AFS &quot;contains emissions, compliance, and
+enforcement data on stationary sources of air pollution,&quot; and ECHO focuses on <strong>plant-level</strong> data (the whole
+facility as one unit). Facility files join to program/action files on <code>AFS_ID</code> / <code>PLANT_ID</code>. Action data are
+&quot;rolled up&quot; to plant level to avoid multi-counting an action entered under several air programs.</p>
+<p>One row per plant: identification, location, classification, operating, and compliance status.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Len</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PLANT_ID</code></td>
+<td>Num</td>
+<td>22</td>
+<td>Numeric plant identifier</td>
+</tr>
+<tr>
+<td><code>AFS_ID</code></td>
+<td>Char</td>
+<td>10</td>
+<td>Plant code (see definition below)</td>
+</tr>
+<tr>
+<td><code>PLANT_NAME</code></td>
+<td>Char</td>
+<td>45</td>
+<td>&quot;The name associated with a plant at a given location&quot;</td>
+</tr>
+<tr>
+<td><code>EPA_REGION</code></td>
+<td>Char</td>
+<td>2</td>
+<td>&quot;A two-character code identifying the EPA Region in which the plant is located&quot; (01–10)</td>
+</tr>
+<tr>
+<td><code>PLANT_STREET_ADDRESS</code></td>
+<td>Char</td>
+<td>35</td>
+<td>&quot;Field that indicates the street address for the physical location of the plant&quot;</td>
+</tr>
+<tr>
+<td><code>PLANT_CITY</code></td>
+<td>Char</td>
+<td>30</td>
+<td>&quot;Field containing the name of the city or town where the plant is located&quot;</td>
+</tr>
+<tr>
+<td><code>PLANT_COUNTY</code></td>
+<td>Char</td>
+<td>3</td>
+<td>&quot;Field containing the code of the county where the plant is located&quot;</td>
+</tr>
+<tr>
+<td><code>STATE</code></td>
+<td>Char</td>
+<td>2</td>
+<td>&quot;Two-character postal abbreviation code to identify the state where the plant is located&quot;</td>
+</tr>
+<tr>
+<td><code>STATE_NUMBER</code></td>
+<td>Char</td>
+<td>2</td>
+<td>&quot;A two-digit number corresponding to the state, using the federal information processing system (FIPS) standard&quot;</td>
+</tr>
+<tr>
+<td><code>ZIP_CODE</code></td>
+<td>Char</td>
+<td>9</td>
+<td>&quot;Field that contains the five or nine-digit zip code for the plant address&quot;</td>
+</tr>
+<tr>
+<td><code>PRIMARY_SIC_CODE</code></td>
+<td>Char</td>
+<td>4</td>
+<td>&quot;The four-character Standard Industrial Classification code that classifies the main product produced or service performed at the plant&quot;</td>
+</tr>
+<tr>
+<td><code>SECONDARY_SIC_CODE</code></td>
+<td>Char</td>
+<td>4</td>
+<td>Four-character SIC code for a product/service &quot;other than the one described by the Primary SIC Code&quot;</td>
+</tr>
+<tr>
+<td><code>NAICS_CODE</code></td>
+<td>Char</td>
+<td>6</td>
+<td>Primary NAICS code (NAICS &quot;replaced the U.S. Standard Industrial Classification (SIC) system … in 1997&quot;)</td>
+</tr>
+<tr>
+<td><code>AFS_GOV_FACILITY_CODE</code></td>
+<td>Char</td>
+<td>1</td>
+<td>Government facility indicator (codes below)</td>
+</tr>
+<tr>
+<td><code>FEDERALLY_REPORTABLE</code></td>
+<td>Char</td>
+<td>1</td>
+<td>ECHO-generated Y/N (definition below)</td>
+</tr>
+<tr>
+<td><code>EPA_CLASSIFICATION_CODE</code></td>
+<td>Char</td>
+<td>2</td>
+<td>Emissions classification (codes below)</td>
+</tr>
+<tr>
+<td><code>OPERATING_STATUS</code></td>
+<td>Char</td>
+<td>1</td>
+<td>Operational condition (codes below)</td>
+</tr>
+<tr>
+<td><code>EPA_COMPLIANCE_STATUS</code></td>
+<td>Char</td>
+<td>1</td>
+<td>EPA compliance determination (codes below)</td>
+</tr>
+<tr>
+<td><code>CURRENT_HPV</code></td>
+<td>Char</td>
+<td>1</td>
+<td>Current High Priority Violator status (codes below)</td>
+</tr>
+<tr>
+<td><code>LOCAL_CONTROL_REGION</code></td>
+<td>Char</td>
+<td>2</td>
+<td>&quot;A two character code identifying the Local Control Region Code with jurisdiction over a plant. Note: LCON codes have different meanings in each state&quot;</td>
+</tr>
+<tr>
+<td><code>STATE_COMPLIANCE_STATUS</code></td>
+<td>Char</td>
+<td>1</td>
+<td>State agency compliance determination (same code set as <code>EPA_COMPLIANCE_STATUS</code>)</td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>AFS_ID</code></strong> — &quot;A 10-character alphanumeric code which uniquely identifies each permitted plant. The AFSID is
+composed of the Census FIPS state code, the FIPS county code and the unique AFS plant ID. Also known as SCSC
+in AFS.&quot;</p>
+<p><strong><code>AFS_GOV_FACILITY_CODE</code></strong> — &quot;A one-character code indicating if plant is government facility.&quot;</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Description</th>
+<th></th>
+<th>Code</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>0</code></td>
+<td>Privately owned/operated</td>
+<td></td>
+<td><code>4</code></td>
+<td>Owned/operated by municipality</td>
+</tr>
+<tr>
+<td><code>1</code></td>
+<td>Owned/operated by fed gov</td>
+<td></td>
+<td><code>5</code></td>
+<td>Owned/operated by district</td>
+</tr>
+<tr>
+<td><code>2</code></td>
+<td>Owned/operated by st gov</td>
+<td></td>
+<td><code>6</code></td>
+<td>Owned/operated by tribe</td>
+</tr>
+<tr>
+<td><code>3</code></td>
+<td>Owned/operated by county</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>data:</strong> all of <code>0</code>–<code>6</code> appear in this download.</p>
+<p><strong><code>FEDERALLY_REPORTABLE</code></strong> — &quot;ECHO generates the Federally Reportable indicator. FEDERALLY_REPORTABLE displays
+a &quot;Y&quot; if the facility is federally reportable and a &quot;N&quot; if the facility is not federally reportable. A facility
+is federally reportable if it's emission classification is &quot;major&quot; or &quot;synthetic minor&quot;, or it is subject to
+NSPS or NESHAP requirements and it's source-level compliance status is not equal to &quot;no applicable state
+regulation&quot; (AFS.EPA_CLASSIFICATION_CODE = A, A1, A2, SM OR (AFS.AIR_PROGRAM_CODE = 8, 9 and
+AFS.EPA_COMPLIANCE_STATUS is not equal to 8)).&quot;</p>
+<p><strong><code>EPA_CLASSIFICATION_CODE</code></strong> — &quot;A two-character code that categorizes a source's emission status according to
+the Alabama Power Decision's definition of a Major Source, or the 1993 EPA Compliance Monitoring Branch
+Classification Guidance. If there is no EPA Classification Code present, this field displays the State
+Classification Code value. AFS generates a plant classification reflecting the highest emission level
+classification of criteria pollutants regulated by an Air program.&quot; The same code set is used at the plant
+level (<code>EPA_CLASSIFICATION_CODE</code>), pollutant level (<code>POLLUTANT_CLASSIFICATION</code>), and air-program level
+(<code>EPA_STATE_CLASSIFICATION_CODE</code>).</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>A</code></td>
+<td>Actual or potential emissions are above the applicable major source thresholds.</td>
+</tr>
+<tr>
+<td><code>A1</code></td>
+<td>Actual or potential controlled emissions &gt;100 tons/year as per Alabama Power Decision.</td>
+</tr>
+<tr>
+<td><code>A2</code></td>
+<td>Actual emissions &lt;100 tons/year, but potential uncontrolled emissions &gt;100 tons/year.</td>
+</tr>
+<tr>
+<td><code>B</code></td>
+<td>Potential uncontrolled emissions &lt;100 tons/year</td>
+</tr>
+<tr>
+<td><code>C</code></td>
+<td>Class is unknown.</td>
+</tr>
+<tr>
+<td><code>E1</code></td>
+<td>Unregulated pollutant actual or potential controlled emissions &gt;100 tons/year as per Alabama Power Decision.</td>
+</tr>
+<tr>
+<td><code>E2</code></td>
+<td>Unregulated pollutant actual emission &lt;100 tons/year.</td>
+</tr>
+<tr>
+<td><code>ND</code></td>
+<td>Major Source thresholds are not defined.</td>
+</tr>
+<tr>
+<td><code>SM</code></td>
+<td>Potential emissions are below all applicable Major Source enforceable regulations or limitations.</td>
+</tr>
+<tr>
+<td><code>UK</code></td>
+<td>Unknown Pollutant Classification.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>data / interpretation note.</strong> Observed plant-level values in this download are <code>{A, A1, A2, B, C, ND, SM, UK}</code> (<code>B</code> most common; <code>C</code> ≈ 5,280 rows). The unregulated-pollutant codes <code>E1</code>/<code>E2</code> <strong>do not appear</strong>.
+This table adopts EPA's Feb-2015 definitions, under which <strong><code>C</code> = &quot;Class is unknown.&quot;</strong> A prior draft of
+this dictionary instead defined <code>C</code> as &quot;unregulated pollutant, actual/potential controlled emissions &gt;100
+tons/year&quot; (EPA's <code>E1</code> definition) and asserted &quot;C is not Unknown.&quot; That earlier reading is superseded here:
+observed <code>C</code> values should now be read as <em>class unknown</em>. Flagged because it changes the meaning of a code
+present in the data — confirm against any downstream code that keyed on the old <code>C</code> definition.</p>
+</blockquote>
+<p><strong><code>OPERATING_STATUS</code></strong> — &quot;A one-character code representing the operational condition of the plant. The
+operating status for a plant is generated from the most significant operative value assigned to subordinate
+Air programs (<code>AIR_PROGRAM_STATUS</code>).&quot; Same code set as <code>AIR_PROGRAM_STATUS</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Description</th>
+<th></th>
+<th>Code</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>O</code></td>
+<td>Operating</td>
+<td></td>
+<td><code>D</code></td>
+<td>NESHAP Demolition</td>
+</tr>
+<tr>
+<td><code>C</code></td>
+<td>Under Construction</td>
+<td></td>
+<td><code>R</code></td>
+<td>NESHAP Renovation</td>
+</tr>
+<tr>
+<td><code>P</code></td>
+<td>Planned (Has Applied For A Construction Permit)</td>
+<td></td>
+<td><code>S</code></td>
+<td>NESHAP Spraying</td>
+</tr>
+<tr>
+<td><code>T</code></td>
+<td>Temporarily Closed</td>
+<td></td>
+<td><code>L</code></td>
+<td>Landfill</td>
+</tr>
+<tr>
+<td><code>X</code></td>
+<td>Permanently Closed</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>I</code></td>
+<td>Seasonal</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>data:</strong> observed values are <code>O, C, P, T, X, I</code>. The NESHAP/landfill statuses (<code>D, R, S, L</code>) are documented
+but do not appear in this download.</p>
+<p><strong><code>EPA_COMPLIANCE_STATUS</code></strong> — &quot;A one-character code reflecting EPA's determination of compliance for a facility
+(or point within a facility) with regard to pollutants regulated by an Air program or by the procedural
+requirements of a permit. (This corresponds to the AFS field DCS1 at the facility level, and DCA1 at the
+program level. That is, it is the worst case of the EPA and State fields.)&quot;</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Description</th>
+<th></th>
+<th>Code</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>0</code></td>
+<td>Unknown Compliance Status</td>
+<td></td>
+<td><code>A</code></td>
+<td>Unknown With Regard To Procedural Compliance</td>
+</tr>
+<tr>
+<td><code>1</code></td>
+<td>In Violation – No Schedule</td>
+<td></td>
+<td><code>B</code></td>
+<td>In Violation With Regard To Both Emissions And Procedural Compliance</td>
+</tr>
+<tr>
+<td><code>2</code></td>
+<td>In Compliance – Source Test</td>
+<td></td>
+<td><code>C</code></td>
+<td>In Compliance With Procedural Requirements</td>
+</tr>
+<tr>
+<td><code>3</code></td>
+<td>In Compliance – Inspection</td>
+<td></td>
+<td><code>D</code></td>
+<td>HPV Violation (Auto-Generated)</td>
+</tr>
+<tr>
+<td><code>4</code></td>
+<td>In Compliance – Certification</td>
+<td></td>
+<td><code>E</code></td>
+<td>FRV Violation (Auto-Generated)</td>
+</tr>
+<tr>
+<td><code>5</code></td>
+<td>Meeting Compliance Schedule</td>
+<td></td>
+<td><code>F</code></td>
+<td>HPV On Schedule (Auto-Generated)</td>
+</tr>
+<tr>
+<td><code>6</code></td>
+<td>In Violation – Not Meeting Schedule</td>
+<td></td>
+<td><code>G</code></td>
+<td>FRV On Schedule (Auto-Generated)</td>
+</tr>
+<tr>
+<td><code>7</code></td>
+<td>In Violation – Unknown With Regard To Schedule</td>
+<td></td>
+<td><code>H</code></td>
+<td>In Compliance (Auto-Generated)</td>
+</tr>
+<tr>
+<td><code>8</code></td>
+<td>No Applicable State Regulation</td>
+<td></td>
+<td><code>M</code></td>
+<td>In Compliance – CEMs</td>
+</tr>
+<tr>
+<td><code>9</code></td>
+<td>In Compliance – Shut Down</td>
+<td></td>
+<td><code>P</code></td>
+<td>Present, See Other Program(s)</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td><code>U</code></td>
+<td>Unknown By Evaluation Calculation (Generated Value–Not Available For Input)</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td><code>W</code></td>
+<td>In Violation With Regard To Procedural Compliance</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td><code>Y</code></td>
+<td>Unknown With Regard To Both Emissions And Procedural Compliance</td>
+</tr>
+</tbody>
+</table>
+<p><strong>data:</strong> all of <code>0</code>–<code>9</code> and <code>A, B, C, D, E, F, G, H, M, P, U, W, Y</code> appear at the facility level in this
+download.</p>
+<p><strong><code>CURRENT_HPV</code></strong> — &quot;A one-character code indicating if plant is currently categorized as a High Priority
+Violator.&quot;</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>B</code></td>
+<td>Violation Unaddressed; EPA And State Share Lead Enforcement</td>
+</tr>
+<tr>
+<td><code>C</code></td>
+<td>Violation Addressed; EPA And State Share Lead Enforcement</td>
+</tr>
+<tr>
+<td><code>D</code></td>
+<td>Src W/Svil=B W/Changed Comp. Status Code From 1 Or 6 To 2,3,4,8 Or 9 (Obsolete)</td>
+</tr>
+<tr>
+<td><code>E</code></td>
+<td>Violation Unaddressed; EPA Has Lead Enforcement</td>
+</tr>
+<tr>
+<td><code>F</code></td>
+<td>Violation Addressed; EPA Has Lead Enforcement</td>
+</tr>
+<tr>
+<td><code>G</code></td>
+<td>Src W/Svil=E W/Changed Comp. Stat. Code from 1 Or 6 To 2,3,4,8 Or 9 (Obsolete)</td>
+</tr>
+<tr>
+<td><code>H</code></td>
+<td>EPA (Lead) Resolved In A Prior Fiscal Year (Obsolete)</td>
+</tr>
+<tr>
+<td><code>P</code></td>
+<td>Both (Lead) Resolved In A Prior Fiscal Year (Obsolete)</td>
+</tr>
+<tr>
+<td><code>S</code></td>
+<td>Violation Unaddressed; State/Local Has Lead Enforcement</td>
+</tr>
+<tr>
+<td><code>T</code></td>
+<td>Violation Addressed; State Has Lead Enforcement</td>
+</tr>
+<tr>
+<td><code>U</code></td>
+<td>Src W/Svil=S W/Changed Compliance Status from 1 Or 6 To 2,3,4,8, Or 9 (Obsolete)</td>
+</tr>
+<tr>
+<td><code>V</code></td>
+<td>State (Lead) Resolved in A Prior Year (Obsolete)</td>
+</tr>
+<tr>
+<td><code>X</code></td>
+<td>Violation Unaddressed; Enforcement Lead Unassigned</td>
+</tr>
+</tbody>
+</table>
+<p><strong>data:</strong> observed values are <code>C, E, F, S, T</code> (plus blank for non-HPV plants). The remaining codes — including
+all &quot;(Obsolete)&quot; ones — do not appear.</p>
+<p class='dict-xref'><a href='raw_data.html#afs_facilities'>Variable coverage &amp; summary stats →</a></p></div><div class='doc-pane' id='raw-air-program-csv'><h2>AIR_PROGRAM.csv</h2><p>One row per plant–program (with pollutant-level detail). Joins to facilities on <code>AFS_ID</code> / <code>PLANT_ID</code>.
+Per EPA, Air Program data are &quot;a repeating block of data addressing each regulatory area that a facility is
+subject to (e.g., SIP, NSPS, NESHAP, PSD).&quot;</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Len</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PLANT_ID</code></td>
+<td>Num</td>
+<td>22</td>
+<td>Plant identifier</td>
+</tr>
+<tr>
+<td><code>AFS_ID</code></td>
+<td>Char</td>
+<td>10</td>
+<td>Plant identifier</td>
+</tr>
+<tr>
+<td><code>AIR_PROGRAM_CODE</code></td>
+<td>Char</td>
+<td>1</td>
+<td>Regulatory air program (codes below)</td>
+</tr>
+<tr>
+<td><code>AIR_PROGRAM_STATUS</code></td>
+<td>Char</td>
+<td>1</td>
+<td>Operating status within the program (same codes as <code>OPERATING_STATUS</code>)</td>
+</tr>
+<tr>
+<td><code>EPA_CLASSIFICATION_CODE</code></td>
+<td>Char</td>
+<td>2</td>
+<td>Emissions classification at the air-program level</td>
+</tr>
+<tr>
+<td><code>EPA_COMPLIANCE_STATUS</code></td>
+<td>Char</td>
+<td>1</td>
+<td>Compliance status at the air-program level</td>
+</tr>
+<tr>
+<td><code>AIR_PROGRAM_CODE_SUBPARTS</code></td>
+<td>Char</td>
+<td>71</td>
+<td>Applicable subparts; &quot;Multiple subpart codes are delimited by a single blank space&quot;</td>
+</tr>
+<tr>
+<td><code>POLLUTANT_CODE</code></td>
+<td>Char</td>
+<td>5</td>
+<td>&quot;A five-character code that identifies a pollutant tracked at the air program level&quot; (see Appendix 1)</td>
+</tr>
+<tr>
+<td><code>CHEMICAL_ABSTRACT_SERVICE_NMBR</code></td>
+<td>Char</td>
+<td>9</td>
+<td>&quot;The chemical abstract number (CAS) for the pollutant if it exists&quot;</td>
+</tr>
+<tr>
+<td><code>POLLUTANT_CLASSIFICATION</code></td>
+<td>Char</td>
+<td>2</td>
+<td>Emissions classification at the pollutant level (same codes as <code>EPA_CLASSIFICATION_CODE</code>)</td>
+</tr>
+<tr>
+<td><code>POLLUTANT_COMPLIANCE_STATUS</code></td>
+<td>Char</td>
+<td>1</td>
+<td>Compliance status at the pollutant level (same codes as <code>EPA_COMPLIANCE_STATUS</code>)</td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>AIR_PROGRAM_CODE</code></strong> — &quot;A one-character code used to identify 1) the regulatory air program(s) that applies
+to a particular plant or point, and 2) the regulatory air program(s) authorizing and associated with an
+action taken by a local, state or federal regulatory agency.&quot;</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Description</th>
+<th></th>
+<th>Code</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>0</code></td>
+<td>SIP Source</td>
+<td></td>
+<td><code>A</code></td>
+<td>Acid Precipitation</td>
+</tr>
+<tr>
+<td><code>1</code></td>
+<td>SIP Source under federal jurisdiction</td>
+<td></td>
+<td><code>F</code></td>
+<td>FESOP (non-Title V)</td>
+</tr>
+<tr>
+<td><code>3</code></td>
+<td>Non-Federally Reportable Source</td>
+<td></td>
+<td><code>I</code></td>
+<td>Native American</td>
+</tr>
+<tr>
+<td><code>4</code></td>
+<td>CFC Tracking</td>
+<td></td>
+<td><code>M</code></td>
+<td>MACT (Section 63 NESHAPs)</td>
+</tr>
+<tr>
+<td><code>6</code></td>
+<td>PSD</td>
+<td></td>
+<td><code>T</code></td>
+<td>TIP (Tribal Implementation Plan)</td>
+</tr>
+<tr>
+<td><code>7</code></td>
+<td>NSR</td>
+<td></td>
+<td><code>V</code></td>
+<td>Title V Permits</td>
+</tr>
+<tr>
+<td><code>8</code></td>
+<td>NESHAP</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>9</code></td>
+<td>NSPS</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>data note:</strong> the <code>AIR_PROGRAM_CODE</code> column in this download also contains the values <strong><code>G</code></strong> (≈313 rows)
+and <strong><code>R</code></strong> (≈310 rows), which are <strong>not</strong> in EPA's documented program-code list above; their meaning is not
+documented in the AFS download materials.</p>
+</blockquote>
+<p><strong><code>AIR_PROGRAM_CODE_SUBPARTS</code></strong> — &quot;A field indicating applicable air program subparts. Multiple subpart codes
+are delimited by a single blank space.&quot; The full subpart code list (≈90 values, e.g. <code>DA</code> = &quot;Elec Util Steam
+Gener After 9/18/78&quot;, <code>J</code> = &quot;Petroleum Refineries&quot;) is given in EPA's AFS PDF; each is a source-category
+subpart shared with the NSPS/NESHAP subpart numbering. Not reproduced here — see the AFS Data Element
+Dictionary.</p>
+<p class='dict-xref'><a href='raw_data.html#afs_air_program'>Variable coverage &amp; summary stats →</a></p></div><div class='doc-pane' id='raw-afs-actions-csv'><h2>AFS_ACTIONS.csv</h2><p>Compliance-monitoring and enforcement events, rolled up to plant level. Per EPA, Action/Activity Data cover
+inspections, enforcement actions, etc., <strong>1978 to present</strong> — that &quot;present&quot; is EPA's own program-design
+language, not this repo's coverage: this repo's frozen extract's <code>DATE_ACHIEVED</code> values ramp up through
+~2013 then crash to near-zero after 2014 (<strong>data:</strong> confirmed against <code>data/raw/afs_downloads/AFS_ACTIONS.csv</code>),
+consistent with AFS being frozen as of 2014.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Len</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PLANT_ID</code></td>
+<td>Num</td>
+<td>22</td>
+<td>Plant identifier</td>
+</tr>
+<tr>
+<td><code>AFS_ID</code></td>
+<td>Char</td>
+<td>10</td>
+<td>Plant identifier</td>
+</tr>
+<tr>
+<td><code>ANU1</code></td>
+<td>Num</td>
+<td>22</td>
+<td>&quot;The action number is a numeric field used to uniquely identify an action record&quot;</td>
+</tr>
+<tr>
+<td><code>NATIONAL_ACTION_TYPE</code></td>
+<td>Char</td>
+<td>2</td>
+<td>Two-character action code (inspection/enforcement); see note below</td>
+</tr>
+<tr>
+<td><code>NATIONAL_ACTION_DESC</code></td>
+<td>Char</td>
+<td>50</td>
+<td>&quot;Text description for value NATIONAL_ACTION_TYPE&quot;</td>
+</tr>
+<tr>
+<td><code>DATE_ACHIEVED</code></td>
+<td>Char</td>
+<td>6</td>
+<td>&quot;Field that indicates the date (YYYYMMDD) of a completed compliance action&quot;</td>
+</tr>
+<tr>
+<td><code>ALL_AIR_PROGRAM_CODES</code></td>
+<td>Char</td>
+<td>4000</td>
+<td>&quot;All air programs associated with a given National Action Type … delimited by a single blank space&quot;</td>
+</tr>
+<tr>
+<td><code>PENALTY_AMOUNT</code></td>
+<td>Char</td>
+<td>9</td>
+<td>Civil penalty &quot;assessed, or agreed to by a facility in the final agreement between the enforcement authority and the plant&quot;</td>
+</tr>
+<tr>
+<td><code>RESULT_CODE</code></td>
+<td>Char</td>
+<td>2</td>
+<td>Result of stack tests / Title V reviews (codes below)</td>
+</tr>
+<tr>
+<td><code>POLLUTANT_CODE</code></td>
+<td>Char</td>
+<td>5</td>
+<td>Pollutant associated with the action (see Appendix 1)</td>
+</tr>
+<tr>
+<td><code>ALL_VIOLATING_POLL_CODES</code></td>
+<td>Char</td>
+<td>17</td>
+<td>&quot;One or more five character code values that identifies pollutant(s) in violation by the related national action&quot;</td>
+</tr>
+<tr>
+<td><code>ALL_VIOLATION_TYPE_CODES</code></td>
+<td>Char</td>
+<td>27</td>
+<td>&quot;One or more three character codes that identify the types of violations cited&quot; (codes below)</td>
+</tr>
+<tr>
+<td><code>KEY_ACTION_NUMBERS</code></td>
+<td>Char</td>
+<td>59</td>
+<td>Links an action to a violation-to-FCE pathway; &quot;An action can be linked to a maximum of ten pathways&quot;</td>
+</tr>
+<tr>
+<td><code>REGIONAL_DATA_ELEMENT_8</code></td>
+<td>Char</td>
+<td>2</td>
+<td>Title V Annual Compliance Certification result: In Compliance (MC), In Violation (MV), or Unknown (MU)</td>
+</tr>
+<tr>
+<td><code>DATE_RECORD_IS_UPDATED</code></td>
+<td>Char</td>
+<td>6</td>
+<td>&quot;The last date the action record was updated&quot;</td>
+</tr>
+<tr>
+<td><code>CREATION_DATE</code></td>
+<td>Char</td>
+<td>8</td>
+<td>&quot;The date the action record was created in AFS … automatically generated when a new plant action record is created&quot;</td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>NATIONAL_ACTION_TYPE</code></strong> — &quot;A two-character code identifying a compliance activity including inspections and
+enforcement actions. The National Action Type field translates region-specific action type codes to the
+corresponding EPA national activity code. … The lead agency for a national action is indicated within its
+description. The most commonly used codes for inspections are: FF, FS, FE, FZ, 1A, &amp; 5C for full inspections,
+and EM, EO, ES, EX, PC, PO, PP, PR, PS &amp; PX for partial inspections. The most commonly used codes for formal
+enforcement actions are: 1B, 2D, 6B, 7A, 7E, 7F, 8A, 8C, &amp; 9A.&quot; The AFS PDF tabulates 71 national action
+codes (a subset &quot;limited to compliance monitoring and enforcement activities&quot;); this download contains ~110
+distinct values. Not reproduced here — each row carries its own <code>NATIONAL_ACTION_DESC</code>; see the AFS PDF for
+the full list.</p>
+<p><strong><code>RESULT_CODE</code></strong> — &quot;Code indicating results of Stack Test and Title V review.&quot;</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Description</th>
+<th></th>
+<th>Code</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>01</code></td>
+<td>Action Achieved</td>
+<td></td>
+<td><code>FR</code></td>
+<td>Fed Rept Viol</td>
+</tr>
+<tr>
+<td><code>02</code></td>
+<td>Not Achieved</td>
+<td></td>
+<td><code>MA</code></td>
+<td>QEER Adequate</td>
+</tr>
+<tr>
+<td><code>03</code></td>
+<td>Action Resched.</td>
+<td></td>
+<td><code>MC</code></td>
+<td>In Compliance</td>
+</tr>
+<tr>
+<td><code>97</code></td>
+<td>Approved</td>
+<td></td>
+<td><code>MI</code></td>
+<td>QEER Inadequate</td>
+</tr>
+<tr>
+<td><code>98</code></td>
+<td>Disapproved</td>
+<td></td>
+<td><code>MR</code></td>
+<td>Retest Req</td>
+</tr>
+<tr>
+<td><code>99</code></td>
+<td>Pending</td>
+<td></td>
+<td><code>MU</code></td>
+<td>Unknown CMST</td>
+</tr>
+<tr>
+<td><code>FF</code></td>
+<td>Stack Test Failed</td>
+<td></td>
+<td><code>MV</code></td>
+<td>In Violation</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td><code>PP</code></td>
+<td>Stack Test Passed</td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>ALL_VIOLATION_TYPE_CODES</code></strong> — &quot;One or more three character codes that identify the types of violations cited
+for a violation or administrative penalty.&quot;</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GC1</code></td>
+<td>Fail to Obtain PSD or NSR Permit and/or a Permit for Major Mods to Either</td>
+</tr>
+<tr>
+<td><code>GC2</code></td>
+<td>Viol. of Air Toxics Req. Resulting in Either EE or Viol. Op Parm Restricts</td>
+</tr>
+<tr>
+<td><code>GC3</code></td>
+<td>Viol. by SM of Emis Lim or Perm. Condition Effecting Srces PSD, NSR or T5</td>
+</tr>
+<tr>
+<td><code>GC4</code></td>
+<td>Viol. of any Substantive Term of any S/L or Fed Order, Consent Decree or AO</td>
+</tr>
+<tr>
+<td><code>GC5</code></td>
+<td>Substantial Viol. of T5 Cert. Obligation, e.g., Failure to Submit a Cert</td>
+</tr>
+<tr>
+<td><code>GC6</code></td>
+<td>Substantial Violation of Srces Obligation to Submit T5 Permit Application</td>
+</tr>
+<tr>
+<td><code>GC7</code></td>
+<td>Test/Monitor/Records/Reporting Viol. that Substan. Interfere w/Enf or Cmst</td>
+</tr>
+<tr>
+<td><code>GC8</code></td>
+<td>Viol. of Allw Emis. Limit Detected during a Reference Method Stack Test</td>
+</tr>
+<tr>
+<td><code>GC9</code></td>
+<td>Clean Air Act (CAA) Violations by Chronic or Recalcitrant Violators</td>
+</tr>
+<tr>
+<td><code>G10</code></td>
+<td>Substantial Violation of Clean Air Act Section 112(R) Requirements</td>
+</tr>
+<tr>
+<td><code>M1A</code></td>
+<td>Any Violation of Emission Limit Detected via Stack Testing</td>
+</tr>
+<tr>
+<td><code>M1B</code></td>
+<td>Violation of Emission Limits &gt;15% via Sampling</td>
+</tr>
+<tr>
+<td><code>M1C</code></td>
+<td>Violation of Emission Limits &gt; The SST (Supplemental Sig. Threshold)</td>
+</tr>
+<tr>
+<td><code>M2A</code></td>
+<td>Violation of Direct Surrogate For &gt;5% of Limit For &gt;3% of Operating Time</td>
+</tr>
+<tr>
+<td><code>M2B</code></td>
+<td>Violation of Direct Surrogate For &gt;50% of Operating Time (OT)</td>
+</tr>
+<tr>
+<td><code>M2C</code></td>
+<td>Violation of Direct Surrogate of &gt;25% For 2 Reporting Periods</td>
+</tr>
+<tr>
+<td><code>M3A</code></td>
+<td>Violation of Non-Opacity Standard via CEM of &gt;15% For &gt;5% of Operating Time</td>
+</tr>
+<tr>
+<td><code>M3B</code></td>
+<td>Violation of Non-Opacity Standard via CEM of the Supplement. Sig. Threshold</td>
+</tr>
+<tr>
+<td><code>M3C</code></td>
+<td>Viol. of Non-Opacity Std via CEM of &gt;15% for 2 Reporting Periods</td>
+</tr>
+<tr>
+<td><code>M3D</code></td>
+<td>Viol. of Non-Opacity Std via CEM of &gt;50% of the Oper Time during Report Per</td>
+</tr>
+<tr>
+<td><code>M3E</code></td>
+<td>Viol of Non-Opacity Std via CEM of &gt;25% During 2 Consec. Reporting Periods</td>
+</tr>
+<tr>
+<td><code>M3F</code></td>
+<td>Any Violation of Non-Opacity Standard via CEM</td>
+</tr>
+<tr>
+<td><code>M4A</code></td>
+<td>Violation of Opacity Standards (0-20%) via Continuous Opacity Monitoring</td>
+</tr>
+<tr>
+<td><code>M4B</code></td>
+<td>Viols. of Opacity Stds &gt;3% of Op Time via Com During 2 Consec. Rept Perds</td>
+</tr>
+<tr>
+<td><code>M4C</code></td>
+<td>Violation of Opacity Stds (&gt;20%) via Com For &gt;5% of Operating Time</td>
+</tr>
+<tr>
+<td><code>M4D</code></td>
+<td>Violation of Opacity Standards (&gt;20%) via Com For 5% Operating Time</td>
+</tr>
+<tr>
+<td><code>M4E</code></td>
+<td>Violation of Opacity Standards (0-20%) via Method 9 VE Readings</td>
+</tr>
+<tr>
+<td><code>M4F</code></td>
+<td>Violation of Opacity Standards (&gt;20%) via Method 9 VE Readings</td>
+</tr>
+</tbody>
+</table>
+<p class='dict-xref'><a href='raw_data.html#afs_actions'>Variable coverage &amp; summary stats →</a></p></div><div class='doc-pane' id='raw-afs-air-prg-hist-compliance-csv'><h2>AFS_AIR_PRG_HIST_COMPLIANCE.csv</h2><p>Quarterly compliance status per plant–program (<strong>FY2007 to present</strong> per EPA — again EPA's program-design
+language; this repo's frozen extract ends ~2014, per <code>briefs/datasets/afs_crosswalk_feasibility.md</code>). One
+row per plant–program–quarter.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Len</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AFS_ID</code></td>
+<td>Char</td>
+<td>10</td>
+<td>Plant identifier</td>
+</tr>
+<tr>
+<td><code>AIR_PROGRAM_CODE</code></td>
+<td>Char</td>
+<td>1</td>
+<td>Regulatory program (same codes as <code>AIR_PROGRAM</code>)</td>
+</tr>
+<tr>
+<td><code>HISTORICAL_COMPLIANCE_DATE</code></td>
+<td>Char</td>
+<td>4</td>
+<td>&quot;The date (in YYQQ format) … Quarters are calendar year-quarters (not fiscal year), i.e., quarter one covers January 1 – March 31&quot;</td>
+</tr>
+<tr>
+<td><code>HISTORICAL_COMPLIANCE_STATUS</code></td>
+<td>Char</td>
+<td>1</td>
+<td>&quot;A compliance status associated with a year and quarter time frame&quot; (same codes as <code>EPA_COMPLIANCE_STATUS</code>)</td>
+</tr>
+</tbody>
+</table>
+<p class='dict-xref'><a href='raw_data.html#afs_hist_compliance'>Variable coverage &amp; summary stats →</a></p></div><div class='doc-pane' id='raw-afs-hpv-history-csv'><h2>AFS_HPV_HISTORY.csv</h2><p>Lifecycle of High Priority Violator designations. One row per HPV episode.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Len</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AFS_ID</code></td>
+<td>Char</td>
+<td>10</td>
+<td>Plant identifier</td>
+</tr>
+<tr>
+<td><code>HPV_DAYZERO_TYPE</code></td>
+<td>Char</td>
+<td>2</td>
+<td>Lead-agency code at day zero (codes below; carried with <code>HPV_DAYZERO_DESC</code>)</td>
+</tr>
+<tr>
+<td><code>HPV_DAYZERO_DESC</code></td>
+<td>Char</td>
+<td>50</td>
+<td>Text description of the day-zero type</td>
+</tr>
+<tr>
+<td><code>HPV_DAYZERO_DATE</code></td>
+<td>Date</td>
+<td></td>
+<td>Date the plant entered HPV status</td>
+</tr>
+<tr>
+<td><code>HPV_RESOLVED_TYPE</code></td>
+<td>Char</td>
+<td>2</td>
+<td>Resolution-action code (blank if unresolved; carried with <code>HPV_RESOLVED_DESC</code>)</td>
+</tr>
+<tr>
+<td><code>HPV_RESOLVED_DESC</code></td>
+<td>Char</td>
+<td>50</td>
+<td>Text description of the resolution type</td>
+</tr>
+<tr>
+<td><code>HPV_RESOLVED_DATE</code></td>
+<td>Date</td>
+<td></td>
+<td>Date the HPV was resolved</td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>HPV_DAYZERO_TYPE</code></strong> — &quot;Code designating the lead agency for the high priority violator in AFS. These
+correspond to the AFS national action types for &quot;day zeroes&quot;, indicating the start of high priority violation
+status.&quot;</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>2B</code></td>
+<td>Day Zero – Shared Enforcement Lead</td>
+</tr>
+<tr>
+<td><code>2E</code></td>
+<td>State Day Zero</td>
+</tr>
+<tr>
+<td><code>2Z</code></td>
+<td>Federal Day Zero</td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>HPV_RESOLVED_TYPE</code></strong> — &quot;These correspond to AFS national action types which resolved the HPV pathway in
+AFS. … If the HPV pathway was unresolved as of the data extract, this will be blank.&quot; Resolution codes in the
+AFS PDF include <code>C3</code> (113D Pen Collected), <code>C7</code> (Closeout Memo Issued), <code>2K</code> (Compl By State, No Act Req),
+<code>WD</code> (EPA 113D Withdrawn), <code>2L</code> (Proposed SIP Revision To Compliance), <code>7G</code> (Source Ret To Compl By USEPA
+W/No Further Act Req), <code>2M</code> (Source Specific SIP Revision), and <code>VR</code> (Violation Resolved); each row carries
+its meaning in <code>HPV_RESOLVED_DESC</code>.</p>
+<p class='dict-xref'><a href='raw_data.html#afs_hpv'>Variable coverage &amp; summary stats →</a></p></div><div class='doc-pane' id='raw-afs-pollutant-codes-appendix-1'><h2>AFS pollutant codes (Appendix 1)</h2><p><code>POLLUTANT_CODE</code>, <code>ALL_VIOLATING_POLL_CODES</code>, and the <code>AIR_PROGRAM.csv</code> pollutant code use a shared ~300-value
+code list (Appendix 1 of the AFS PDF) — e.g. <code>AB</code> Asbestos, <code>CO</code> Carbon Monoxide, <code>SO2</code> Sulfur Dioxide, <code>PB</code>
+Lead, <code>PM2.5</code> &quot;Particulate Matter &lt; 2.5 Um&quot;, <code>VOC</code> Volatile Organic Compounds. Not reproduced here; each AFS
+row also carries the pollutant's CAS number (<code>CHEMICAL_ABSTRACT_SERVICE_NMBR</code>) where one exists. See the AFS
+Data Element Dictionary, Appendix 1, for the full mapping.</p>
+</div><div class='doc-pane' id='raw-pipeline-caa-00-complete-csv'><h2>PIPELINE_CAA_00_COMPLETE.csv</h2><blockquote>
+<p><strong>Repo note:</strong> <code>PIPELINE_CAA_00_COMPLETE.csv</code> was first added to <code>data/raw/</code> on 2026-07-23 as a manual
+extract (66,655 rows, matching the predecessor extract's count below). It has since been superseded by
+<code>01_download.R</code>'s automated fetch (as of 2026-07-27: <strong>66,723 rows</strong> — see decision <code>PL3</code> in
+<code>briefs/datasets/dataset_construction_decisions.md</code> Part G). It is cleaned to
+<code>data/processed/pipeline.csv.gz</code> (spec in <code>code/02_cleaning/02_cleaning_parameters.R</code>) and built into the
+facility × year dataset 6, <code>pipeline</code>, by <code>code/03_datasets/07_pipeline.R</code> — see
+<code>briefs/datasets/dataset_construction_decisions.md</code> Part G for coding decisions and verification.</p>
+</blockquote>
+<p>Source: <a href="https://echo.epa.gov/tools/data-downloads/caa-pipeline-download-summary">https://echo.epa.gov/tools/data-downloads/caa-pipeline-download-summary</a>. <strong>What it is.</strong> Per EPA, the
+pipeline &quot;shows links between Compliance Monitoring Activities (CMA) to any related violations and/or
+enforcement actions&quot; — i.e. it pre-joins, in a single row, a violation to its triggering evaluation and
+resulting enforcement action, a linkage not available in the individual ICIS-Air tables. This file documents
+the 35 columns. In the predecessor extract the file had <strong>66,655 rows</strong>, with <code>FOUND_VIOLATION = Y</code> for every
+row (<strong>data</strong>).</p>
+<p><strong>Identification and row-level flags</strong></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Len</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SORT_ORDER</code></td>
+<td>Num</td>
+<td></td>
+<td>&quot;A generated field to aid in the linkage creation&quot; (EPA internal ordering)</td>
+</tr>
+<tr>
+<td><code>SORT_DATE</code></td>
+<td>Date</td>
+<td></td>
+<td>&quot;A linkage creation helper field to help get the proper display order by date&quot;</td>
+</tr>
+<tr>
+<td><code>SOURCE_ID</code></td>
+<td>Char</td>
+<td>30</td>
+<td>&quot;The Clean Air Act facility identification number&quot; (ICIS-Air <code>PGM_SYS_ID</code>)</td>
+</tr>
+<tr>
+<td><code>REGISTRY_ID</code></td>
+<td>Char</td>
+<td>50</td>
+<td>Facility Registry Service (FRS) ID (character, to preserve leading zeros)</td>
+</tr>
+<tr>
+<td><code>AIR_NAME</code></td>
+<td>Char</td>
+<td>200</td>
+<td>&quot;The facility name&quot;</td>
+</tr>
+<tr>
+<td><code>PIPELINE_FLAG</code></td>
+<td>Char</td>
+<td>1</td>
+<td>EPA: &quot;an internally generated flag to indicate at least [one] violation (VIOL_ACTIVITY_ID) linked to an evaluation and/or enforcement action.&quot; <strong>data:</strong> values Y/N</td>
+</tr>
+<tr>
+<td><code>OFFICIAL_FLAG</code></td>
+<td>Char</td>
+<td>1</td>
+<td>EPA: &quot;set to 'Y' when an entry is counted as compliance monitoring strategy activities&quot; (null for programs without strategies)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Evaluation block (the compliance-monitoring activity)</strong></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Len</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>EVAL_FLAG</code></td>
+<td>Char</td>
+<td>1</td>
+<td>EPA: &quot;an internally generated flag to indicate if there is at least one Compliance Monitoring Activity (CMA) (evaluation) [linked] to the violation activity id.&quot;</td>
+</tr>
+<tr>
+<td><code>EVAL_SORT_ORDER</code></td>
+<td>Num</td>
+<td></td>
+<td>Internal ordering of the evaluation within the row</td>
+</tr>
+<tr>
+<td><code>EVAL_ACTIVITY_ID</code></td>
+<td>Num</td>
+<td></td>
+<td>Evaluation activity identifier. <strong>data:</strong> a sentinel value <code>-9999</code> is used where no evaluation is linked</td>
+</tr>
+<tr>
+<td><code>EVAL_TYPE_DESC</code></td>
+<td>Char</td>
+<td>100</td>
+<td>Evaluation type (e.g. FCE/PCE variants, Investigation, Self-Disclosure). <strong>data:</strong> includes a &quot;Self-Disclosure&quot; category</td>
+</tr>
+<tr>
+<td><code>EVAL_LEAD_AGENCY</code></td>
+<td>Char</td>
+<td>5</td>
+<td>Lead agency for the evaluation (EPA / State / Local)</td>
+</tr>
+<tr>
+<td><code>EVAL_DATE</code></td>
+<td>Date</td>
+<td></td>
+<td>Date of the evaluation</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Violation block</strong></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Len</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>VIOL_FLAG</code></td>
+<td>Char</td>
+<td>1</td>
+<td>Flag indicating a violation on the row</td>
+</tr>
+<tr>
+<td><code>VIOL_SORT_ORDER</code></td>
+<td>Num</td>
+<td></td>
+<td>Internal ordering of the violation</td>
+</tr>
+<tr>
+<td><code>FOUND_VIOLATION</code></td>
+<td>Char</td>
+<td>1</td>
+<td>&quot;Flag indicating if violation was found.&quot; <strong>data:</strong> Y for all rows in the predecessor extract (66,655 rows, 2026-07-23); not re-verified against the current automated 66,723-row extract</td>
+</tr>
+<tr>
+<td><code>VIOL_ACTIVITY_ID</code></td>
+<td>Num</td>
+<td></td>
+<td>Violation activity identifier (key linking violations to CMAs and/or EAs). <strong>data + EPA:</strong> some rows carry system-generated IDs (prefixes <code>9906</code>/<code>9913</code>) that &quot;did not have an actual violation activity identification number&quot; and were &quot;system generated for purposes of creating the pipeline table&quot;</td>
+</tr>
+<tr>
+<td><code>VIOL_TYPE</code></td>
+<td>Char</td>
+<td>40</td>
+<td>Violation type. <strong>data:</strong> HPV, FRV, plus placeholder values (blank, and &quot;Linked to Viol. Below&quot;) on the system-generated rows</td>
+</tr>
+<tr>
+<td><code>VIOL_TYPE_SORT</code></td>
+<td>Num</td>
+<td></td>
+<td>Internal ordering by violation type</td>
+</tr>
+<tr>
+<td><code>VIOL_LEAD_AGENCY</code></td>
+<td>Char</td>
+<td>6</td>
+<td>Lead agency for the violation (EPA / State / Local; often blank on placeholder rows)</td>
+</tr>
+<tr>
+<td><code>VIOL_PROGRAMS</code></td>
+<td>Char</td>
+<td>4000</td>
+<td>Regulatory program(s) violated</td>
+</tr>
+<tr>
+<td><code>VIOL_POLLUTANT_CODES</code></td>
+<td>Char</td>
+<td>4000</td>
+<td>Pollutant code(s) of the violation</td>
+</tr>
+<tr>
+<td><code>VIOL_POLLUTANT_DESCS</code></td>
+<td>Char</td>
+<td>4000</td>
+<td>Pollutant description(s) of the violation</td>
+</tr>
+<tr>
+<td><code>VIOL_START_DATE</code></td>
+<td>Date</td>
+<td></td>
+<td>Violation start date</td>
+</tr>
+<tr>
+<td><code>VIOL_END_DATE</code></td>
+<td>Char</td>
+<td>40</td>
+<td>Violation end/resolution date (text field, mixed format)</td>
+</tr>
+<tr>
+<td><code>VIOL_END_DATE_DATE</code></td>
+<td>Date</td>
+<td></td>
+<td>Parsed date version of <code>VIOL_END_DATE</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Enforcement-action block</strong></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Len</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>EA_FLAG</code></td>
+<td>Char</td>
+<td>1</td>
+<td>Flag indicating an enforcement action on the row</td>
+</tr>
+<tr>
+<td><code>EA_SORT_ORDER</code></td>
+<td>Num</td>
+<td></td>
+<td>Internal ordering of the enforcement action</td>
+</tr>
+<tr>
+<td><code>EA_ACTIVITY_ID</code></td>
+<td>Num</td>
+<td></td>
+<td>Enforcement-action activity identifier</td>
+</tr>
+<tr>
+<td><code>EA_FEA_ACTIVITY_ID</code></td>
+<td>Num</td>
+<td></td>
+<td>Separate identifier for the formal enforcement action</td>
+</tr>
+<tr>
+<td><code>EA_TYPE</code></td>
+<td>Char</td>
+<td>100</td>
+<td>Enforcement-action type (e.g. Notice of Violation, Administrative – Formal, Judicial)</td>
+</tr>
+<tr>
+<td><code>EA_DATE</code></td>
+<td>Date</td>
+<td></td>
+<td>Date of the enforcement action</td>
+</tr>
+<tr>
+<td><code>FEA_ISSUE_DATE_FLAG</code></td>
+<td>Char</td>
+<td>1</td>
+<td>Flag for the formal-enforcement-action issue date</td>
+</tr>
+<tr>
+<td><code>EA_PENALTY_AMT</code></td>
+<td>Num</td>
+<td></td>
+<td>Monetary penalty. <strong>data:</strong> non-zero on 14,427 rows</td>
+</tr>
+<tr>
+<td><code>EA_COMP_ACTION_COST</code></td>
+<td>Num</td>
+<td></td>
+<td>Supplemental compliance / environmental-project cost. <strong>data:</strong> non-zero on 94 rows</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Lead-agency note (data).</strong> There is no enforcement-action-level lead-agency field; the only lead-agency
+columns are <code>EVAL_LEAD_AGENCY</code> and <code>VIOL_LEAD_AGENCY</code>. Of the 94 non-zero <code>EA_COMP_ACTION_COST</code> rows, 83 have
+a blank <code>VIOL_LEAD_AGENCY</code>, so agency attribution via that field is incomplete.</p>
+</blockquote>
+</div><div class='doc-pane' id='derived-conventions-used-throughout'><h2>Conventions used throughout</h2><ul>
+<li><strong>Casing.</strong> Both layers are <strong>fully <code>UPPER_SNAKE_CASE</code></strong> — <code>data/datasets/</code> builders assemble in lowercase,
+then uppercase once on write; <code>data/panels/</code> reads columns directly off the
+already-uppercase datasets layer with no separate casing step of its own (<code>code/04_panel_building/README.md</code>'s
+Conventions section), so there's no mixed casing between the two layers as of the current
+(<code>code/04_panel_building/</code>) pipeline.</li>
+<li><strong>Join keys.</strong> Every file in both layers carries <code>PGM_SYS_ID</code> (the ICIS-Air facility id) and <code>REGISTRY_ID</code>
+(the cross-program FRS facility id, <code>NA</code> where no FRS match). Facility-year files join <code>(PGM_SYS_ID,  YEAR)</code> 1:1 onto one another; event-grain files (<code>hpv_spells</code>, <code>penalties</code>) join many-to-one via
+<code>PGM_SYS_ID</code> (+ year where relevant).</li>
+<li><strong>The zero-vs-NA discipline (the single most load-bearing convention in this repo).</strong> Every count/status
+column in a facility-year file is gated by an observability flag for that file (<code>ICIS_OBSERVED</code>,
+<code>WAYBACK_OBSERVED</code>, <code>PIPELINE_OBSERVED</code>, <code>EMISSIONS_OBSERVED</code>/<code>GHG_OBSERVED</code>, or the panel layer's
+<code>OBS_SOURCE</code>). Within an <strong>observed</strong> facility-year, a <code>0</code> is a confirmed true zero; an <strong>unobserved</strong>
+facility-year is <code>NA</code> — we simply don't know. Never treat <code>NA</code> as <code>0</code>, and never assume <code>0</code> means &quot;checked
+and none happened&quot; without first checking the observability flag. Below, a column tagged <strong>COUNT_COL</strong>
+follows this rule; a handful of dollar/lag columns (<code>PENALTY_AMOUNT</code>, <code>MEAN_*_LAG_DAYS</code>) follow a
+<em>different</em>, narrower rule (&quot;no value or zero → <code>NA</code>&quot;) that's called out explicitly where it applies.</li>
+<li><strong>Duplicates are surfaced, never dropped.</strong> Every <code>N_*</code>/<code>n_*</code> count counts <strong>all rows</strong> of its source event
+table, with no deduplication. Where an asset carries duplicate event-key rows (inspections, enforcement,
+certs), a companion <code>_DUP</code>/<code>_dup</code> (event-key repeat) and <code>_DUP_EXACT</code>/<code>_dup_exact</code> (byte-identical repeat)
+column reports how many of those rows were duplicates; recover the event-distinct count as <code>n_x − n_x_dup</code>.
+Violations and stack tests carry zero dups <strong>enforced via <code>stopifnot()</code> at build time</strong>
+(<code>01_regulatory.R:146,216</code>) — not merely a comment — so they carry no <code>_dup</code> columns.</li>
+</ul>
+</div><div class='doc-pane' id='derived-regulatory-csv-gz-dataset-0-facility-year-icis-air-only'><h2>regulatory.csv.gz — dataset 0, facility × year, ICIS-Air only</h2><p>Each dataset is built once over the <strong>full</strong> 279,665-facility ICIS-Air universe (no ever-active screen, no
+sample restriction); sample selection is left to the user.</p>
+<p>Universe: every <code>PGM_SYS_ID</code> in <code>ICIS-AIR_FACILITIES</code>, years 2005–2025. <code>ICIS_OBSERVED</code> is the
+reference zero-vs-NA flag reused by <code>hpv_active</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Definition &amp; derivation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ICIS_OBSERVED</code></td>
+<td>flag</td>
+<td><code>1</code> iff the facility-year has ≥1 row in <em>any</em> of the six ICIS event tables (inspections/violations/formal/informal/certs/stacktests); gates every <code>N_*</code> column below.</td>
+</tr>
+<tr>
+<td><code>N_INSPECTIONS</code></td>
+<td>COUNT_COL</td>
+<td>Count of <code>inspections</code> rows for the facility-year.</td>
+</tr>
+<tr>
+<td><code>N_FCE</code></td>
+<td>COUNT_COL</td>
+<td><code>sum(grepl(&quot;^FCE&quot;, COMP_MONITOR_TYPE_DESC))</code> — Full Compliance Evaluations (overlaps <code>N_PCE</code>).</td>
+</tr>
+<tr>
+<td><code>N_PCE</code></td>
+<td>COUNT_COL</td>
+<td><code>sum(grepl(&quot;^PCE&quot;, COMP_MONITOR_TYPE_DESC))</code> — Partial Compliance Evaluations.</td>
+</tr>
+<tr>
+<td><code>N_INSP_EPA</code> / <code>N_INSP_STATE</code> / <code>N_INSP_LOCAL</code></td>
+<td>COUNT_COL</td>
+<td><code>STATE_EPA_FLAG == &quot;E&quot;/&quot;S&quot;/&quot;L&quot;</code> — conducting agency; partitions <code>N_INSPECTIONS</code>.</td>
+</tr>
+<tr>
+<td><code>N_INSPECTIONS_DUP</code></td>
+<td>COUNT_COL</td>
+<td>Count of inspection rows with a repeated event key.</td>
+</tr>
+<tr>
+<td><code>N_INSPECTIONS_DUP_EXACT</code></td>
+<td>COUNT_COL</td>
+<td>Subset of the above that are byte-identical repeats.</td>
+</tr>
+<tr>
+<td><code>N_VIOLATIONS</code></td>
+<td>COUNT_COL</td>
+<td>Count of <code>violations</code> rows (asset asserted dup-free).</td>
+</tr>
+<tr>
+<td><code>N_HPV</code></td>
+<td>COUNT_COL</td>
+<td><code>sum(!is.na(HPV_DAYZERO_DATE) &amp; HPV_DAYZERO_DATE != &quot;&quot;)</code> on violation rows — a <strong>narrower, different</strong> HPV proxy than dataset 2's <code>ENF_RESPONSE_POLICY_CODE==&quot;HPV&quot;</code> tier. See cross-file caveats below — do not expect this to reconcile exactly to <code>hpv_spells</code>/<code>hpv_active</code>.</td>
+</tr>
+<tr>
+<td><code>N_FRV</code></td>
+<td>COUNT_COL</td>
+<td>Complement of <code>N_HPV</code> — violation rows with no HPV day-zero date.</td>
+</tr>
+<tr>
+<td><code>N_VIOL_SIP</code> / <code>N_VIOL_TITLEV</code> / <code>N_VIOL_NSPS</code> / <code>N_VIOL_MACT</code> / <code>N_VIOL_FESOP</code></td>
+<td>COUNT_COL</td>
+<td>Match against <code>PROGRAM_CODES</code> with explicit <code>\b</code>-bounded codes (State Implementation Plan / Title V Permits / New Source Performance Standards / MACT Standards / Federally-Enforceable State Operating Permit). Previously: was a <code>grepl()</code> substring match against <code>PROGRAM_DESCS</code>, which let <code>N_VIOL_NSPS</code> scope-creep into <code>CAANSPSM</code>'s description by substring accident (418 rows) — now coded, not coincidental, and matches <code>PROG_NSPS</code>'s deliberate <code>CAANSPS</code>+<code>CAANSPSM</code> pooling by design. Overlapping, not partitioning — need not sum to <code>N_VIOLATIONS</code>.</td>
+</tr>
+<tr>
+<td><code>N_VIOL_EPA</code> / <code>N_VIOL_STATE</code> / <code>N_VIOL_LOCAL</code></td>
+<td>COUNT_COL</td>
+<td><code>AGENCY_TYPE_DESC</code> bucketed to federal / state / local (see agent report for exact string sets).</td>
+</tr>
+<tr>
+<td><code>N_ENFORCEMENT</code></td>
+<td>COUNT_COL</td>
+<td>Count of pooled <code>formal_actions</code> + <code>informal_actions</code> rows for the facility-year.</td>
+</tr>
+<tr>
+<td><code>N_FORMAL</code> / <code>N_INFORMAL</code></td>
+<td>COUNT_COL</td>
+<td>Partition of <code>N_ENFORCEMENT</code> by source table.</td>
+</tr>
+<tr>
+<td><code>N_PENALTY_ACTION</code></td>
+<td>COUNT_COL</td>
+<td><code>grepl(&quot;^113D1&quot;, ENF_TYPE_CODE)</code>, pooled. Previously: was an exact match <code>ENF_TYPE_DESC == &quot;CAA 113D1 Action For Penalty&quot;</code>, which missed four 112(r)/MRR expedited-settlement variants of the same action (<code>ENF_TYPE_CODE</code> <code>113D1E</code>/<code>113D1E1</code>/<code>113D1E2</code>/<code>113D1E3</code>) — a 201-row (~2.9%) undercount of the true 113D1 family.</td>
+</tr>
+<tr>
+<td><code>N_PENALTIES</code></td>
+<td>COUNT_COL</td>
+<td>Count of <strong>formal</strong> rows with parsed <code>PENALTY_AMOUNT &gt; 0</code> (informal rows have no penalty field, never counted). The count companion to the dollar sum <code>PENALTY_AMOUNT</code> — they follow <em>different</em> NA rules (see below).</td>
+</tr>
+<tr>
+<td><code>N_PENALTIES_DUP</code></td>
+<td>COUNT_COL</td>
+<td>Subset of <code>N_PENALTIES</code> on duplicate-flagged rows.</td>
+</tr>
+<tr>
+<td><code>N_WARNING_LETTER</code> / <code>N_ADMIN_NP</code> / <code>N_CIVIL_JUDICIAL</code> / <code>N_NOV</code> / <code>N_ADMIN_ORDER</code></td>
+<td>COUNT_COL</td>
+<td>Exact <code>ENF_TYPE_DESC</code> matches (&quot;Warning Letter&quot; / &quot;CAA 113A Admin Compliance Order (Non-Penalty)&quot; / &quot;Civil Judicial Action&quot; / &quot;Notice of Violation&quot; / &quot;Administrative Order&quot;), pooled formal+informal; unmapped types are dropped, so these need not sum to <code>N_ENFORCEMENT</code>.</td>
+</tr>
+<tr>
+<td><code>N_ENF_EPA</code> / <code>N_ENF_STATE</code> / <code>N_ENF_LOCAL</code></td>
+<td>COUNT_COL</td>
+<td><code>STATE_EPA_FLAG</code>, pooled enforcement.</td>
+</tr>
+<tr>
+<td><code>N_ENFORCEMENT_DUP</code> / <code>N_ENFORCEMENT_DUP_EXACT</code></td>
+<td>COUNT_COL</td>
+<td>Duplicate-load indicators, pooled.</td>
+</tr>
+<tr>
+<td><code>N_FORMAL_DUP</code> / <code>N_FORMAL_DUP_EXACT</code> / <code>N_INFORMAL_DUP</code> / <code>N_INFORMAL_DUP_EXACT</code></td>
+<td>COUNT_COL</td>
+<td>Same, split by formal/informal.</td>
+</tr>
+<tr>
+<td><code>PENALTY_AMOUNT</code></td>
+<td>dollars</td>
+<td><code>sum(parse_number(PENALTY_AMOUNT), na.rm=TRUE)</code> over all <strong>formal</strong> rows for the facility-year. <strong>Not</strong> a COUNT_COL: real when observed, but <code>NA</code> — not <code>0</code> — when unobserved. An observed facility-year with a formal action but no penalty dollars can read <code>N_PENALTIES = 0</code> <strong>and</strong> <code>PENALTY_AMOUNT = NA</code> simultaneously; this is by design, not a bug.</td>
+</tr>
+<tr>
+<td><code>PENALTY_AMOUNT_DUP</code></td>
+<td>dollars</td>
+<td>Dollars contributed by duplicate-flagged formal rows only — isolates inflation from not deduping.</td>
+</tr>
+<tr>
+<td><code>N_CERTS</code></td>
+<td>COUNT_COL</td>
+<td>Count of <code>certs</code> rows.</td>
+</tr>
+<tr>
+<td><code>N_CERTS_DEVIATION</code></td>
+<td>COUNT_COL</td>
+<td><code>sum(FACILITY_RPT_DEVIATION_FLAG == &quot;Y&quot;)</code> — Title V certs self-reporting a deviation.</td>
+</tr>
+<tr>
+<td><code>N_CERTS_DUP</code> / <code>N_CERTS_DUP_EXACT</code></td>
+<td>COUNT_COL</td>
+<td>Duplicate-load indicators (~81% of cert rows are event-key duplicates).</td>
+</tr>
+<tr>
+<td><code>N_STACK_TESTS</code></td>
+<td>COUNT_COL</td>
+<td>Count of <code>stacktests</code> rows (asset asserted dup-free).</td>
+</tr>
+<tr>
+<td><code>N_STACK_PASS</code> / <code>N_STACK_FAIL</code></td>
+<td>COUNT_COL</td>
+<td><code>AIR_STACK_TEST_STATUS_DESC == &quot;Pass&quot;/&quot;Fail&quot;</code> (Pending/Incomplete/N-A left uncounted).</td>
+</tr>
+<tr>
+<td><code>FACILITY_TYPE</code></td>
+<td>label</td>
+<td><code>FACILITY_TYPE_CODE</code> mapped through a fixed lookup, all 15 official ICIS-Air codes (POF→&quot;Privately owned&quot;, COR→&quot;Corporation&quot;, CNG→&quot;County government&quot;, CTG→&quot;Municipality&quot;, FDF→&quot;Federal facility&quot;, STF→&quot;State facility&quot;, DIS→&quot;District&quot;, NON→&quot;Non-government&quot;, GOC→&quot;GOCO (government-owned, contractor-operated)&quot;, IND→&quot;Individual&quot;, MXO→&quot;Mixed ownership (public/private)&quot;, MWD→&quot;Municipal or water district&quot;, SDT→&quot;School district&quot;, TRB→&quot;Tribal government&quot;, UNK→&quot;Unknown&quot;); <code>NA</code> if unmapped .</td>
+</tr>
+<tr>
+<td><code>OP_STATUS_CURRENT_DESC</code></td>
+<td>passthrough</td>
+<td>Renamed from ICIS's <code>AIR_OPERATING_STATUS_DESC</code> — a <strong>current, undated</strong> snapshot, distinct from dataset 1's year-varying wayback status.</td>
+</tr>
+<tr>
+<td><code>EMITS_PM</code> / <code>EMITS_CO</code> / <code>EMITS_NOX</code> / <code>EMITS_SO2</code></td>
+<td>flag</td>
+<td>&quot;Ever reported&quot; flag from <code>pollutants.csv.gz</code>: <code>any(grepl(&lt;pattern&gt;, POLLUTANT_DESC, ignore.case=TRUE))</code> per facility (Particulate Matter / Carbon Monoxide / Nitrogen Oxides / Sulfur Dioxide). Undated, boolean only — <strong>not</strong> a measured quantity (contrast with <code>emissions.csv.gz</code>'s pounds columns). Each backed by only 1–8 distinct <code>POLLUTANT_CODE</code> values, so the plain substring match is safe here. Facility absent from <code>pollutants.csv.gz</code> → coalesced to <code>0</code> (a true &quot;no profile&quot; reading, not missing data).</td>
+</tr>
+<tr>
+<td><code>EMITS_VOC</code></td>
+<td>flag</td>
+<td>Same &quot;ever reported&quot; pattern, but with a negative-lookbehind regex <code>(?&lt;!NON-)VOLATILE ORGANIC</code> on <code>POLLUTANT_DESC</code>. Previously: the old plain <code>grepl(&quot;VOLATILE ORGANIC&quot;, ...)</code> matched <code>POLLUTANT_CODE 300000310</code> &quot;NON-VOLATILE ORGANIC COMPOUNDS&quot; as a false positive, flipping 30 facilities from <code>1</code> to the correct <code>0</code>.</td>
+</tr>
+<tr>
+<td><code>EMITS_HAP</code></td>
+<td>flag</td>
+<td>&quot;Ever reported&quot; flag, but <strong>not</strong> a single-pattern match: (a) a CAS (Chemical Abstracts Service registry number)-number join against the official CAA §112(b) HAP list (188 substances, <code>code/03_datasets/hap_list_112b.R</code>), <strong>unioned with</strong> (b) the original umbrella-phrase rule (<code>grepl(&quot;HAZARDOUS AIR POLLUTANT&quot;, POLLUTANT_DESC)</code>) and (c) a name match for 17 CAS-less compound-class entries (e.g. &quot;Chromium Compounds&quot;). Previously: the pre-fix rule was (b) alone, which missed the large majority of HAPs that ICIS-AIR records under a specific chemical name (Benzene, Formaldehyde, Lead, Mercury, ...) rather than the umbrella phrase. (b) was kept, not dropped, because it independently catches a real signal: an aggregate <code>&quot;TOTAL HAZARDOUS AIR POLLUTANTS (HAPS)&quot;</code> summary record (no CAS) that some facilities report instead of itemizing species. Full-universe <code>EMITS_HAP=1</code> count post-fix: 67,011 of 279,665 (24.0%). A coverage diagnostic prints on every build (<code>pollutants coverage: N/M rows (%) match none of the six EMITS_* categories</code>).</td>
+</tr>
+<tr>
+<td><code>PROG_SIP</code> / <code>PROG_TITLEV</code> / <code>PROG_NSPS</code> / <code>PROG_MACT</code> / <code>PROG_NESHAP</code> / <code>PROG_FESOP</code> / <code>PROG_NSR</code> / <code>PROG_PSD</code></td>
+<td>flag</td>
+<td>&quot;Ever enrolled&quot; flag from <code>programs.csv.gz</code> by <code>PROGRAM_CODE</code> (SIP=<code>CAASIP</code>, Title V=<code>CAATVP</code>, NSPS=<code>CAANSPS</code>+<code>CAANSPSM</code> pooled, MACT=<code>CAAMACT</code>, NESHAP=<code>CAANESH</code>, FESOP=<code>CAAFESOP</code>, NSR=<code>CAANSR</code>, PSD=<code>CAAPSD</code>). This is a deliberately <strong>narrowed 8-group set</strong> — <code>CAAGACTM</code> (area-source MACT) and <code>CAACFC</code> (Title VI ozone) are excluded here to match dataset 1's 8-group <code>PROG_*_ACTIVE</code> allowlist, even though the panel layer (Part 2) keeps all 10 groups. Coalesced <code>NA→0</code>.</td>
+</tr>
+<tr>
+<td><code>N_PROGRAMS</code></td>
+<td>count</td>
+<td><code>n_distinct(PROGRAM_CODE)</code> per facility, <strong>including</strong> GACT/CFC (broader scope than the 8 <code>PROG_*</code> flags above). Facility-level, <strong>not</strong> subject to the coalesce-to-0 step.</td>
+</tr>
+</tbody>
+</table>
+<p class='dict-xref'><a href='databases.html#regulatory'>Construction decisions &amp; headline finding →</a></p></div><div class='doc-pane' id='derived-operating-csv-gz-dataset-1-facility-year-wayback-reconstruction'><h2>operating.csv.gz — dataset 1, facility × year, Wayback reconstruction</h2><p>Same 279,665 × 21-year rectangle as dataset 0 (1:1 joinable); strictly raw — year-varying fields are <code>NA</code>
+wherever no Wayback snapshot exists, never imputed.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Definition &amp; derivation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>WAYBACK_OBSERVED</code></td>
+<td>flag</td>
+<td><code>1</code> iff <code>wayback_facility_status.csv.gz</code> has a snapshot for <code>(PGM_SYS_ID, year)</code>. Always 0/1, never itself <code>NA</code>.</td>
+</tr>
+<tr>
+<td><code>OP_STATUS_CODE</code> / <code>OP_STATUS_DESC</code></td>
+<td>passthrough</td>
+<td>Wayback-reconstructed operating-status code/description for that year. <code>NA</code> for 2005–2014 and any uncovered facility-year.</td>
+</tr>
+<tr>
+<td><code>OPERATING</code></td>
+<td>flag</td>
+<td><code>1</code> iff <code>OP_STATUS_CODE %in% c(&quot;OPR&quot;,&quot;TMP&quot;,&quot;SEA&quot;)</code>; carried unchanged from the cleaning layer, <strong>except</strong> the <code>OPERATING_IMPUTED==1</code> rows below, where it's bridge-imputed rather than code-derived. <code>NA</code> outside wayback coverage.</td>
+</tr>
+<tr>
+<td><code>OPERATING_IMPUTED</code></td>
+<td>flag</td>
+<td><code>1</code> iff this row is 2018 AND <code>OPERATING</code> was bridge-imputed from a matching real 2017/2019 observation (both in-service, or both not); <code>0</code> otherwise, never <code>NA</code>. The one exception to this layer's &quot;strictly raw&quot; rule — see <code>dataset_construction_decisions.md</code> for the full derivation and the checks (panel eligibility, entry/exit spells) that were verified unaffected before adding it. <code>OP_STATUS_CODE</code>/<code>OP_STATUS_DESC</code> are never fabricated for these rows (stay <code>NA</code>) and <code>WAYBACK_OBSERVED</code> stays <code>0</code> (no real snapshot exists) — this column is the only signal that <code>OPERATING</code> is inferred rather than observed here.</td>
+</tr>
+<tr>
+<td><code>PROG_SIP_ACTIVE</code>, <code>PROG_TITLEV_ACTIVE</code>, <code>PROG_NSPS_ACTIVE</code>, <code>PROG_MACT_ACTIVE</code>, <code>PROG_NESHAP_ACTIVE</code>, <code>PROG_FESOP_ACTIVE</code>, <code>PROG_NSR_ACTIVE</code>, <code>PROG_PSD_ACTIVE</code> (8 flags)</td>
+<td>flag</td>
+<td>From <code>wayback_program_status.csv.gz</code>, an explicit 8-group allowlist (chosen to guard against upstream schema drift after <code>gact</code>/<code>cfc</code> were silently added elsewhere) — &quot;is this program group active in this year's wayback snapshot.&quot; <code>NA</code> where the facility isn't covered by that year's snapshot.</td>
+</tr>
+<tr>
+<td><code>ENTERED_YEAR</code> / <code>EXITED_YEAR</code></td>
+<td>facility-level</td>
+<td>From <code>wayback_facility_spells.csv.gz</code> — year the facility's observed operating spell began/ended, broadcast to all 21 rows. <code>NA</code> for the ~2,472 ICIS facilities with no wayback spell.</td>
+</tr>
+<tr>
+<td><code>EXIT_SOURCE</code></td>
+<td>categorical</td>
+<td><code>&quot;cls&quot;</code> (confirmed closure) / <code>&quot;dropout&quot;</code> (last seen operating, then vanished — an upper bound on unexplained exits) / <code>&quot;other&quot;</code> / <code>NA</code> (no exit observed). Because dataset 1 drops wayback-only facilities, only 2 of 11,801 wayback <code>dropout</code> exits survive here — this column is effectively almost pure <code>&quot;cls&quot;</code> in this file.</td>
+</tr>
+<tr>
+<td><code>LEFT_CENSORED</code> / <code>RIGHT_CENSORED</code></td>
+<td>flag</td>
+<td>Facility-level: spell already in progress at the window's left edge / still ongoing at the right edge.</td>
+</tr>
+<tr>
+<td><code>EARLIEST_PROGRAM_BEGIN_YEAR_RAW</code></td>
+<td>year</td>
+<td><code>min(year(mdy(BEGIN_DATE)))</code> across all parseable <code>BEGIN_DATE</code> values in <code>programs.csv.gz</code>, <strong>unscreened</strong> (raw range observed: [218, 2028] — includes clear data-entry typos). <code>NA</code> if no parseable date.</td>
+</tr>
+<tr>
+<td><code>EARLIEST_PROGRAM_BEGIN_YEAR</code></td>
+<td>year</td>
+<td>Same minimum, restricted to a <code>[1970, 2025]</code> validity screen — removes implausible candidates only, never imputes; always ≥ the raw version. <code>NA</code> if no in-range date.</td>
+</tr>
+<tr>
+<td><code>ICIS_OBSERVED</code></td>
+<td>flag</td>
+<td>Passthrough from <code>regulatory.csv.gz</code>, same <code>(PGM_SYS_ID, YEAR)</code> — <code>1</code> iff ICIS holds ≥1 event record that year. Never <code>NA</code> (dataset 0's own invariant). Carried here so <code>ACTIVE</code>'s constituent evidence is visible without a join.</td>
+</tr>
+<tr>
+<td><code>EMISSIONS_OBSERVED</code> / <code>GHG_OBSERVED</code></td>
+<td>flag</td>
+<td>Passthrough from <code>emissions.csv.gz</code>, same <code>(PGM_SYS_ID, YEAR)</code> — pounds-based / GHG reporting that year, independently. Never <code>NA</code> (dataset 7's own invariant). Carried here so <code>ACTIVE_BROAD</code>'s constituent evidence is visible without a join.</td>
+</tr>
+<tr>
+<td><code>ACTIVE</code></td>
+<td>flag</td>
+<td><strong>Year-varying</strong>, not an &quot;ever&quot; summary: <code>1</code> iff <code>OPERATING==1</code> OR <code>ICIS_OBSERVED==1</code> <strong>that year</strong>; <code>0</code> iff both are confirmed <code>0</code> that year; <code>NA</code> iff <code>OPERATING</code> is <code>NA</code> that year (no wayback snapshot) AND <code>ICIS_OBSERVED==0</code> that year (no ICIS event that specific year) — genuinely no evidence either way. Closes wayback's pre-2015 blind spot and ICIS's never-inspected-facility blind spot, year by year.</td>
+</tr>
+<tr>
+<td><code>ACTIVE_BROAD</code></td>
+<td>flag</td>
+<td><code>1</code> iff <code>ACTIVE==1</code> OR <code>EMISSIONS_OBSERVED==1</code> OR <code>GHG_OBSERVED==1</code> <strong>that year</strong>; <code>0</code> iff all three are confirmed <code>0</code>; <code>NA</code> iff <code>ACTIVE</code> is <code>NA</code> and neither emissions flag is <code>1</code> that year. Nests monotonically under <code>ACTIVE</code> (<code>ACTIVE==1 ⇒ ACTIVE_BROAD==1</code>, verified 0 violations).</td>
+</tr>
+</tbody>
+</table>
+<p class='dict-xref'><a href='databases.html#operating'>Construction decisions &amp; headline finding →</a></p></div><div class='doc-pane' id='derived-wayback-only-facilities-csv-gz-dataset-1b-facility-year-2015-2025-only'><h2>wayback_only_facilities.csv.gz — dataset 1b, facility × year (2015–2025 only)</h2><p>Supplementary output, not one of the eight numbered datasets — covers the ~15,302 facilities Wayback has
+captured operating-status snapshots for that are entirely absent from the current ICIS-AIR facility extract
+. Grain <code>PGM_SYS_ID × year</code>, but window is <strong>2015–2025 only</strong> (Wayback's real coverage,
+narrower than every other file's 2005–2025 — these facilities have zero information of any kind before
+2015). Does <strong>not</strong> join to <code>regulatory.csv.gz</code>/<code>operating.csv.gz</code> — by definition, none of its facilities
+appear there (confirmed: 0/15,302 have any ICIS event record at all).</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Definition &amp; derivation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>WAYBACK_OBSERVED</code></td>
+<td>flag</td>
+<td>Same definition as <code>operating.csv.gz</code>'s column of the same name, restricted to this facility set.</td>
+</tr>
+<tr>
+<td><code>OP_STATUS_CODE</code> / <code>OP_STATUS_DESC</code> / <code>OPERATING</code> / <code>OPERATING_IMPUTED</code></td>
+<td>passthrough / flag</td>
+<td>Same definitions as <code>operating.csv.gz</code>'s columns of the same name.</td>
+</tr>
+<tr>
+<td><code>ENTERED_YEAR</code> / <code>EXITED_YEAR</code> / <code>EXIT_SOURCE</code> / <code>LEFT_CENSORED</code> / <code>RIGHT_CENSORED</code></td>
+<td>facility-level</td>
+<td>Same definitions as <code>operating.csv.gz</code>'s columns of the same name — the pre-done version of a manual join users previously had to do.</td>
+</tr>
+</tbody>
+</table>
+<p>No <code>ACTIVE</code>/<code>ACTIVE_BROAD</code>-style column here: <code>ICIS_OBSERVED</code> and <code>EMISSIONS_OBSERVED</code>/<code>GHG_OBSERVED</code> are
+structurally undefined for this population (no row to look up in <code>regulatory.csv.gz</code> or <code>emissions.csv.gz</code>
+at all, not merely a confident <code>0</code>), so such a column would either be all-<code>NA</code> or wrongly imply a real zero.</p>
+</div><div class='doc-pane' id='derived-hpv-spells-csv-gz-dataset-2-spell-grain-uncollapsed'><h2>hpv_spells.csv.gz — dataset 2, spell grain, UNcollapsed</h2><p>One row per HPV violation record (<code>ENF_RESPONSE_POLICY_CODE == &quot;HPV&quot;</code> on <code>violations.csv.gz</code>) —
+overlapping spells at the same facility are <strong>not</strong> merged here (merging happens only in <code>hpv_active</code>).</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Definition &amp; derivation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>HPV_DAYZERO_DATE</code> / <code>HPV_RESOLVED_DATE</code></td>
+<td>Date</td>
+<td><code>mdy()</code>-parsed spell start/resolution dates, carried <strong>as parsed with no plausibility screen</strong> (implausible years like <code>218</code> or <code>2026</code> are kept as-is).</td>
+</tr>
+<tr>
+<td><code>DAYZERO_YEAR</code> / <code>RESOLVED_YEAR</code></td>
+<td>year</td>
+<td><code>year()</code> of the parsed dates. <code>DAYZERO_YEAR</code> is <code>NA</code> iff <code>SPELL_STATUS == &quot;missing_start&quot;</code>; <code>RESOLVED_YEAR</code> is <code>NA</code> for <code>open</code> and <code>missing_start</code>-with-no-dates spells.</td>
+</tr>
+<tr>
+<td><code>SPELL_STATUS</code></td>
+<td>categorical</td>
+<td>Exhaustive, mutually exclusive: <code>&quot;missing_start&quot;</code> (no day-zero date) / <code>&quot;open&quot;</code> (no resolved date) / <code>&quot;bad_order&quot;</code> (resolved date precedes day-zero) / <code>&quot;closed&quot;</code> (both present, ordered).</td>
+</tr>
+<tr>
+<td><code>SPELL_DAYS</code></td>
+<td>integer</td>
+<td><code>(resolved − dayzero) + 1</code> (inclusive), computed only where <code>SPELL_STATUS == &quot;closed&quot;</code>; <code>NA</code> otherwise.</td>
+</tr>
+<tr>
+<td><code>DUP</code> / <code>DUP_EXACT</code></td>
+<td>flag</td>
+<td>Passthrough duplicate-load flags; asserted <code>== 0</code> for every row in this file (violations carry no dups).</td>
+</tr>
+</tbody>
+</table>
+<p>Remaining columns (<code>ACTIVITY_ID</code>, <code>COMP_DETERMINATION_UID</code>, <code>EARLIEST_FRV_DETERM_DATE</code>, <code>PROGRAM_CODES</code>,
+<code>PROGRAM_DESCS</code>, <code>POLLUTANT_CODES</code>, <code>POLLUTANT_DESCS</code>, <code>AGENCY_TYPE_DESC</code>, <code>STATE_CODE</code>) are direct passthrough
+from <code>violations.csv.gz</code> — see <code>data_dictionary.md</code>'s <code>ICIS-AIR_VIOLATION_HISTORY.csv</code> entry for the raw
+definitions.</p>
+<p class='dict-xref'><a href='databases.html#hpv-spells'>Construction decisions &amp; headline finding →</a></p></div><div class='doc-pane' id='derived-hpv-active-csv-gz-dataset-2b-facility-year-interval-overlap-collapse-of-hpv-spells'><h2>hpv_active.csv.gz — dataset 2b, facility × year, interval-overlap collapse of hpv_spells</h2><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Definition &amp; derivation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>HPV_ACTIVE</code></td>
+<td>flag</td>
+<td>Built from <code>hpv_spells</code>: drop <code>missing_start</code> spells (no interval to test); screen day-zero year to <code>[1970, 2025]</code> (excludes 268/44,744 mappable spells, catching e.g. a mistyped <code>0218</code> that would spuriously flag 2005–2017); compute a conservative closing date (<code>resolved</code> if <code>closed</code>, else Dec 31 of the day-zero year for <code>open</code>/<code>bad_order</code> — chosen over alternatives in diagnostic 09); <code>1</code> if any qualifying spell's interval overlaps the calendar year (can be <code>1</code> even where <code>ICIS_OBSERVED == 0</code> — a spell always wins); <code>0</code> if no overlap but <code>ICIS_OBSERVED == 1</code> (true zero, reusing dataset 0's flag rather than inventing a new one); <code>NA</code> if no overlap and unobserved.</td>
+</tr>
+</tbody>
+</table>
+<p class='dict-xref'><a href='databases.html#hpv-active'>Construction decisions &amp; headline finding →</a></p></div><div class='doc-pane' id='derived-penalties-csv-gz-dataset-3-one-row-per-formal-enforcement-action'><h2>penalties.csv.gz — dataset 3, one row per formal enforcement action</h2><p>Grain: every <code>formal_actions.csv.gz</code> row, duplicates flagged not dropped; not restricted to 2005–2025; reconciles exactly to <code>regulatory.csv.gz</code>'s windowed <code>PENALTY_AMOUNT</code> sum.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Definition &amp; derivation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ENF_IDENTIFIER</code></td>
+<td>key</td>
+<td>The <strong>settlement key</strong> — multiple facility rows sharing one <code>ENF_IDENTIFIER</code> are co-defendants of a single multi-facility settlement.</td>
+</tr>
+<tr>
+<td><code>PENALTY_AMOUNT</code></td>
+<td>dollars</td>
+<td><code>parse_number(PENALTY_AMOUNT)</code> for this row, kept as recorded (0 or positive) — every row is an observed action, so no zero-vs-NA discipline applies at this grain.</td>
+</tr>
+<tr>
+<td><code>HAS_PENALTY</code></td>
+<td>flag</td>
+<td><code>1</code> iff <code>PENALTY_AMOUNT &gt; 0</code>.</td>
+</tr>
+<tr>
+<td><code>N_SETTLEMENT_FACILITIES</code></td>
+<td>count</td>
+<td><code>n_distinct(PGM_SYS_ID)</code> within the same <code>ENF_IDENTIFIER</code> group — constant within a settlement.</td>
+</tr>
+<tr>
+<td><code>IS_MULTI_FACILITY</code></td>
+<td>flag</td>
+<td><code>1</code> iff <code>N_SETTLEMENT_FACILITIES &gt; 1</code>.</td>
+</tr>
+<tr>
+<td><code>DUP</code> / <code>DUP_EXACT</code></td>
+<td>flag</td>
+<td>Passthrough duplicate-load flags, kept not dropped.</td>
+</tr>
+</tbody>
+</table>
+<p><code>SETTLEMENT_ENTERED_DATE</code> (parsed settlement date), <code>ENF_TYPE_CODE</code> / <code>ENF_TYPE_DESC</code> (enforcement-action type
+code/description), <code>ACTIVITY_TYPE_CODE</code> / <code>ACTIVITY_TYPE_DESC</code> (activity-type code/description), and
+<code>STATE_EPA_FLAG</code> (which level — EPA/State/Local — took the action) are direct passthrough from
+<code>formal_actions.csv.gz</code>; see <code>data_dictionary.md</code>'s <code>ICIS-AIR_FORMAL_ACTIONS.csv</code> entry for the raw definitions.</p>
+<blockquote>
+<p><strong>Caveat.</strong> As of 2026-07-27, 571 settlements span more than one facility; the penalty is usually one
+dollar figure repeated across co-defendants (507 of 571), but 64 settlements carry <em>differing</em> per-facility
+amounts. Do not sum <code>PENALTY_AMOUNT</code> across a settlement's facilities without first deciding a broadcast
+rule — see <code>briefs/datasets/multi_facility_settlement_decision.md</code>.</p>
+</blockquote>
+<p class='dict-xref'><a href='databases.html#penalties'>Construction decisions &amp; headline finding →</a></p></div><div class='doc-pane' id='derived-coordinates-csv-gz-dataset-4-one-row-per-facility'><h2>coordinates.csv.gz — dataset 4, one row per facility</h2><p>Coordinate source: FRS via <code>REGISTRY_ID</code>; full 279,665-facility universe.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Definition &amp; derivation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ICIS_COUNTY_FIPS</code></td>
+<td>GEOID</td>
+<td>The ICIS-<em>claimed</em> county resolved to a GEOID: <code>(STATE, COUNTY_NAME)</code> normalized (case, &quot;(city)&quot;/&quot;County&quot;/&quot;Parish&quot;/etc. suffix stripping, &quot;Saint&quot;→&quot;St&quot;) and matched against a name crosswalk built from the county shapefile. Independent of any coordinate. <code>NA</code> if the normalized name doesn't resolve to exactly one GEOID in this shapefile vintage.</td>
+</tr>
+<tr>
+<td><code>LATITUDE</code> / <code>LONGITUDE</code></td>
+<td>numeric</td>
+<td><code>FRS_FACILITIES.csv</code>'s <code>LATITUDE_MEASURE</code>/<code>LONGITUDE_MEASURE</code>, joined via <code>REGISTRY_ID</code> (first record kept if multiple). <code>NA</code> if no FRS match.</td>
+</tr>
+<tr>
+<td><code>HAS_COORDINATE</code></td>
+<td>flag</td>
+<td><code>1</code> iff both lat/lon are non-missing.</td>
+</tr>
+<tr>
+<td><code>COUNTY_FIPS</code></td>
+<td>GEOID</td>
+<td>Point-in-polygon spatial join (<code>st_within</code>) of the FRS coordinate against the county shapefile — the county the <em>coordinate itself</em> falls in, computed only where a coordinate exists. <code>NA</code> for non-CONUS facilities (shapefile is CONUS+DC only) or points outside every polygon.</td>
+</tr>
+<tr>
+<td><code>COORD_COUNTY_DIST_KM</code></td>
+<td>km</td>
+<td>Distance from the coordinate to the ICIS-claimed county's polygon, via a direct <strong>geodesic</strong> distance. <strong><code>0</code> by construction</strong> where <code>COUNTY_FIPS == ICIS_COUNTY_FIPS</code> (no distance computed, exact match); a real distance value only for the checkable-and-mismatched subset. <code>NA</code> if uncheckable (no coordinate, or <code>COUNTY_NAME</code> unresolvable). <code>0 ≠ NA</code> is strictly honored — don't treat a missing check as agreement. Previously: was reprojected into EPSG:5070 (NAD83 / Conus Albers), valid only for CONUS — Alaska mismatches diverged from the true geodesic distance by up to ~21% (e.g. 817 km vs 993 km); CONUS distances were negligibly affected (mean 0.11 km). <code>COORD_GROSS_ERROR</code> itself likely never flipped from this fix (every affected mismatch was well past the 5 km cutoff either way), but the distance number wasn't trustworthy outside CONUS before it.</td>
+</tr>
+<tr>
+<td><code>COORD_GROSS_ERROR</code></td>
+<td>flag</td>
+<td><code>1</code> iff checkable and <code>COORD_COUNTY_DIST_KM &gt; 5</code> (km). <code>NA</code> exactly where <code>COORD_COUNTY_DIST_KM</code> is <code>NA</code>.</td>
+</tr>
+</tbody>
+</table>
+<p class='dict-xref'><a href='databases.html#coordinates'>Construction decisions &amp; headline finding →</a></p></div><div class='doc-pane' id='derived-pipeline-csv-gz-dataset-6-facility-year-epa-echo-caa-compliance-pipeline'><h2>pipeline.csv.gz — dataset 6, facility × year, EPA ECHO "CAA Compliance Pipeline"</h2><p>As of 2026-07-27 (automated fetch — this drifts with each live source refresh), 7,218 of 66,723 raw rows are
+EPA linkage-helper placeholders (no real violation date) and are excluded. Year anchor is
+<code>VIOL_START_DATE</code>, deliberately not the cleaned asset's own <code>date</code> (which can trace to a later
+enforcement/eval date and would misdate the violation). Universe: the same 279,665 × 21 rectangle as
+datasets 0/1/2b.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Definition &amp; derivation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PIPELINE_OBSERVED</code></td>
+<td>flag</td>
+<td><code>1</code> iff ≥1 real (non-placeholder) pipeline row anchors to the facility-year.</td>
+</tr>
+<tr>
+<td><code>N_VIOL_PIPELINE</code></td>
+<td>COUNT_COL</td>
+<td>Count of real rows for the facility-year.</td>
+</tr>
+<tr>
+<td><code>N_VIOL_HPV</code> / <code>N_VIOL_FRV</code></td>
+<td>COUNT_COL</td>
+<td><code>VIOL_TYPE == &quot;HPV&quot;/&quot;FRV&quot;</code> — the raw ECHO pipeline's <strong>own</strong> HPV/FRV tag (asserted to sum exactly to <code>N_VIOL_PIPELINE</code>, i.e. exhaustive/exclusive here) — this is a <strong>third, separate</strong> HPV/FRV definition from <code>regulatory.N_HPV</code>/<code>N_FRV</code> and from <code>hpv_spells</code>/<code>hpv_active</code>. See cross-file caveats below.</td>
+</tr>
+<tr>
+<td><code>N_VIOL_WITH_EVAL</code></td>
+<td>COUNT_COL</td>
+<td><code>sum(EVAL_FLAG == &quot;Y&quot;)</code> — violations with a linked evaluation/inspection record.</td>
+</tr>
+<tr>
+<td><code>N_VIOL_WITH_EA</code></td>
+<td>COUNT_COL</td>
+<td><code>sum(EA_FLAG == &quot;Y&quot;)</code> — violations with a linked enforcement action.</td>
+</tr>
+<tr>
+<td><code>N_VIOL_SELF_DISCLOSED</code></td>
+<td>COUNT_COL</td>
+<td><code>sum(EVAL_TYPE_DESC == &quot;Self-Disclosure&quot;)</code> among rows with a linked eval, explicitly NA-guarded (an unguarded comparison against the ~46% of rows lacking a linked eval, whose <code>EVAL_TYPE_DESC</code> is blank→<code>NA</code>, would poison the whole-group sum).</td>
+</tr>
+<tr>
+<td><code>N_VIOL_WITH_EA_PENALTY</code></td>
+<td>COUNT_COL</td>
+<td><code>sum(EA_PENALTY_AMT &gt; 0, na.rm=TRUE)</code>.</td>
+</tr>
+<tr>
+<td><code>EA_PENALTY_AMT_SUM</code></td>
+<td>dollars</td>
+<td>Sum of linked EA penalty dollars over violations with a positive linked penalty. <strong>Likely traces to the same underlying dollars as <code>penalties.PENALTY_AMOUNT</code></strong> — reconciliation deliberately left undone; don't sum the two files together without a dedup rule.</td>
+</tr>
+<tr>
+<td><code>MEAN_EVAL_TO_VIOL_LAG_DAYS</code></td>
+<td>days</td>
+<td>Mean <code>(VIOL_START_DATE − EVAL_DATE)</code> over rows where a linked eval precedes the violation; <code>NaN</code>→<code>NA</code> when no eligible rows.</td>
+</tr>
+<tr>
+<td><code>MEAN_VIOL_TO_EA_LAG_DAYS</code></td>
+<td>days</td>
+<td>Mean <code>(EA_DATE − VIOL_START_DATE)</code> over rows where a linked EA follows the violation; <code>NaN</code>→<code>NA</code>.</td>
+</tr>
+</tbody>
+</table>
+<p class='dict-xref'><a href='databases.html#pipeline'>Construction decisions &amp; headline finding →</a></p></div><div class='doc-pane' id='derived-emissions-csv-gz-dataset-7-facility-year-combined-pollutant-report-eis-tris-e-ggrt-camdbs'><h2>emissions.csv.gz — dataset 7, facility × year, combined pollutant report (EIS/TRIS/E-GGRT/CAMDBS)</h2><p>Joined on <code>REGISTRY_ID</code>, not <code>PGM_SYS_ID</code> — the four source programs share only the FRS id. Where one
+<code>REGISTRY_ID</code> maps to multiple <code>PGM_SYS_ID</code>s, the same pounds/GHG values are <strong>broadcast identically</strong> onto
+every co-mapped <code>PGM_SYS_ID</code> — flagged, not resolved.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Definition &amp; derivation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>EMISSIONS_OBSERVED</code></td>
+<td>flag</td>
+<td><code>1</code> iff ≥1 non-GHG (EIS/TRIS/CAMDBS) row exists for <code>(REGISTRY_ID, year)</code>, broadcast to every sharing <code>PGM_SYS_ID</code>. Never <code>NA</code> (coalesced to <code>0</code>).</td>
+</tr>
+<tr>
+<td><code>GHG_OBSERVED</code></td>
+<td>flag</td>
+<td>Same pattern, restricted to <code>E-GGRT</code> rows — gated <strong>fully independently</strong> of <code>EMISSIONS_OBSERVED</code>.</td>
+</tr>
+<tr>
+<td><code>VOC_LBS</code> / <code>PM10_LBS</code> / <code>PM25_LBS</code> / <code>NOX_LBS</code> / <code>SO2_LBS</code> / <code>CO_LBS</code></td>
+<td>pounds</td>
+<td><code>sum(ANNUAL_EMISSION)</code> matched to a single <strong>exact</strong> canonical <code>POLLUTANT_NAME</code> string per pollutant (e.g. &quot;Primary PM10 (filterables and condensibles)&quot;), never substring/regex — PM10/PM2.5 have component-variant names that are subsets of the canonical total, and naive substring matching was verified to inflate totals ~1.7×. <code>0</code> if <code>EMISSIONS_OBSERVED==1</code> but this pollutant wasn't reported; <code>NA</code> if <code>EMISSIONS_OBSERVED==0</code>.</td>
+</tr>
+<tr>
+<td><code>HAP_LBS</code></td>
+<td>pounds</td>
+<td><code>sum(ANNUAL_EMISSION[NEI_TYPE == &quot;HAP&quot;])</code> — every row tagged HAP (292 distinct pollutant names); verified no &quot;Total HAP&quot; aggregate row exists upstream, so plain summation doesn't double-count.</td>
+</tr>
+<tr>
+<td><code>GHG_MTCO2E</code></td>
+<td>metric tons CO2e</td>
+<td><code>sum(ANNUAL_EMISSION)</code> among E-GGRT rows only — a distinct unit from the pounds columns. <code>NA</code> if <code>GHG_OBSERVED==0</code>.</td>
+</tr>
+<tr>
+<td><code>N_PGM_SYS_ID_SHARING_REGISTRY</code></td>
+<td>count</td>
+<td>Number of distinct <code>PGM_SYS_ID</code>s sharing this facility's <code>REGISTRY_ID</code>, facility-level (broadcast to all years). <code>NA</code> for facilities with a blank <code>REGISTRY_ID</code>.</td>
+</tr>
+<tr>
+<td><code>IS_SHARED_REGISTRY</code></td>
+<td>flag</td>
+<td><code>1</code> iff <code>N_PGM_SYS_ID_SHARING_REGISTRY &gt; 1</code> — where <code>1</code>, the pounds/GHG values on this row are identical broadcasts shared with other <code>PGM_SYS_ID</code>s. <strong>Do not sum emissions across facilities sharing a <code>REGISTRY_ID</code>.</strong></td>
+</tr>
+</tbody>
+</table>
+<h3>Cross-file caveats (Part 1)</h3>
+<ul>
+<li><strong>Three non-reconciling HPV/FRV definitions.</strong> <code>regulatory.N_HPV</code>/<code>N_FRV</code> (day-zero-date presence on a
+violation row), <code>hpv_spells</code>/<code>hpv_active</code> (<code>ENF_RESPONSE_POLICY_CODE == &quot;HPV&quot;</code>), and
+<code>pipeline.N_VIOL_HPV</code>/<code>N_VIOL_FRV</code> (the raw ECHO pipeline's own <code>VIOL_TYPE</code> tag) answer closely related but
+distinct questions. <code>regulatory</code> and <code>hpv_spells</code> differ by only ~33 records — close,
+not identical — and neither is expected to reconcile exactly with <code>pipeline</code>.</li>
+<li><strong>Three penalty-dollar exposures that likely trace to the same underlying money.</strong>
+<code>regulatory.PENALTY_AMOUNT</code>, <code>penalties.PENALTY_AMOUNT</code> (action grain), and <code>pipeline.EA_PENALTY_AMT_SUM</code>
+are very likely drawing on the same enforcement-action universe. Reconciliation across the three is
+deliberately left undone — do not sum them together.</li>
+<li><strong>The same &quot;broadcast, not resolved&quot; fan-out pattern appears twice.</strong> <code>penalties.N_SETTLEMENT_FACILITIES</code>/
+<code>IS_MULTI_FACILITY</code> (multi-facility settlements sharing one <code>ENF_IDENTIFIER</code>) and
+<code>emissions.N_PGM_SYS_ID_SHARING_REGISTRY</code>/<code>IS_SHARED_REGISTRY</code> (multiple <code>PGM_SYS_ID</code>s sharing one
+<code>REGISTRY_ID</code>) both expose a many-to-one join as a flag rather than resolving it — the common warning in
+both cases is &quot;don't sum across the broadcast without deciding a rule first.&quot;</li>
+</ul>
+<p class='dict-xref'><a href='databases.html#emissions'>Construction decisions &amp; headline finding →</a></p></div><div class='doc-pane' id='derived-facility-filters-panel-specs'><h2>Facility filters (PANEL_SPECS)</h2><p><strong>This entire part was rewritten 2026-07-29</strong> — it used to describe the archived <code>code/03_panel_building/</code>
+pipeline (a facility spine + three sample panels: <code>universe</code>/<code>major_synmin</code>/<code>electric</code>, 111 lowercase-<code>snake_case</code>
+columns). That pipeline is archived in full (<code>archive/panel_building_legacy/README.md</code>); the current
+<code>code/04_panel_building/</code> pipeline builds from <code>data/datasets/</code> instead of <code>data/processed/</code> directly, ships
+<strong>exactly two panels</strong>, no persisted spine file, and uses the same <code>UPPER_SNAKE_CASE</code> casing as Part 1
+throughout. See <code>code/04_panel_building/README.md</code> for the full construction rationale.</p>
+<p><code>major_synmin_2015_2025</code> and <code>electric_2015_2025</code> are the <strong>same column recipe</strong> (<code>build_panel()</code> in
+<code>03_build_functions.R</code>) over two different facility filters, both drawn from one shared in-memory candidate
+set (<code>00_spine.R</code>'s <code>spine</code> — CONUS + Major/Synthetic-Minor class; not written to disk, since only these two
+panels ever consume it in the same R session).</p>
+<table>
+<thead>
+<tr>
+<th>Panel</th>
+<th>Filter</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>major_synmin_2015_2025</code></td>
+<td><code>STATE</code> in the 48 contiguous states + DC, <strong>+</strong> <code>AIR_POLLUTANT_CLASS_DESC %in% c(&quot;Major Emissions&quot;, &quot;Synthetic Minor Emissions&quot;)</code>, <strong>+</strong> <code>EVER_ACTIVE</code> (see below).</td>
+</tr>
+<tr>
+<td><code>electric_2015_2025</code></td>
+<td>the above <strong>+</strong> NAICS 2211 (prefix-anywhere match, catches child codes like <code>221112</code>) <strong>or</strong> SIC 4911 (anchored exact 4-digit match).</td>
+</tr>
+</tbody>
+</table>
+<p><code>EVER_ACTIVE</code> : <code>1</code> iff <code>ACTIVE_BROAD == 1</code>
+(from <code>operating.csv.gz</code>) in <strong>at least one</strong> of the 11 years 2015–2025 —
+<code>any(ACTIVE_BROAD == 1, na.rm = TRUE)</code>. Originally required <code>ACTIVE_BROAD == 1</code> in <em>every</em> year
+(&quot;continuously active,&quot; <code>all(...)</code>); retired because that screen dropped exactly the facilities most likely
+to exit <em>because of</em> enforcement/penalty outcomes — survivorship bias in a panel meant to study enforcement
+and compliance. <code>EVER_ACTIVE</code> itself rides along as a column in both built panels, constant <code>TRUE</code> on every
+row (a facility that failed the screen is never in the panel to begin with) — present for traceability, not
+because it varies within either file.</p>
+<p>Grain: <code>PGM_SYS_ID × YEAR</code>, window <strong>2015–2025 only</strong> — not the repo-wide 2005–2025, since the
+eligibility screen and both panels are already restricted to this span. Every eligible facility gets a full
+11-year rectangle of rows (<code>build_panel()</code>'s <code>expand_grid</code>) regardless of which year(s) made it eligible —
+years outside its actual activity read as <code>OBS_SOURCE == &quot;unobserved&quot;</code> (see below), not as missing rows.</p>
+<p class='dict-xref'><a href='panels.html'>Panel coverage &amp; summary statistics →</a></p></div><div class='doc-pane' id='derived-facility-level-attributes-constant-across-all-11-rows-of-a-pgm-sys-id'><h2>Facility-level attributes (constant across all 11 rows of a PGM_SYS_ID)</h2><p>Read straight from <code>regulatory.csv.gz</code>/<code>coordinates.csv.gz</code>/<code>operating.csv.gz</code> (Part 1) by <code>00_spine.R</code>, with
+no panel-specific re-derivation — same columns, same casing, same decisions as their Part 1 entries above.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Definition &amp; derivation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>REGISTRY_ID</code>, <code>FACILITY_NAME</code>, <code>STREET_ADDRESS</code>, <code>CITY</code>, <code>COUNTY_NAME</code>, <code>STATE</code>, <code>ZIP_CODE</code>, <code>EPA_REGION</code>, <code>NAICS_CODES</code>, <code>SIC_CODES</code>, <code>FACILITY_TYPE_CODE</code>, <code>FACILITY_TYPE</code>, <code>AIR_POLLUTANT_CLASS_DESC</code></td>
+<td>passthrough</td>
+<td>Identical to their <code>regulatory.csv.gz</code> entries in Part 1 (current ICIS snapshot, time-invariant).</td>
+</tr>
+<tr>
+<td><code>EMITS_VOC</code> / <code>EMITS_PM</code> / <code>EMITS_CO</code> / <code>EMITS_NOX</code> / <code>EMITS_SO2</code> / <code>EMITS_HAP</code></td>
+<td>flag</td>
+<td>Identical to <code>regulatory.csv.gz</code>'s columns of the same name.</td>
+</tr>
+<tr>
+<td><code>PROG_SIP</code> / <code>PROG_TITLEV</code> / <code>PROG_NSPS</code> / <code>PROG_MACT</code> / <code>PROG_NESHAP</code> / <code>PROG_FESOP</code> / <code>PROG_NSR</code> / <code>PROG_PSD</code></td>
+<td>flag</td>
+<td>Identical to <code>regulatory.csv.gz</code>'s columns of the same name — the same narrowed <strong>8-group</strong> set (no <code>GACT</code>/<code>CFC</code>), matching dataset 1's <code>PROG_*_ACTIVE</code> allowlist. Unlike the archived pipeline, the panel layer does <strong>not</strong> carry a 10-group version — <code>PROG_GACT</code>/<code>PROG_CFC</code> don't exist anywhere in this pipeline.</td>
+</tr>
+<tr>
+<td><code>N_PROGRAMS</code></td>
+<td>count</td>
+<td>Identical to <code>regulatory.csv.gz</code>'s column — <code>NA</code>-able, <strong>never</strong> coalesced to <code>0</code> (unlike the archived pipeline's <code>n_programs</code>, which did coalesce). A facility absent from <code>programs.csv.gz</code> reads <code>NA</code>, not <code>0</code>.</td>
+</tr>
+<tr>
+<td><code>LATITUDE</code> / <code>LONGITUDE</code> / <code>HAS_COORDINATE</code> / <code>COUNTY_FIPS</code> / <code>ICIS_COUNTY_FIPS</code> / <code>COORD_COUNTY_DIST_KM</code> / <code>COORD_GROSS_ERROR</code></td>
+<td>numeric/flag/GEOID</td>
+<td>Identical to their <code>coordinates.csv.gz</code> entries in Part 1.</td>
+</tr>
+<tr>
+<td><code>COORD_NO_COUNTY_MATCH</code></td>
+<td>flag</td>
+<td>Panel-layer-only derivation (<code>coordinates.csv.gz</code> doesn't ship this exact flag): <code>1</code> iff <code>HAS_COORDINATE == 1</code> but the point-in-polygon lookup still failed to land in any county polygon — distinct from <code>HAS_COORDINATE == 0</code> (no coordinate to begin with).</td>
+</tr>
+<tr>
+<td><code>ENTERED_YEAR</code> / <code>EXITED_YEAR</code> / <code>EXIT_SOURCE</code></td>
+<td>year / categorical</td>
+<td>Identical to their <code>operating.csv.gz</code> entries in Part 1 (wayback-derived facility-level spell fields).</td>
+</tr>
+<tr>
+<td><code>EARLIEST_PROGRAM_BEGIN_YEAR</code> / <code>EARLIEST_PROGRAM_BEGIN_YEAR_RAW</code></td>
+<td>year</td>
+<td>Identical to their <code>operating.csv.gz</code> entries in Part 1.</td>
+</tr>
+<tr>
+<td><code>EVER_ACTIVE</code></td>
+<td>flag</td>
+<td>The panel's own eligibility screen (see above) — always <code>TRUE</code> within either built panel.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Not included in this layer (explicit decisions):</strong></p>
+<ul>
+<li><strong><code>OP_STATUS_CURRENT_DESC</code></strong> (the static, current-ICIS-snapshot status Part 1's <code>regulatory.csv.gz</code> carries) — excluded here to avoid it being mistaken for the panel's genuinely year-varying operating-status
+evidence (<code>OP_STATUS_CODE</code>/<code>OPERATING</code>/<code>ACTIVE</code>/<code>ACTIVE_BROAD</code>, below). Still available directly from
+<code>regulatory.csv.gz</code> for anyone who wants the current snapshot specifically.</li>
+<li><strong><code>LEFT_CENSORED</code>/<code>RIGHT_CENSORED</code></strong> — dropped as a derived convenience on top of <code>ENTERED_YEAR</code>/
+<code>EXITED_YEAR</code>/<code>EXIT_SOURCE</code>, which already carry the same entry/exit information directly.</li>
+</ul>
+</div><div class='doc-pane' id='derived-year-varying-block-facility-year-build-panel'><h2>Year-varying block (facility × year, build_panel())</h2><p><strong>Event counts</strong> — every <code>N_*</code>/<code>_DUP</code>/<code>_DUP_EXACT</code> column, plus <code>PENALTY_AMOUNT</code>/<code>PENALTY_AMOUNT_DUP</code>, is a
+direct passthrough of its identically-named <code>regulatory.csv.gz</code> column (Part 1) — same source tables, same
+logic, same zero-vs-NA gate (<code>ICIS_OBSERVED</code>), no re-derivation at this layer. Not repeated here; see Part 1's
+<code>regulatory.csv.gz</code> table.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Definition &amp; derivation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ANY_INSPECTIONS</code> / <code>ANY_VIOLATIONS</code> / <code>ANY_ENFORCEMENT</code> / <code>ANY_CERTS</code></td>
+<td>flag</td>
+<td><code>1</code> iff the matching <code>N_*</code> count <code>&gt; 0</code>; NA-safe (<code>NA &gt; 0</code> is <code>NA</code>, so an unobserved facility-year reads <code>NA</code> here too, never a silent <code>0</code>).</td>
+</tr>
+<tr>
+<td><code>OP_STATUS_CODE</code> / <code>OPERATING</code> / <code>OPERATING_IMPUTED</code> / <code>PROG_SIP_ACTIVE</code> … <code>PROG_PSD_ACTIVE</code> (8 flags, same set as the facility-level <code>PROG_*</code> above) / <code>ICIS_OBSERVED</code> / <code>EMISSIONS_OBSERVED</code> / <code>GHG_OBSERVED</code> / <code>ACTIVE</code> / <code>ACTIVE_BROAD</code></td>
+<td>passthrough / flag</td>
+<td>Direct passthrough of their identically-named <code>operating.csv.gz</code> columns (Part 1) — no panel-specific re-derivation. <code>PROG_NSR_ACTIVE</code>/<code>PROG_PSD_ACTIVE</code> inherit the dataset layer's preconstruction-program rule (<code>{PLN,CNS}</code> counts as active, since these permits attach before a source operates). <code>OPERATING_IMPUTED</code> lets a user identify/exclude the 2018 bridge-imputed rows if they want raw-observation-only analysis.</td>
+</tr>
+<tr>
+<td><code>HPV_ACTIVE</code></td>
+<td>flag</td>
+<td>Direct passthrough of <code>hpv_active.csv.gz</code> (Part 1) — the same interval-overlap collapse and zero-vs-NA discipline used elsewhere in this layer. <strong>No <code>HPV_ACTIVE_1MO</code> variant</strong> — <code>hpv_active.csv.gz</code> never shipped it, and recomputing a third implementation of the same interval logic was explicitly ruled out.</td>
+</tr>
+<tr>
+<td><code>OBS_SOURCE</code></td>
+<td>categorical</td>
+<td>The one piece of real logic this layer adds. This is now a four-way split. <code>&quot;event&quot;</code> = <code>ICIS_OBSERVED == 1</code> (a real ICIS record that year); <code>&quot;operating&quot;</code> = no ICIS event but <code>ACTIVE_BROAD == 1</code> (confirmed active some other way — a genuine structural zero); <code>&quot;confirmed_inactive&quot;</code> = no ICIS event but <code>ACTIVE_BROAD == 0</code> (every checked signal — wayback status, emissions/GHG reporting — positively confirms the facility was NOT active that year — also a genuine structural zero, previously mislabeled <code>&quot;unobserved&quot;</code>); <code>&quot;unobserved&quot;</code> = no ICIS event and <code>ACTIVE_BROAD</code> is genuinely <code>NA</code> (no evidence either way that year — the only truly unknown case). <code>ACTIVE_BROAD</code>'s own 0-vs-<code>NA</code> distinction was already computed correctly upstream; this split just stops discarding it. Checked directly: 33% of major_synmin's pre-fix <code>&quot;unobserved&quot;</code> facility-years (30,612 of 92,013) actually had <code>ACTIVE_BROAD == 0</code>. Previously: under the old all-11-years eligibility screen, <code>&quot;unobserved&quot;</code>-type rows were impossible by construction; under the current ≥1-year rule they're real and substantial, since a facility can qualify via one year while other years in its 11-year rectangle have no confirmed activity.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>The known-operating-zero fill:</strong> for rows with <code>OBS_SOURCE %in% c(&quot;operating&quot;, &quot;confirmed_inactive&quot;)</code>,
+every <code>N_*</code> count and <code>HPV_ACTIVE</code> is filled <code>NA → 0</code> — a facility-year we know was active, or know was
+inactive, with no ICIS event is a true zero either way, not unknown. <code>PENALTY_AMOUNT</code>/<code>PENALTY_AMOUNT_DUP</code> are
+<strong>deliberately excluded</strong> from this fill in both branches — a known-outcome, zero-ICIS-event facility-year
+still reads <code>NA</code> for <code>PENALTY_AMOUNT</code> (no confirmed formal action), matching the dataset layer's own convention.</p>
+<h3>Cross-cutting notes (Part 2)</h3>
+<ul>
+<li><strong><code>OBS_SOURCE</code> is context-dependent</strong>, same as its predecessor concept was: within an already-filtered
+<code>&quot;operating&quot;</code> subsample, <code>OBS_SOURCE == &quot;event&quot;</code> is mechanically equivalent to &quot;some count &gt; 0&quot; —
+conditioning on it there is conditioning on the outcome. Across the full panel it carries independent
+information by separating <code>&quot;unobserved&quot;</code>/<code>&quot;confirmed_inactive&quot;</code> from real, event-generating activity.</li>
+<li><strong>This layer carries no separate HPV-count column of its own</strong> (unlike the old <code>hpv_active</code>/<code>hpv_active_1mo</code>
+vs. a spine-level recorded-year count) — <code>N_HPV</code> (an event count, from <code>regulatory.csv.gz</code>) and <code>HPV_ACTIVE</code>
+(an interval-overlap status, from <code>hpv_active.csv.gz</code>) answer different questions and will disagree year to
+year; use the interval flag for a status question, the recorded-year count for an events question.</li>
+</ul>
+</div></div></div></div></main><footer class='site-footer'><p>Automatically generated from the underlying data — no figures are hand-entered. Part of the <a href='https://github.com/gracecarverr/caa-regdata'>caa-regdata</a> reproducible pipeline.</p></footer><script>
+(function(){
+  document.querySelectorAll('.doc-nav').forEach(function(nav){
+    var links = nav.querySelectorAll('.doc-sidebar-link');
+    var panes = nav.querySelectorAll('.doc-pane');
+    function show(id){
+      links.forEach(function(l){ l.classList.toggle('active', l.dataset.target === id); });
+      panes.forEach(function(p){ p.hidden = (p.id !== id); });
+    }
+    links.forEach(function(l){
+      l.addEventListener('click', function(e){
+        e.preventDefault();
+        history.replaceState(null, '', '#' + l.dataset.target);
+        show(l.dataset.target);
+      });
+    });
+    var initial = (location.hash || '').slice(1);
+    if (!initial || !nav.querySelector("[id='" + initial + "']")) initial = links.length ? links[0].dataset.target : null;
+    if (initial) show(initial);
+  });
+  window.addEventListener('hashchange', function(){
+    var id = (location.hash || '').slice(1);
+    if (!id) return;
+    document.querySelectorAll('.doc-nav').forEach(function(nav){
+      var pane = nav.querySelector("[id='" + id + "']");
+      if (!pane) return;
+      nav.querySelectorAll('.doc-sidebar-link').forEach(function(l){ l.classList.toggle('active', l.dataset.target === id); });
+      nav.querySelectorAll('.doc-pane').forEach(function(p){ p.hidden = (p.id !== id); });
+    });
+  });
+})();
+</script></body></html>

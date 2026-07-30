@@ -21,6 +21,15 @@ lines   <- enc2utf8(readLines(md_path, warn = FALSE, encoding = "UTF-8"))
 # drop the brief's own H1 (the hero supplies the page title)
 if (length(lines) && grepl("^# ", lines[1])) lines <- lines[-1]
 
+# strip internal decision-code citations ((R1), (O6), (H5)...) for a public audience -- done here at render
+# time (NOT by hand-editing the source brief) so briefs/datasets/datasets_overview.md itself keeps its full
+# traceability for a researcher returning to the project cold; only the public HTML drops the citations.
+# Every instance here is a simple end-of-sentence "(CODE)" the brief's already-complete sentence doesn't
+# need, so the shared regex sanitizer (_html.R) handles all of them with no further hand substitutions.
+narrative_text <- strip_internal_citations(paste(lines, collapse = "\n"))
+assert_no_internal_citations(narrative_text, "build_databases_page.R")
+lines <- strsplit(narrative_text, "\n")[[1]]
+
 # split into one chunk per top-level "## " section (title + its body, up to the next "## " or end of file)
 # -- each chunk becomes its own sidebar entry + content pane (site_shell.R's doc_nav()), same
 # split-then-slugify approach as build_home.R's institutional-overview sections.
@@ -53,7 +62,7 @@ body <- paste0(
     "<div class='section-note'>These are the built datasets in <code>data/datasets/</code> — for the raw ",
     "EPA source files they're built from, see <a href='raw_data.html'>Raw Data</a>; for column-by-column ",
     "definitions of every field below, see the ",
-    "<a href='data_dictionary_derived.md'>derived data dictionary</a>.</div>",
+    "<a href='dictionary.html'>Data Dictionary</a>.</div>",
     "<div class='prose'>", nav_html, "</div>"
   )
 )

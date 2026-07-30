@@ -49,16 +49,30 @@ expected and normal under this one.
 
 ## Key things to remember when using a panel
 
-- **`0` ≠ `NA`.** `OBS_SOURCE ∈ {event, operating, unobserved}` — `"event"` = an ICIS record exists that year
-  (counts are real); `"operating"` = no ICIS event, but confirmed active some other way (event counts are a
-  true `0`, not missing); `"unobserved"` = neither (counts stay `NA`). `"unobserved"` years are now expected
-  for a facility whose only qualifying (`ACTIVE_BROAD == 1`) year is outside that row's year — this differs
-  from the pre-2026-07-29 continuity-screened panels, where `"unobserved"` could never appear.
+- **`0` ≠ `NA`.** `OBS_SOURCE ∈ {event, operating, confirmed_inactive, unobserved}` (four-way as of
+  2026-07-30) — `"event"` = an ICIS record exists that year (counts are real); `"operating"` = no ICIS event,
+  but confirmed active some other way (event counts are a true `0`, not missing); `"confirmed_inactive"` = no
+  ICIS event, but every checked signal (Wayback status, emissions/GHG reporting) positively confirms the
+  facility was NOT active that year (event counts are also a true `0` — we know the outcome, we just didn't
+  get an ICIS record); `"unobserved"` = no ICIS event and no signal either way (`ACTIVE_BROAD` is genuinely
+  `NA` — counts stay `NA`, the only truly unknown case). `"confirmed_inactive"`/`"unobserved"` years are
+  expected for a facility whose only qualifying (`ACTIVE_BROAD == 1`) year is outside that row's year — this
+  differs from the pre-2026-07-29 continuity-screened panels, where neither could appear. Before 2026-07-30,
+  `"confirmed_inactive"` rows were folded into `"unobserved"` — a bug, since `ACTIVE_BROAD`'s 0-vs-`NA`
+  distinction was already computed correctly one layer up (`operating.csv.gz`, `O6`) and was being discarded
+  here; see `PB4` in `panel_construction_decisions.md`.
 - **`N_*` count all rows — nothing is deduped.** Duplicate load is surfaced by `_DUP` (event-key repeats)
   and `_DUP_EXACT` (byte-identical) on inspections, enforcement (+ formal/informal), and certs; recover
   event-distinct counts as `N_X − N_X_DUP`. `PENALTY_AMOUNT` sums all formal rows (`NA` if no formal action
   or if it summed to exactly `$0` — both read the same); `PENALTY_AMOUNT_DUP` gives the duplicate-row
   dollars. `HPV_ACTIVE` is a binary status flag (no `HPV_ACTIVE_1MO` variant — not shipped).
+- **`OPERATING_IMPUTED` (NEW 2026-07-30)** flags the one narrow exception to "no imputation" in this pipeline
+  (`O2`): a 2018 row whose `OPERATING` was bridge-imputed because the facility had a real, raw 2017
+  observation AND a real, raw 2019 observation agreeing on the same operating bucket. `1` for those rows, `0`
+  everywhere else, never `NA` — filter on it if you want raw-observation-only analysis. `OP_STATUS_CODE` is
+  still `NA` for these rows (only the coarse operating bucket is imputed, never a specific status code); see
+  `O2` in `dataset_construction_decisions.md` for the full derivation and what was verified unaffected
+  (panel eligibility, entry/exit spells) before adding it.
 - **`ACTIVE`/`ACTIVE_BROAD`, `ICIS_OBSERVED`, `EMISSIONS_OBSERVED`/`GHG_OBSERVED` ride along as their own
   columns** — the constituent evidence behind `OBS_SOURCE` and the eligibility screen is visible in place,
   not hidden inside a derived flag.

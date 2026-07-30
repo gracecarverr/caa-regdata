@@ -1,5 +1,5 @@
 # =========================================================================================================
-# code/04_datasets/07_pipeline.R -- DATASET 6: pipeline. Facility x year, built from EPA ECHO's "CAA
+# code/03_datasets/07_pipeline.R -- DATASET 6: pipeline. Facility x year, built from EPA ECHO's "CAA
 #   Compliance Pipeline" (docs/data_dictionary.md "CAA Compliance Pipeline"). Every line below is commented
 #   per the user's explicit request for this script (the layer's usual house style is sparser -- see the
 #   other 04_datasets/*.R files).
@@ -47,7 +47,7 @@ library(readr)                                             # read_csv / write_cs
 library(dplyr)                                             # filter / mutate / group_by / summarise / join
 library(tidyr)                                             # expand_grid, for the full facility x year rectangle
 library(lubridate)                                         # mdy() date parsing, year()
-source(here::here("code/04_datasets/00_parameters.R"))     # YEARS, CLEAN, DATASETS, write_dataset()
+source(here::here("code/03_datasets/00_parameters.R"))     # YEARS, CLEAN, DATASETS, write_dataset()
 
 # ---- read the cleaned pipeline asset, keep only the columns this build needs -----------------------------
 p <- read_csv(file.path(CLEAN, "pipeline.csv.gz"),                     # data/processed/pipeline.csv.gz

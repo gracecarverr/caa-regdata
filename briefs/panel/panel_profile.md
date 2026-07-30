@@ -12,6 +12,12 @@ the rebuilt panels following `PB2`'s revision (`panel_construction_decisions.md`
 this is not a drift update, it's a different (and much larger) facility population. Will keep drifting with
 each live ICIS-AIR/Wayback refresh after this — regenerate the script before citing a number here as current.*
 
+> **Refreshed 2026-07-29** against the rebuild following the Wayback capture Q4 re-pin
+> (`briefs/datasets/dataset_construction_decisions.md` `O8`). Effect on these panels: **one** facility
+> (major_synmin: 45,873 → 45,872; electric unchanged) — every percentage figure below is unchanged at its
+> displayed precision, since only 2024's snapshot moved (Sep 26 → Dec 10) and the other 9 pinned years didn't
+> change at all. Only the counts in §1 moved.
+
 ---
 
 ## 1. Scale & coverage
@@ -24,7 +30,7 @@ not all eleven — so the facility population is far larger than the old continu
 
 | panel | facilities | facility-years | balanced |
 |---|--:|--:|---|
-| `major_synmin_2015_2025` | 45,873 | 504,603 | TRUE |
+| `major_synmin_2015_2025` | 45,872 | 504,592 | TRUE |
 | `electric_2015_2025` | 2,965 | 32,615 | TRUE |
 
 Compare to the retired continuity-screened build: 20,261 / 1,913 facilities respectively (36.3% of the
@@ -33,33 +39,83 @@ Compare to the retired continuity-screened build: 20,261 / 1,913 facilities resp
 that invariant survives the rule change because eligibility is evaluated once over a facility's whole record,
 not per year, so the *set* of facilities in the panel can't vary by year regardless of which rule is used.
 
-## 2. `OBS_SOURCE` composition — event vs. operating vs. unobserved
+## 2. `OBS_SOURCE` composition — event vs. operating vs. confirmed_inactive vs. unobserved
 
-`OBS_SOURCE` can now genuinely be `"event"`, `"operating"`, **or `"unobserved"`** — under the old all-11-years
-rule `"unobserved"` was impossible by construction (every row had already passed `ACTIVE_BROAD==1` for that
-year); under the ≥1-year rule a facility can qualify via one year while other years in its 11-year rectangle
-have no confirmed activity (`PB4`, `panel_construction_decisions.md`). That share is now substantial —
-12–49% of facility-years depending on year and panel (`output/panel_profile/coverage_by_year.csv`).
+`OBS_SOURCE` is a **four-way split as of 2026-07-30 (`PB4` fix)** — `"event"`, `"operating"`,
+`"confirmed_inactive"`, or `"unobserved"`. Under the old all-11-years continuity rule, none of the last three
+were possible by construction (every row had already passed `ACTIVE_BROAD==1` for that year); under the
+≥1-year eligibility rule a facility can qualify via one year while other years in its 11-year rectangle have
+no ICIS event, and `ACTIVE_BROAD` for those years can be confirmed `1` (`"operating"`), confirmed `0`
+(`"confirmed_inactive"`), or genuinely `NA` (`"unobserved"`). **Before the 2026-07-30 fix, `confirmed_inactive`
+rows were folded into `unobserved`** — the panel layer's `case_when()` only tested `ACTIVE_BROAD == 1` and let
+both `0` and `NA` fall into one catch-all, discarding a distinction `ACTIVE_BROAD` (`operating.csv.gz`, `O6`)
+already made correctly. Splitting them out changes the picture substantially:
 
-| panel | 2015 | 2018 | 2021 | 2025 |
-|---|--:|--:|--:|--:|
-| major_synmin — event | 47.3% | 45.8% | 45.5% | 44.7% |
-| major_synmin — unobserved | 23.6% | **48.9%** | 14.0% | 12.1% |
-| electric — event | 71.0% | 69.3% | 65.1% | 60.5% |
-| electric — unobserved | 10.0% | **26.8%** | 10.2% | 13.0% |
+| panel | 2015 | 2017 | 2018 | 2019 | 2021 | 2025 |
+|---|--:|--:|--:|--:|--:|--:|
+| major_synmin — event | 47.3% | 45.9% | 45.8% | 45.8% | 45.5% | 44.7% |
+| major_synmin — operating | 29.1% | 36.9% | 35.4% | 38.4% | 40.4% | 43.2% |
+| major_synmin — confirmed_inactive | 1.1% | 3.7% | 4.0% | 5.6% | 7.6% | 12.0% |
+| major_synmin — unobserved | 22.5% | 13.5% | 14.8% | 10.2% | 6.4% | 0.1% |
+| electric — event | 71.0% | 68.9% | 69.3% | 67.2% | 65.1% | 60.5% |
+| electric — operating | 19.0% | 22.6% | 20.5% | 23.8% | 24.7% | 26.5% |
+| electric — confirmed_inactive | 1.2% | 3.5% | 4.0% | 5.3% | 7.2% | 12.8% |
+| electric — unobserved | 8.8% | 5.1% | 6.2% | 3.7% | 3.0% | 0.1% |
 
-Both series are much flatter than the retired build's event-share table (which ran 72–96%, since that
-population was pre-selected for full-window activity). **2018 stands out as an anomaly in both panels** —
-`pct_unobserved` roughly doubles or triples relative to the surrounding years (and `pct_operating`
-correspondingly collapses to near-zero, `coverage_by_year.csv`), which was invisible under the old
-continuity screen precisely because it filtered out every facility that could expose it. **Confirmed cause:
-2018 has no real Wayback snapshot** — the raw folder was a mislabeled duplicate of 2019 and was removed from
-`data/raw/` (2026-07-21, see `code/02_cleaning/wayback/README.md`); `operating`/`prog_*_active` are asserted
-explicit `NA` for every facility that year (not LOCF-filled, since there's no real observation for any
-facility to infer from). That NA propagates into `ACTIVE_BROAD`'s wayback component (`O6`,
-`dataset_construction_decisions.md`), which is why the "operating" (wayback-confirmed-but-no-ICIS-event)
-share collapses and "unobserved" absorbs it — a known, structural data gap for this one year, not a
-panel-construction defect.
+(`event` is unchanged from the `PB4` fix — that fix only touched the non-event remainder, per
+`code_obs_source()`'s branch order.) The genuinely-unknown share **shrinks sharply across the window** — from
+22.5%/8.8% in 2015 down to essentially 0.1% by 2025 for both panels — rather than sitting flat as the old,
+undifferentiated `unobserved` number implied. Both series are still much flatter than the retired build's
+event-share table (which ran 72–96%, since that population was pre-selected for full-window activity).
+
+**Why it declines monotonically — decomposed directly (2026-07-30), not just described.** Every
+`major_synmin` `unobserved` row was classified by *why*, using each facility's own real-Wayback-snapshot span
+(first/last year it has a genuine, non-`NA` `OP_STATUS_CODE`):
+
+| reason | 2015 | 2017 | 2019 | 2021 | 2023 | 2025 |
+|---|--:|--:|--:|--:|--:|--:|
+| year is before the facility's first real snapshot | 10,102 | 5,994 | 4,479 | 2,760 | 1,442 | 0 |
+| facility has zero real Wayback presence, ever | 210 | 187 | 204 | 196 | 182 | 60 |
+| year is after the facility's last real snapshot | 0 | 0 | 0 | 0 | 0 | 0 |
+
+**Almost the entire decline is `before_first_snapshot`, and it's mechanically forced to zero by 2025.** 25.6%
+of major_synmin facilities (11,733 of 45,872) don't get their first real Wayback observation until sometime
+*after* 2015 — Wayback's own LOCF only fills *interior* gaps, never extrapolates backward, so every year
+before a facility's first appearance reads `unobserved` by construction. As calendar time advances toward the
+window's end, fewer such pre-first-snapshot years remain for any given facility — and by definition none can
+remain in 2025, since 2025 can't be "before" a first snapshot that's already ≤2025. There's no symmetric
+effect at the other end: 45,646 of 45,872 facilities (99.5%) have their *last* real snapshot in 2025 itself
+(right-censored, still present at window close), so `after_last_snapshot` contributes essentially nothing —
+confirmed directly above, a flat 0 in every sampled year. The residual ~200/year baseline is the fixed
+population of facilities with zero Wayback presence ever (`major_synmin`: 226 facilities, checked directly
+this session against `OP_STATUS_CODE`'s per-facility non-`NA` count), eligible only via ICIS events or
+emissions/GHG reporting.
+
+⚠️ **Caveat for causal/entry-timing inference:** a facility whose first Wayback snapshot is, say, 2019 does
+NOT necessarily mean it *started operating* in 2019 — it could equally mean ICIS-AIR's own bulk facility
+extract hadn't yet incorporated that facility's record as of the 2015–2018 captures. The raw Wayback-captured
+facility roster itself grew **~22% over the decade** (228,513 facilities in the 2015 snapshot → 278,540 in
+2025, `17_wayback_facility_status_README.md`), which is administrative/database coverage expanding, not proof
+of real economic entry. Use `ENTERED_YEAR`/`EARLIEST_PROGRAM_BEGIN_YEAR` (`operating.csv.gz`, `O4`/`O5`), not
+a facility's bare first-Wayback-snapshot year, before treating it as a true entry date.
+
+**2018 is no longer an anomaly, as of the 2026-07-30 bridge-imputation fix (`PB9`/`O2`).** Before that fix,
+`pct_unobserved` roughly doubled or tripled relative to the surrounding years (48.9%/26.8%, vs. 13.5%/5.1% in
+2017) and `pct_operating`/`pct_confirmed_inactive` correspondingly collapsed toward zero — a known, structural
+gap (2018 has no real Wayback snapshot; the raw folder was a mislabeled duplicate of 2019, removed from
+`data/raw/` 2026-07-21, see `code/02_cleaning/wayback/README.md`) that was invisible under the old continuity
+screen precisely because it filtered out every facility that could expose it. **The fix:** a facility with a
+real, raw 2017 observation AND a real, raw 2019 observation agreeing on the same operating bucket (both
+in-service, or both not) now gets that value bridge-imputed into its 2018 row — flagged via the new
+`OPERATING_IMPUTED` column so it stays distinguishable from a real observation. This resolved **227,634**
+facility-years' worth of the underlying Wayback reconstruction (`operating.csv.gz`), of which **37,805** land
+in major_synmin's 2018 rows and **2,699** in electric's. As the table shows, 2018 now sits essentially in line
+with 2017/2019 rather than standing out — `pct_unobserved` dropped from 48.9%→14.8% (major_synmin) and
+26.8%→6.2% (electric). It isn't a perfect match to its neighbors (some facilities lack a real 2017 or 2019
+observation, or have a real transition between the two that the bridge deliberately leaves alone — mismatched
+pairs are NOT imputed, since that timing-unknowable case is already `O4`'s `W7a` treatment, and this fix is
+designed not to interfere with it) — see `O2` in `dataset_construction_decisions.md` for the full derivation,
+including what was verified unaffected (panel eligibility, entry/exit spells) before it was added.
 
 ## 3. Key count measures (`ICIS_OBSERVED` subset)
 
@@ -174,13 +230,15 @@ to produce:
 
 | panel | pct confirmed-exited | entered-year median |
 |---|--:|--:|
-| major_synmin | TBD | TBD |
-| electric | TBD | TBD |
+| major_synmin | 10.61% | 2015 |
+| electric | 10.52% | 2015 |
 
 Compare to the retired build's `pct_right_censored` complement: confirmed exits were only 0.5%/0.4%
-(major_synmin/electric) when every facility was required to survive through 2025 by construction. Rising
-substantially under the ≥1-year rule means the panel now actually contains the population of facilities that
-enforcement/penalty analysis needs to see, rather than conditioning them away.
+(major_synmin/electric) when every facility was required to survive through 2025 by construction. Rising to
+~10.6%/10.5% under the ≥1-year rule confirms the intended effect: the panel now actually contains the
+population of facilities that enforcement/penalty analysis needs to see, rather than conditioning them away.
+Both panels' entry-year median sits at 2015 (the left edge of the window) — expected, since most eligible
+facilities were already operating when the Wayback series starts rather than entering partway through.
 
 ## 9. The subset relationship
 

@@ -70,7 +70,7 @@ build_violations_section <- function() {
     list(n="HPV_DAYZERO_DATE",         d="Date the HPV tracking clock started.",              s=hpv_dz),
     list(n="HPV_RESOLVED_DATE",        d="Date the HPV was resolved or closed.",              s=hpv_res),
     list(n="DSCV_PATHWAY_DATE",        d="Date the violation was discovered through the pathway process.", s=dscv),
-    list(n="NFTC_PATHWAY_DATE",        d="Date the violation entered the no-further-tracking-required pathway.", s=nftc))
+    list(n="NFTC_PATHWAY_DATE",        d="Date the facility was notified.", s=nftc))
   nrows <- vapply(dv, function(v) num_row(v$n, v$d,
     c(v$s$miss_label, comma(v$s$n), v$s$min, v$s$p5, v$s$med, v$s$p95, v$s$max)), character(1))
 

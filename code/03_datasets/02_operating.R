@@ -1,5 +1,5 @@
 # =========================================================================================================
-# code/04_datasets/02_operating.R -- DATASET 1: the operating dataset. Facility x year. Reconstructed
+# code/03_datasets/02_operating.R -- DATASET 1: the operating dataset. Facility x year. Reconstructed
 #   operating evidence that dataset 0 (regulatory) deliberately holds out: year-varying operating status,
 #   program-active flags, facility entry/exit spells, and the earliest program-enrollment year.
 #
@@ -66,7 +66,7 @@
 #   existence/activity) -- see FLAGGED ISSUES #4.
 # =========================================================================================================
 library(readr); library(dplyr); library(tidyr); library(lubridate)
-source(here::here("code/04_datasets/00_parameters.R"))
+source(here::here("code/03_datasets/00_parameters.R"))
 
 # ---- universe (identical to dataset 0) ------------------------------------------------------------------
 frs_ids <- read_csv(file.path(CLEAN, "facilities.csv.gz"),
@@ -81,11 +81,16 @@ stopifnot("facilities: PGM_SYS_ID is not unique -- the facility grain is broken"
 
 # ---- year-varying wayback layers (2015-2025) ------------------------------------------------------------
 # Facility operating status. `operating` = cleaning-layer whitelist (1 iff code in {OPR,TMP,SEA}); carried as-is.
+# `operating_imputed` (NEW 2026-07-30, O2 exception): 1 iff this row's `operating` was 2018-bridge-imputed
+# from matching real 2017/2019 observations (17_wayback_facility_status.R), 0 otherwise, never NA -- explicit
+# col_integer() rather than letting .default = col_character() catch it, matching this script's no-col_guess()
+# discipline elsewhere in the file.
 status <- read_csv(file.path(CLEAN, "wayback_facility_status.csv.gz"),
                    col_types = cols(PGM_SYS_ID = col_character(), year = col_integer(),
-                                    operating = col_integer(), .default = col_character()),
+                                    operating = col_integer(), operating_imputed = col_integer(),
+                                    .default = col_character()),
                    show_col_types = FALSE) |>
-  select(PGM_SYS_ID, year, op_status_code, op_status_desc, operating)
+  select(PGM_SYS_ID, year, op_status_code, op_status_desc, operating, operating_imputed)
   # NOTE: `status` is read ONCE here and reused TWICE below -- once (implicitly restricted to `ids` via the
   # left_join into the main rectangle) to build operating.csv.gz, and again (restricted to the COMPLEMENT of
   # `ids`) further down to build wayback_only_facilities.csv.gz. Reading it once and slicing both ways avoids
@@ -166,7 +171,11 @@ em_yr <- read_csv(file.path(DATASETS, "emissions.csv.gz"),                # data
 cat("building the facility x year rectangle...\n")
 op <- expand_grid(PGM_SYS_ID = ids, year = YEARS) |>
   left_join(status, by = c("PGM_SYS_ID", "year")) |>                    # NA outside 2015-2025 / uncovered
-  mutate(wayback_observed = as.integer(!is.na(op_status_code)), .after = year) |>
+  mutate(wayback_observed = as.integer(!is.na(op_status_code)), .after = year,
+         # `status`'s left_join leaves operating_imputed NA for years outside 2015-2025 (no match at all,
+         # not "checked and 0") -- coalesced to 0 here since it's a "was THIS row bridge-imputed" flag, never
+         # meaningfully NA (unlike operating/op_status_code, which stay genuinely NA pre-2015 by design, O2).
+         operating_imputed = coalesce(operating_imputed, 0L)) |>
   left_join(progst, by = c("PGM_SYS_ID", "year")) |>
   left_join(spells, by = "PGM_SYS_ID") |>                              # facility-level, broadcast
   left_join(begin,  by = "PGM_SYS_ID") |>
@@ -196,9 +205,21 @@ stopifnot(
   "wayback leaked before 2015: operating is non-NA"  = !any(!is.na(op$operating) & op$year < 2015),
   "wayback_observed disagrees with op_status_code"   =
     all(op$wayback_observed == as.integer(!is.na(op$op_status_code))),
-  "operating flag != whitelist(op_status_code)"      =
-    all(op$operating == as.integer(op$op_status_code %in% whitelist), na.rm = TRUE) &&
-    !any(is.na(op$operating) & !is.na(op$op_status_code)),
+  # REVISED 2026-07-30 (O2 exception): restricted to operating_imputed==0 rows -- a bridge-imputed row's
+  # `operating` is, by construction, NOT derivable from its (NA) op_status_code, so it's correctly exempted
+  # here rather than weakening the check for everyone else. The 3 new checks below cover imputed rows instead.
+  "operating flag != whitelist(op_status_code) (non-imputed rows)" = {
+    idx <- which(op$operating_imputed == 0L)
+    all(op$operating[idx] == as.integer(op$op_status_code[idx] %in% whitelist), na.rm = TRUE) &&
+      !any(is.na(op$operating[idx]) & !is.na(op$op_status_code[idx]))
+  },
+  "operating_imputed is NA somewhere (should always be a real 0/1)" = !anyNA(op$operating_imputed),
+  "operating_imputed==1 row exists outside year 2018" =
+    all(op$year[op$operating_imputed == 1L] == 2018L),
+  "operating_imputed==1 row has a non-NA op_status_code (should never fabricate a specific code) or NA operating" = {
+    idx <- which(op$operating_imputed == 1L)
+    all(is.na(op$op_status_code[idx])) && !anyNA(op$operating[idx])
+  },
   "earliest_program_begin_year has Inf (bad min)"    =
     !any(is.infinite(op$earliest_program_begin_year)) && !any(is.infinite(op$earliest_program_begin_year_raw)),
   "screened begin year escaped [1970,2025]"          =
@@ -295,9 +316,14 @@ wb_only_ids <- setdiff(wb_all_ids, ids)              # ... minus the ones still 
 
 wb_only <- expand_grid(PGM_SYS_ID = wb_only_ids, year = WAYBACK_YEARS) |>   # balanced rectangle over
                                                                              # Wayback's own coverage window
-  left_join(status |> select(PGM_SYS_ID, year, op_status_code, op_status_desc, operating),
+  left_join(status |> select(PGM_SYS_ID, year, op_status_code, op_status_desc, operating, operating_imputed),
            by = c("PGM_SYS_ID", "year")) |>          # same year-varying status block as the main table
-  mutate(wayback_observed = as.integer(!is.na(op_status_code)), .after = year) |>   # same pattern as `op` above
+  mutate(wayback_observed = as.integer(!is.na(op_status_code)), .after = year,
+         # same reasoning as the main `op` rectangle above: `status` only carries rows within each facility's
+         # OWN observed span (17_wayback_facility_status.R), but this rectangle spans the full 2015-2025
+         # WAYBACK_YEARS regardless -- years outside a given facility's span left_join-miss and need the same
+         # NA -> 0 coalesce (operating_imputed is a per-row "was this bridged" flag, never meaningfully NA).
+         operating_imputed = coalesce(operating_imputed, 0L)) |>   # same pattern as `op` above
   left_join(spells, by = "PGM_SYS_ID") |>              # same facility-level spell block as the main table
   arrange(PGM_SYS_ID, year)
   # deliberately NO active/active_broad columns here -- ICIS_OBSERVED and EMISSIONS_OBSERVED/GHG_OBSERVED
@@ -316,9 +342,20 @@ stopifnot(
     !any(wb_only$PGM_SYS_ID %in% ids),
   "wayback_only: wayback_observed disagrees with op_status_code" =
     all(wb_only$wayback_observed == as.integer(!is.na(wb_only$op_status_code))),
-  "wayback_only: operating flag != whitelist(op_status_code)" =
-    all(wb_only$operating == as.integer(wb_only$op_status_code %in% whitelist), na.rm = TRUE) &&
-    !any(is.na(wb_only$operating) & !is.na(wb_only$op_status_code)))
+  # REVISED 2026-07-30 (O2 exception), same treatment as the main `op` rectangle above -- restricted to
+  # operating_imputed==0 rows, with 3 companion checks for the imputed ones.
+  "wayback_only: operating flag != whitelist(op_status_code) (non-imputed rows)" = {
+    idx <- which(wb_only$operating_imputed == 0L)
+    all(wb_only$operating[idx] == as.integer(wb_only$op_status_code[idx] %in% whitelist), na.rm = TRUE) &&
+      !any(is.na(wb_only$operating[idx]) & !is.na(wb_only$op_status_code[idx]))
+  },
+  "wayback_only: operating_imputed is NA somewhere" = !anyNA(wb_only$operating_imputed),
+  "wayback_only: operating_imputed==1 row exists outside year 2018" =
+    all(wb_only$year[wb_only$operating_imputed == 1L] == 2018L),
+  "wayback_only: operating_imputed==1 row has a non-NA op_status_code or NA operating" = {
+    idx <- which(wb_only$operating_imputed == 1L)
+    all(is.na(wb_only$op_status_code[idx])) && !anyNA(wb_only$operating[idx])
+  })
 
 write_dataset(wb_only, "wayback_only_facilities")   # uppercases all columns on write (see 00_parameters.R)
 cat(sprintf("wayback_only_facilities: %s rows | %d cols | %s facilities (0 overlap with the ICIS roster) | %s wayback-observed facility-years\n",

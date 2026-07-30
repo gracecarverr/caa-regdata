@@ -20,7 +20,7 @@
 #        columns r1_dayzero_year, r2_overlap, r3_overlap_open_extended, r4_union_30d) + console comparison.
 # =========================================================================================================
 library(readr); library(dplyr); library(tidyr); library(lubridate)  # readr I/O, dplyr/tidyr reshaping, lubridate date parsing + arithmetic
-source(here::here("code/04_datasets/00_parameters.R"))  # provides CLEAN (processed-data path) and YEARS (2005:2025 analysis window)
+source(here::here("code/03_datasets/00_parameters.R"))  # provides CLEAN (processed-data path) and YEARS (2005:2025 analysis window)
 OUT <- here::here("output/hpv_spell_diagnostics"); dir.create(OUT, showWarnings = FALSE, recursive = TRUE)  # this diagnostic's output dir; idempotent create
 
 h0 <- read_csv(file.path(CLEAN, "violations.csv.gz"),

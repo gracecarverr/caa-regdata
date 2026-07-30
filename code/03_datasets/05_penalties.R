@@ -1,5 +1,5 @@
 # =========================================================================================================
-# code/04_datasets/05_penalties.R -- DATASET 3: penalties. One row per FORMAL ACTION (action-level).
+# code/03_datasets/05_penalties.R -- DATASET 3: penalties. One row per FORMAL ACTION (action-level).
 #   The disaggregated penalty record behind ds 0's facility-year penalty_amount / n_penalties. Carries the
 #   multi-facility settlement key so co-defendant broadcasting is visible and cross-facility summing is avoidable.
 #
@@ -19,7 +19,7 @@
 #     ==> Do NOT sum PENALTY_AMOUNT across facilities of one ENF_IDENTIFIER without deciding the broadcast rule.
 # =========================================================================================================
 library(readr); library(dplyr); library(lubridate)
-source(here::here("code/04_datasets/00_parameters.R"))
+source(here::here("code/03_datasets/00_parameters.R"))
 
 COLS <- c("PGM_SYS_ID","ACTIVITY_ID","ENF_IDENTIFIER","ACTIVITY_TYPE_CODE","ACTIVITY_TYPE_DESC",
           "STATE_EPA_FLAG","ENF_TYPE_CODE","ENF_TYPE_DESC","SETTLEMENT_ENTERED_DATE","PENALTY_AMOUNT",
