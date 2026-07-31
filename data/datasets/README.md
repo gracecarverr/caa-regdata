@@ -55,6 +55,35 @@ alongside `PGM_SYS_ID` and `NA` where a facility has no FRS match — useful for
 identity across ICIS program systems (e.g. whether co-defendants in a multi-facility settlement are the same
 physical site, see `briefs/datasets/multi_facility_settlement_decision.md` §5).
 
+## Things to know before using a dataset
+
+- **Zero-vs-NA discipline is load-bearing, not a formality.** `regulatory.csv.gz`'s `ICIS_OBSERVED` flag is the
+  reference implementation — a facility-year with no ICIS record that year is `NA` (unknown), not a false `0`
+  — and `hpv_active.csv.gz` explicitly reuses it rather than inventing a separate rule. `emissions.csv.gz` has
+  its own analogous pair, `EMISSIONS_OBSERVED`/`GHG_OBSERVED`. Coalescing any of these `NA`s to `0` before
+  checking the flag will silently understate true zeros' denominator.
+- **`PENALTY_AMOUNT` (`regulatory.csv.gz`) is `NA` if no formal action occurred that facility-year *or* if it
+  summed to exactly `$0`** — both read the same, a documented, unresolved ambiguity (same caveat carried
+  unchanged into `data/panels/`, see `data/panels/README.md`). It can't currently distinguish "no enforcement"
+  from "enforcement, zero-dollar penalty."
+- **Don't sum `penalties.csv.gz`'s per-action `PENALTY_AMOUNT` across facilities sharing a settlement
+  (`ENF_IDENTIFIER`) without a broadcast rule.** 571 settlements span more than one facility (up to 117
+  co-defendants), and 64 of those carry *differing* per-facility amounts — it is not a clean one-value-repeated
+  broadcast. See decision `P5` and `briefs/datasets/multi_facility_settlement_decision.md`.
+- **`emissions.csv.gz`'s `IS_SHARED_REGISTRY` flags facilities sharing an FRS `REGISTRY_ID` with another
+  `PGM_SYS_ID`** — don't sum pollutant quantities across those rows without accounting for the shared
+  registration, or a single physical facility's emissions can be double-counted.
+- **`N_PROGRAMS` is `NA`-able, never coalesced to `0`** (decision `R7`) — a facility with no program record at
+  all reads `NA`, distinct from a genuine `0` on any individual `PROG_*` flag.
+- **`PROG_GACT`/`PROG_CFC` don't exist in this layer** (decisions `R6`/`O3`) — if a downstream script or an
+  older brief references them, that's stale; they were never carried into `regulatory.csv.gz`/`operating.csv.gz`.
+- **`hpv_spells.csv.gz` is uncollapsed and includes non-clean intervals** — `SPELL_STATUS` can be
+  `bad_order` or `missing_start`, not just `closed`/`open`; use `hpv_active.csv.gz` (the deterministic **R2**
+  collapse) rather than re-deriving a facility-year HPV flag from raw spells unless you specifically need the
+  record-grain view.
+- **Dataset 5 (`attainment`) does not exist here, on purpose** (decision `W10`) — don't search for a missing
+  file; it was dropped from this repo entirely, not accidentally omitted.
+
 ## Where the "why" lives
 
 **Construction rationale, decision codes, and verification results:**
