@@ -1,0 +1,9 @@
+GROUP,LAG_QUARTILE,n,lag_days_median,mean_future_violations
+electric,Q1 (fastest),205,0,0.68
+electric,Q2,203,48.33,0.62
+electric,Q3,203,136.67,0.51
+electric,Q4 (slowest),204,425.75,0.66
+other,Q1 (fastest),2595,0,0.85
+other,Q2,2568,53,0.69
+other,Q3,2564,146.5,0.84
+other,Q4 (slowest),2569,447,0.78

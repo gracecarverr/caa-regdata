@@ -5,6 +5,17 @@
 `output/figures/panels/panel_{coverage_over_time,hpv_active_over_time,count_distributions,penalty_dist,
 state_composition,facility_count_over_time}.png`.*
 
+*§10 traces instead to `code/diagnostics/19_panel_electric_lag_profile.R` (added 2026-07-30) — same panel
+layer, a different cut. Figures: `output/figures/panels/panel_{electric_vs_other_means,
+electric_vs_other_over_time,lag_future_violations}.png`.*
+
+*§11 traces to `code/diagnostics/20_panel_extended_profile.R` (added 2026-07-30) — six more cuts, same panel
+layer. Figures: `output/figures/panels/panel_{concentration_lorenz,exit_curve,inspection_hit_rate,
+self_disclosure_share,state_enforcement_intensity,emissions_enforcement}.png`.*
+
+*§12 traces to `code/diagnostics/21_panel_agency_recidivism_profile.R` (added 2026-07-30) — two more cuts,
+same panel layer. Figures: `output/figures/panels/panel_{agency_share_over_time,recidivism}.png`.*
+
 *First written 2026-07-28 against the original all-11-years-continuity build. Rewritten 2026-07-29 against
 the rebuilt panels following `PB2`'s revision (`panel_construction_decisions.md`) — eligibility is now
 `ACTIVE_BROAD == 1` in *at least one* of the 11 years, not every year, and the panels are renamed
@@ -248,6 +259,156 @@ every script run, not just asserted). Electric is 6.5% of major_synmin's facilit
 the retired build — the ≥1-year rule added proportionally more non-electric major/synmin facilities than
 electric ones).
 
+## 10. Electric vs. other facilities, and regulatory lag vs. future violations
+
+`code/diagnostics/19_panel_electric_lag_profile.R` (added 2026-07-30) nets electric out against **other**
+major_synmin facilities directly (`IS_ELECTRIC` = membership in `electric_2015_2025`'s own facility set, not
+a re-derived filter), rather than comparing the two panel files as-is the way §9 does — since electric is a
+subset of major_synmin, §9's comparison is really "electric vs. electric-plus-everyone-else."
+
+**Mean regulatory activity, electric vs. other** (`electric_vs_other_summary.csv`, `ICIS_OBSERVED == 1`
+subset): electric facilities see noticeably **more** inspection and monitoring activity but **less**
+violation/enforcement activity than other major_synmin facilities —
+
+| measure | electric (mean) | other (mean) |
+|---|--:|--:|
+| Inspections | 2.43 | 1.64 |
+| Stack tests | 3.47 | 0.99 |
+| Title V certifications | 6.87 | 3.90 |
+| Violations | 0.13 | 0.17 |
+| Enforcement (pooled) | 0.26 | 0.41 |
+| Formal enforcement | 0.07 | 0.10 |
+| Informal enforcement | 0.19 | 0.31 |
+| Penalty actions | 0.07 | 0.09 |
+| HPV violations | 0.04 | 0.04 |
+
+Plausible read: electric utilities are large, few-in-number, closely monitored point sources (heavy
+inspection/stack-test/certification burden — the up-front compliance-verification side of regulation) that
+generate proportionally fewer violations and enforcement actions once monitored, relative to the much larger
+and more heterogeneous "other" major/synmin population. `panel_electric_vs_other_over_time.png` shows this
+gap is **persistent across 2015–2025**, not a one-year artifact — electric's inspection/stack-test/cert lines
+sit above other's in every year, and its violation/enforcement lines sit below in every year.
+
+**Regulatory lag (violation → enforcement action) vs. future violations**
+(`lag_future_violations.csv`/`lag_future_violations_bin_summary.csv`): joins `pipeline.csv.gz`'s
+`MEAN_VIOL_TO_EA_LAG_DAYS` in year *t* to major_synmin's own `N_VIOLATIONS` in year *t+1*, on facilities with
+both a resolved EA-linked violation that year and continued ICIS observation the next (n = 11,111
+facility-years; electric 815, other 10,296 — a conditioned, not representative, subpopulation, see FLAGGED
+ISSUES 2 in the script). Binning each group into its own lag quartiles:
+
+| lag quartile | electric: mean future violations | other: mean future violations |
+|---|--:|--:|
+| Q1 (fastest, median 0 days) | 0.68 | 0.85 |
+| Q2 (median ~48-53 days) | 0.62 | 0.69 |
+| Q3 (median ~137-147 days) | 0.51 | 0.84 |
+| Q4 (slowest, median ~426-447 days) | 0.66 | 0.78 |
+
+**No monotonic relationship in either group** — future violations don't rise (or fall) steadily as lag
+increases; both lines dip at Q2/Q3 and recover at Q4. Spearman rank correlations confirm this: **0.077
+(electric)** and **0.067 (other)** — both near zero. Read plainly: in this data, how long it takes to move
+from a violation to an enforcement action has **no clear descriptive relationship** with how many violations
+that facility racks up the following year. This does not rule out a real relationship the coarse quartile
+binning or the conditioning (§ above) obscures, and it is descriptive/correlational only either way — see the
+script's FLAGGED ISSUES for why this can't be read causally (facilities with long lags likely differ
+systematically in case complexity or program mix, which could mask or manufacture an apparent relationship).
+
+## 11. Concentration, exit, inspection yield, self-disclosure, state intensity, and emissions
+
+`code/diagnostics/20_panel_extended_profile.R` (added 2026-07-30) — six more descriptive cuts, brainstormed as
+natural follow-ups to §10 rather than duplicating it.
+
+**Concentration.** Enforcement activity is heavily concentrated among a small share of facilities, and
+similarly so for electric and other. Gini coefficients (1 = all activity with one facility, 0 = spread evenly):
+
+| measure | electric | other |
+|---|--:|--:|
+| Violations | 0.84 | 0.82 |
+| Enforcement (pooled) | 0.84 | 0.82 |
+| Penalty $ (naive sum) | 0.86 | 0.93 |
+
+Penalty dollars are noticeably MORE concentrated than violation/enforcement counts, especially for other
+(0.93) — consistent with a small number of large-dollar settlements dominating total penalty revenue, the
+same pattern `penalties_profile.md`'s multi-facility-settlement discussion already flags at the dataset layer.
+
+**Facility exit.** Cumulative exit by 2025 is nearly identical across groups — 10.52% (electric) vs. 10.62%
+(other) — tracking closely together in every year shown in `panel_exit_curve.png`, not just at the endpoint.
+Electric's earlier-noted operating differences (§10) don't extend to a different exit rate.
+
+**Inspection hit rate.** Electric's hit rate sits **below** other's in every year (e.g. 2023: 11.5% vs. 14.9%;
+2025: 8.8% vs. 13.1%) — consistent with §10's finding that electric sees more inspections but proportionally
+fewer violations. Both groups' hit rates **peak in 2023 and decline through 2025** (other: 14.9% → 13.1%;
+electric: 11.5% → 8.8%), the same window flagged as an apparent enforcement decline in earlier discussion —
+since hit rate is already inspection-count-adjusted, this decline is not merely "fewer inspections happened,"
+though it's still consistent with the reporting-lag hypothesis (recent violations not yet finalized in ICIS).
+
+**Self-disclosure share.** Noisy year to year for both groups (no stable trend), electric more so given its
+much smaller yearly n (~100-170 linked-evaluation violations vs. other's ~1,700-2,300). Electric shows two
+sharp peaks (2021: 24.1%, 2024: 18.7%) against a background mostly in the 5-15% range; other stays in a
+tighter 8-20% band. 2015 electric is `NA` (zero linked-evaluation violations that year, a genuine 0/0, not
+missing data).
+
+**State enforcement intensity.** Extremely skewed by state — California (mean 2.15 enforcement actions per
+facility-year) and Washington (1.62) are far above every other state; the next-highest, New Jersey, is under
+half of Washington's level (0.82). The bottom states (ND 0.01, SD 0.03, UT 0.06) are two orders of magnitude
+below CA/WA. This is a state-level pattern, not obviously explained by facility count alone (CA/WA don't have
+the most facilities — OH and NJ both have more).
+
+**Emissions vs. enforcement.** Among facility-years with positive criteria-pollutant mass, both inspections
+and enforcement rise from Q1 (lowest emissions) to Q4 (highest) within each group, most sharply for other's
+enforcement (Q1 0.33 → Q4 0.70, roughly doubling) and electric's inspections (Q1 2.46 → Q3 3.36, dipping
+slightly at Q4 to 3.01). Bigger emitters do appear to draw more regulatory attention in this data — but see
+the script's FLAGGED ISSUES: this is a same-year, descriptive association only, and facility size/program mix
+are obvious shared confounders neither ruled in nor out here.
+
+## 12. Who enforces, and repeat-offender persistence
+
+`code/diagnostics/21_panel_agency_recidivism_profile.R` (added 2026-07-30) — the two follow-up cuts judged
+most likely to reveal something non-obvious.
+
+**Who enforces.** State agencies dominate both inspections and enforcement throughout 2015–2025 — no
+surprise given the CAA's long-standing delegation of day-to-day enforcement to states — but the *composition*
+has shifted at the margins:
+
+| | 2015 | 2025 |
+|---|--:|--:|
+| Inspections — EPA share | 3.7% | 1.2% |
+| Inspections — state share | 82.6% | 85.8% |
+| Inspections — local share | 13.7% | 13.0% |
+| Enforcement — EPA share | 3.4% | 3.5% |
+| Enforcement — state share | 64.6% | 72.9% |
+| Enforcement — local share | 32.0% | 23.6% |
+
+EPA's inspection *share* fell by more than two-thirds (3.7% → 1.2%), not just its absolute count — genuinely a
+compositional shift, not merely "the total shrank and EPA shrank with it." Enforcement tells a different story:
+EPA's own share barely moved (3.4% → 3.5%), but **local** agencies' enforcement share fell substantially
+(32.0% → 23.6%, with a visible trough around 2020 and a partial rebound around 2022 before falling again) while
+state's share rose to compensate (64.6% → 72.9%). Read against the earlier post-2023 enforcement-decline
+discussion: this says the recent decline is **not** concentrated in EPA-led enforcement specifically (EPA's
+share is flat and always small) — if anything, the more notable compositional shift is local agencies doing
+proportionally less enforcement, with state agencies absorbing the difference. This is a real finding worth
+distinguishing from the earlier reporting-lag hypothesis: a share shift like this can't be explained by
+recent-year right-censoring alone, since censoring would depress ALL three agencies' raw counts together
+without necessarily moving the shares.
+
+**Repeat-offender persistence.** Strong, consistent signal in both groups: conditional on a violation at year
+*t*, the probability of another violation within 1–3 years is roughly **3-4x** the unconditional baseline —
+
+| | baseline | P(violation \| had violation at t), k=1 | k=2 | k=3 |
+|---|--:|--:|--:|--:|
+| electric | 8.7% | 35.8% | 34.5% | 29.9% |
+| other | 11.7% | 31.0% | 31.8% | 30.0% |
+
+while facilities with **no** violation at *t* stay close to (in fact, slightly below) their group's own
+baseline at every lag (electric: 6.4–7.2%; other: 9.3–10.0%). This directly answers the question §11's
+concentration finding raised: enforcement activity being concentrated among a small share of facilities
+(Gini 0.82–0.84 for violations/enforcement) is **not** just a small set of facilities that happen to draw the
+short straw once — the same facilities tend to recur. Electric's persistence rate declines somewhat faster
+across the 3-year horizon (35.8% → 29.9%) than other's (which stays essentially flat, 31.0% → 30.0%), though
+both remain far above baseline at k=3. As flagged in the script, this can't distinguish genuine chronic
+noncompliance from a facility simply being inspected more consistently in both periods (more opportunities to
+find a violation) — but the gap is large enough (3-4x baseline) that inspection frequency alone seems an
+unlikely full explanation.
+
 ## Notable things to sanity-check before relying on these panels for a headline number
 
 - **2018 is a known, structural gap, not comparable to other years (§2, §4).** `pct_unobserved` roughly
@@ -268,3 +429,21 @@ electric ones).
 - **Electric's state/region composition is genuinely different from major_synmin's**, not just scaled down
   (§6) — don't assume electric is a uniform random subsample of major_synmin along any dimension other than
   the NAICS/SIC filter itself.
+- **The lag-vs-future-violations join (§10) is conditioned, not representative** — it only includes
+  facility-years with both a resolved EA-linked violation that year and continued ICIS observation the next,
+  which likely selects for larger, more actively-regulated facilities. Don't generalize its ~0.07 Spearman
+  correlations to "lag doesn't matter" for the full panel population, only for this conditioned subset.
+- **Concentration/Lorenz totals (§11) sum only ICIS_OBSERVED (or non-NA PENALTY_AMOUNT) years** — a genuine
+  lifetime total, not just an observed-window proxy, would need every facility to have the same tenure; late
+  entrants have fewer possible years to accumulate activity, understating their apparent lifetime total
+  relative to long-tenured facilities.
+- **Emissions-vs-enforcement (§11) is a same-year, not lagged, association** — it cannot distinguish "bigger
+  emitters get watched more closely" from "facilities that get watched more closely report differently," or
+  from both being driven by a shared confounder (facility size, program mix). Read it as descriptive only.
+- **Agency share (§12) is pooled across electric+other** — a group-level asymmetry in which agency handles
+  electric vs. other facilities would not show up in this figure; it answers "who enforces, in aggregate,"
+  not "who enforces electric facilities specifically."
+- **Recidivism (§12) can't rule out an inspection-frequency confound** — a facility inspected more often has
+  more chances to have a violation recorded in any given window, independent of its true underlying compliance
+  behavior. The 3-4x gap over baseline is large enough that this is unlikely to be the whole story, but this
+  script can't separate "chronic noncompliance" from "chronically inspected."
