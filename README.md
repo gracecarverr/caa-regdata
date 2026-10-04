@@ -163,4 +163,4 @@ future work for the panel layer — see
 
 ## License
 
-TBD — decide before publishing.
+Released under the [MIT License](LICENSE).
