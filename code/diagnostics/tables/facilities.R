@@ -1,5 +1,5 @@
 # =========================================================================================================
-# code/diagnostics/tables/facilities.R — ICIS-AIR_FACILITIES summary section for docs/index.html.
+# code/diagnostics/tables/facilities.R — ICIS-AIR_FACILITIES summary section for docs/raw_data.html.
 # Ported from CAA_Project/data_docs/scripts/tables/table-facilities.R: stat code + curated content are
 # verbatim; only the output layer (openxlsx -> _html.R) changed. Returns one <section> string.
 # =========================================================================================================

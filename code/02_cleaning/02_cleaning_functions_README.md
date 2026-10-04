@@ -46,6 +46,6 @@ Attribute tables supply neither `date` nor `key`, so they receive only `dup_exac
 
 ### Reproducibility note
 
-This refactor was verified to produce **byte-identical decompressed output** to the original 16 per-source
+This refactor was verified to produce **byte-identical decompressed output** to the original 17 per-source
 scripts (compared via `gzip -dc | md5` against the pre-refactor assets). If you change any function here,
 re-verify the same way — a cleaning change that alters outputs must be surfaced, not silently accepted.

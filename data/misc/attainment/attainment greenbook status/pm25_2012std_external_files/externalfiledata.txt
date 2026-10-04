@@ -1,0 +1,31 @@
+Green Book External Data Files
+
+The external files are provided in .xls and .dbf formats.  These files contain area attributes and can be used with the area shapefiles to determine the area name, nonattainment status, and classification.
+
+The fields in the external files are:
+
+Composid
+A unique ID associated with the nonattainment or maintenance area for a specific pollutant standard. The Composid format includes the pollutant, year of the standard, and a short areaname indicator (e.g., ozone_8-hr.1997.Albany).  This ID can be linked with the shapefile dbf composid field.
+
+Areaname
+The name of the nonattainment or maintenance area, per 40 CFR Part 81.
+
+Class
+The classification of the area, specific to the pollutant standard.  If the standard does not have classifications, this field is empty.
+
+Pollutant
+The pollutant name.
+
+NAAStatus
+Indicates whether the area is a nonattainment area (NAA) or a maintenance area (MAI).
+
+Revoked_std
+Indicates whether the national ambient air quality standard has been revoked. For example, the 1-hr Ozone standard was revoked on June 15, 2005.  The external file's revoked_std field will contain .T. and the area classifications will be what was in place at the time of revocation.
+
+PollOrder
+A 1-character code associated with the class field (classification text).
+
+RptDate
+The date of the external file creation (the same for each record).
+
+		

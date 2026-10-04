@@ -21,7 +21,11 @@ build_afs_actions_section <- function() {
   avpc <- top_vals(aa, ALL_VIOLATING_POLL_CODES, 4); avpc_miss <- pct_miss(aa$ALL_VIOLATING_POLL_CODES); avpc_ncat <- n_cats(aa$ALL_VIOLATING_POLL_CODES)
   avtc <- top_vals(aa, ALL_VIOLATION_TYPE_CODES, 4); avtc_miss <- pct_miss(aa$ALL_VIOLATION_TYPE_CODES); avtc_ncat <- n_cats(aa$ALL_VIOLATION_TYPE_CODES)
 
-  da_yr <- year(ymd(aa$DATE_ACHIEVED)); da_n_miss <- sum(is.na(da_yr)); da_n <- sum(!is.na(da_yr))
+  # suppressWarnings: 2 legacy AFS records encode DATE_ACHIEVED as YYYYMM00 (day "00" = unknown day, e.g.
+  # 19801200/20000900) -- ymd() can't parse day 0 and correctly returns NA for them (confirmed: these are
+  # the only 2 values that fail), which da_n_miss below already counts as missing. Nothing to recover --
+  # there's no valid day to parse -- so this just silences the expected NA, not a real parsing bug.
+  da_yr <- year(suppressWarnings(ymd(aa$DATE_ACHIEVED))); da_n_miss <- sum(is.na(da_yr)); da_n <- sum(!is.na(da_yr))
   da_junk <- sum(!is.na(da_yr) & (da_yr < 1970 | da_yr > 2027))
   da <- list(min = min(da_yr, na.rm = TRUE), p5 = as.integer(quantile(da_yr, 0.05, na.rm = TRUE)),
              med = as.integer(median(da_yr, na.rm = TRUE)), p95 = as.integer(quantile(da_yr, 0.95, na.rm = TRUE)), max = max(da_yr, na.rm = TRUE))

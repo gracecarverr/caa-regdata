@@ -8,9 +8,10 @@
 
 Cleaning here is **minimal by design**. Each raw source table becomes one `data/processed/<name>.csv.gz`
 that **keeps every original column and every original row** — nothing is dropped, deduplicated, recoded,
-or type-cast. All facility-selection, collapsing, and treatment logic happens later, in the panel layer
-(`code/03_panel_building/`). Keeping cleaning lossless means the processed assets are a faithful, traceable
-image of the raw data, and every downstream decision is auditable against them.
+or type-cast. All facility-selection, collapsing, and treatment logic happens later, in the datasets layer
+(`code/03_datasets/`) and the panel layer (`code/04_panel_building/`). Keeping cleaning lossless means the
+processed assets are a faithful, traceable image of the raw data, and every downstream decision is auditable
+against them.
 
 The only columns ever **added**:
 
@@ -23,7 +24,7 @@ The only columns ever **added**:
 
 > **Why label duplicates instead of dropping them?** Whether a repeat is a genuine second event or a data
 > artifact is a *panel-construction* decision, not a cleaning one. Labeling keeps the choice visible and
-> reversible. See `briefs/panel_construction_decisions.md`.
+> reversible. See `briefs/panel/panel_construction_decisions.md`.
 
 ## Files
 
@@ -31,14 +32,14 @@ The only columns ever **added**:
 |------|------|
 | `02_clean.R` | **driver** — sources the two files below, loops over `CLEAN_SPECS`, then runs the Wayback cleaners |
 | `02_cleaning_functions.R` | shared mechanics: `read_raw`, `dup_index`, `write_clean`, `clean_one` |
-| `02_cleaning_parameters.R` | `CLEAN_SPECS` — one entry per regular source (16 of 19) |
+| `02_cleaning_parameters.R` | `CLEAN_SPECS` — one entry per regular source (17 of 20) |
 | `02_cleaning_functions_README.md` | function-by-function reference |
 | `02_cleaning_parameters_README.md` | field-by-field reference + the full source→output table |
 | `wayback/` | the 3 bespoke operating-status cleaners (17–19); see `wayback/README.md` |
 
-## Structure: why 16 sources are data and 3 are scripts
+## Structure: why 17 sources are data and 3 are scripts
 
-16 of the 19 sources follow one of two regular shapes — **event** (add date/year/dup/dup_exact) or
+17 of the 20 sources follow one of two regular shapes — **event** (add date/year/dup/dup_exact) or
 **attribute** (add only dup_exact). Those differ only in *which* file, *which* date column, and *which*
 duplicate key, so they are expressed as data in `CLEAN_SPECS` and executed by one function, `clean_one()`.
 
@@ -49,5 +50,5 @@ scripts in `wayback/`.
 ## Per-asset documentation
 
 Column-level definitions, row/facility counts, and **institutional implications** for each cleaned asset
-live next to the data, in `data/processed/<name>.README.md`. The generated column dictionary is
+live in the matching section of `data/processed/README.md`. The generated column dictionary is
 `docs/data_dictionary.md`.

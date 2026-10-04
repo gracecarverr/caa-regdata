@@ -9,6 +9,10 @@ data/raw/*
 data/panels/*
 !data/panels/.gitkeep
 !data/panels/README*
+# The six deliverable datasets are rebuilt from code (code/04_datasets).
+data/datasets/*
+!data/datasets/.gitkeep
+!data/datasets/README*
 # Processed (clean) assets + their generated dictionaries are rebuilt from code (force-add lookups case by case).
 data/processed/*
 !data/processed/.gitkeep
@@ -39,9 +43,13 @@ docs/.quarto/
 /.quarto/
 
 # ---- Local scratch ----------------------------------------------------------
-# Ad-hoc preview helper: dumps the first N rows of each built panel to plain CSV for eyeballing.
+# Ad-hoc preview helpers: dump the first N rows of each built panel/dataset to plain CSV for eyeballing.
 code/diagnostics/preview_panels.R
 data/panels/_preview/
+code/diagnostics/preview_datasets.R
+data/datasets/_preview/
+# Wayback-capture candidate zips fetched for byte-for-byte verification -- disposable, re-fetched on demand.
+code/diagnostics/wayback_verify/_cache/
 
 # ---- OS ---------------------------------------------------------------------
 .DS_Store

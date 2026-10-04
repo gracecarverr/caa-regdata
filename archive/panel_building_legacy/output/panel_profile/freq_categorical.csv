@@ -1,0 +1,98 @@
+panel,variable,level,n,pct
+Electric,obs_source,event,42370,0.669
+Electric,obs_source,unobserved,15182,0.24
+Electric,obs_source,operating,5763,0.091
+Electric,AIR_POLLUTANT_CLASS_DESC,Major Emissions,2259,0.749
+Electric,AIR_POLLUTANT_CLASS_DESC,Synthetic Minor Emissions,756,0.251
+Electric,op_status_current_desc,Operating,2434,0.807
+Electric,op_status_current_desc,Permanently Closed,555,0.184
+Electric,op_status_current_desc,Temporarily Closed,17,0.006
+Electric,op_status_current_desc,Planned Facility,6,0.002
+Electric,op_status_current_desc,,2,0.001
+Electric,op_status_current_desc,Under Construction,1,0
+Electric,facility_type,Privately owned,1419,0.471
+Electric,facility_type,,1065,0.353
+Electric,facility_type,City government,219,0.073
+Electric,facility_type,Non-classified,206,0.068
+Electric,facility_type,Corporation,42,0.014
+Electric,facility_type,Federal facility,25,0.008
+Electric,facility_type,County government,20,0.007
+Electric,facility_type,State facility,17,0.006
+Electric,facility_type,District,2,0.001
+Electric,EPA_REGION,5,554,0.184
+Electric,EPA_REGION,4,462,0.153
+Electric,EPA_REGION,7,436,0.145
+Electric,EPA_REGION,6,353,0.117
+Electric,EPA_REGION,9,331,0.11
+Electric,EPA_REGION,3,282,0.094
+Electric,EPA_REGION,2,245,0.081
+Electric,EPA_REGION,1,157,0.052
+Electric,EPA_REGION,8,133,0.044
+Electric,EPA_REGION,10,62,0.021
+Major/SynMin,obs_source,event,452101,0.476
+Major/SynMin,obs_source,unobserved,354459,0.373
+Major/SynMin,obs_source,operating,142892,0.15
+Major/SynMin,AIR_POLLUTANT_CLASS_DESC,Synthetic Minor Emissions,29149,0.645
+Major/SynMin,AIR_POLLUTANT_CLASS_DESC,Major Emissions,16063,0.355
+Major/SynMin,op_status_current_desc,Operating,35537,0.786
+Major/SynMin,op_status_current_desc,Permanently Closed,9287,0.205
+Major/SynMin,op_status_current_desc,Temporarily Closed,222,0.005
+Major/SynMin,op_status_current_desc,Under Construction,53,0.001
+Major/SynMin,op_status_current_desc,,46,0.001
+Major/SynMin,op_status_current_desc,Planned Facility,34,0.001
+Major/SynMin,op_status_current_desc,Seasonal,33,0.001
+Major/SynMin,facility_type,Privately owned,23229,0.514
+Major/SynMin,facility_type,,14493,0.321
+Major/SynMin,facility_type,Non-classified,4422,0.098
+Major/SynMin,facility_type,Corporation,1429,0.032
+Major/SynMin,facility_type,City government,558,0.012
+Major/SynMin,facility_type,Federal facility,361,0.008
+Major/SynMin,facility_type,State facility,342,0.008
+Major/SynMin,facility_type,County government,331,0.007
+Major/SynMin,facility_type,District,47,0.001
+Major/SynMin,EPA_REGION,4,8745,0.193
+Major/SynMin,EPA_REGION,6,8070,0.178
+Major/SynMin,EPA_REGION,5,7168,0.159
+Major/SynMin,EPA_REGION,3,4682,0.104
+Major/SynMin,EPA_REGION,2,4190,0.093
+Major/SynMin,EPA_REGION,7,3994,0.088
+Major/SynMin,EPA_REGION,8,2912,0.064
+Major/SynMin,EPA_REGION,1,2306,0.051
+Major/SynMin,EPA_REGION,9,2224,0.049
+Major/SynMin,EPA_REGION,10,921,0.02
+Universe,obs_source,unobserved,1353265,0.486
+Universe,obs_source,event,730530,0.263
+Universe,obs_source,operating,697886,0.251
+Universe,AIR_POLLUTANT_CLASS_DESC,Minor Emissions,79459,0.6
+Universe,AIR_POLLUTANT_CLASS_DESC,Synthetic Minor Emissions,29149,0.22
+Universe,AIR_POLLUTANT_CLASS_DESC,Major Emissions,16063,0.121
+Universe,AIR_POLLUTANT_CLASS_DESC,,4453,0.034
+Universe,AIR_POLLUTANT_CLASS_DESC,Not applicable,1670,0.013
+Universe,AIR_POLLUTANT_CLASS_DESC,Emissions classification unknown,1140,0.009
+Universe,AIR_POLLUTANT_CLASS_DESC,Other,527,0.004
+Universe,op_status_current_desc,Operating,100104,0.756
+Universe,op_status_current_desc,Permanently Closed,27388,0.207
+Universe,op_status_current_desc,,3260,0.025
+Universe,op_status_current_desc,Temporarily Closed,1238,0.009
+Universe,op_status_current_desc,Planned Facility,166,0.001
+Universe,op_status_current_desc,Under Construction,161,0.001
+Universe,op_status_current_desc,Seasonal,144,0.001
+Universe,facility_type,Privately owned,76762,0.58
+Universe,facility_type,,27471,0.207
+Universe,facility_type,Non-classified,16698,0.126
+Universe,facility_type,Corporation,6644,0.05
+Universe,facility_type,City government,1848,0.014
+Universe,facility_type,County government,1333,0.01
+Universe,facility_type,State facility,837,0.006
+Universe,facility_type,Federal facility,672,0.005
+Universe,facility_type,District,196,0.001
+Universe,EPA_REGION,6,23890,0.18
+Universe,EPA_REGION,4,20489,0.155
+Universe,EPA_REGION,3,20130,0.152
+Universe,EPA_REGION,5,19198,0.145
+Universe,EPA_REGION,7,13101,0.099
+Universe,EPA_REGION,8,12457,0.094
+Universe,EPA_REGION,2,10555,0.08
+Universe,EPA_REGION,1,7126,0.054
+Universe,EPA_REGION,9,3115,0.024
+Universe,EPA_REGION,10,2400,0.018

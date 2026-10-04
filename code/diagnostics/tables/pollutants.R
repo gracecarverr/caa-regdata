@@ -5,7 +5,13 @@
 library(here); library(readr); library(dplyr)
 
 build_pollutants_section <- function() {
-  pl <- read_csv(here("data/raw/ICIS-AIR_downloads/ICIS-AIR_POLLUTANTS.csv"), show_col_types = FALSE)
+  pl <- read_csv(here("data/raw/ICIS-AIR_downloads/ICIS-AIR_POLLUTANTS.csv"), show_col_types = FALSE,
+    # SRS_ID is mostly numeric but carries at least one non-numeric marker value ("P1CONV") -- col_guess()
+    # samples the first rows, guesses col_double() from the numeric-looking majority, and silently turns
+    # every non-numeric SRS_ID into NA (97 rows, confirmed via problems()), which would inflate this script's
+    # own pct_miss(SRS_ID)/n_cats(SRS_ID) stats. Same failure mode as PB8 in
+    # briefs/panel/panel_construction_decisions.md, fixed the same way: pin the type explicitly.
+    col_types = cols(SRS_ID = col_character(), .default = col_guess()))
   n_obs <- nrow(pl); n_fac <- n_distinct(pl$PGM_SYS_ID)
 
   pct_miss <- function(x) paste0(round(sum(is.na(x)) / length(x) * 100, 1), "%")

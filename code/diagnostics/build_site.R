@@ -1,14 +1,17 @@
 # =========================================================================================================
-# code/diagnostics/build_site.R — assemble docs/index.html from the per-source table scripts in
-#   code/diagnostics/tables/. Each tables/<asset>.R defines build_<asset>_section() returning one <section>
-#   of HTML, built from data/raw with the same computations + curated content as the old CAA_Project
-#   *_table.xlsx workbooks. This script sources them (in display order), concatenates the sections, and
-#   writes the page. GitHub Pages serves docs/index.html directly; no build tool needed.
+# code/diagnostics/build_site.R — assemble docs/raw_data.html (the site's "Raw Data" page) from the
+#   per-source table scripts in code/diagnostics/tables/. Each tables/<asset>.R defines
+#   build_<asset>_section() returning one <section> of HTML, built from data/raw with the same computations
+#   + curated content as the old CAA_Project *_table.xlsx workbooks. This script sources them (in display
+#   order), converts each section into a doc_nav() sidebar entry + content pane (see to_doc_pane() below),
+#   and writes the page under the shared site shell (site_shell.R). GitHub Pages serves docs/ directly; no
+#   build tool needed.
 #   Reads data/raw directly (independent of cleaning/panels); a documentation step, not a data build.
 # =========================================================================================================
 library(here)
 SRC <- here("code", "diagnostics", "tables")
 source(file.path(SRC, "_html.R"))
+source(here("code", "diagnostics", "site_shell.R"))
 
 # display order + nav labels
 TITLES <- c(
@@ -35,37 +38,44 @@ for (a in order) {
   }
 }
 
-toc  <- paste0("<a href='#", names(built), "'>", esc(unname(TITLES[names(built)])), "</a>", collapse = "")
-body <- paste(unlist(built), collapse = "\n")
+# Convert each source's sec(h_head(...), ...) HTML into a doc_nav() section: {id, title, body_html}.
+# h_head() always emits the section's one <h2 id='..'>title</h2> immediately after the opening <section> tag
+# (verified across all 16 scripts) -- that <h2> is dropped here (not just left in place) because doc_nav()
+# renders its own <h2> per pane from `title`; leaving the original in too would duplicate the heading.
+to_doc_pane <- function(html) {
+  m <- regmatches(html, regexec("^<section><h2 id='([^']*)'>([^<]*)</h2>", html))[[1]]
+  if (length(m) < 3) stop("build_site.R: to_doc_pane() couldn't find the expected leading <h2 id='..'> -- a tables/*.R script's output shape may have changed.")
+  id <- m[2]; title <- m[3]
+  body_html <- sub("^<section><h2 id='[^']*'>[^<]*</h2>", "", html)
+  body_html <- sub("</section>$", "", body_html)
+  list(id = id, title = title, body_html = body_html)
+}
+nav_html <- doc_nav(lapply(built, to_doc_pane))
 
-css <- "
-body{font-family:Calibri,'Segoe UI',system-ui,sans-serif;color:#1f2328;background:#fff;max-width:1100px;margin:0 auto;padding:2rem 1.2rem;}
-h1{text-align:center;margin-bottom:.2rem;} .lead{text-align:center;color:#57606a;margin-top:0;}
-nav{display:flex;flex-wrap:wrap;gap:.4rem .9rem;justify-content:center;margin:1.4rem 0 2rem;font-weight:bold;}
-nav a{color:#0969da;text-decoration:none;} nav a:hover{text-decoration:underline;}
-section{margin:2.6rem 0;padding-top:1rem;border-top:1px solid #e5e7eb;overflow-x:auto;}
-h2{margin-bottom:.1rem;text-align:center;}
-.src{text-align:center;color:#8a8f98;font-size:.85em;margin:.1rem 0;font-family:ui-monospace,Menlo,monospace;}
-.desc{text-align:center;margin:.4rem auto .6rem;max-width:860px;}
-.obs{text-align:center;font-weight:bold;margin:.3rem 0;}
-.inv{text-align:center;color:#57606a;font-size:.84em;margin:.2rem auto 1rem;max-width:920px;}
-table{border-collapse:collapse;width:100%;margin:.5rem 0 1rem;font-size:.9em;}
-th,td{border:1px solid #9aa0a6;padding:5px 8px;text-align:center;vertical-align:middle;}
-td.l{text-align:left;} .var{text-align:left;} .vd{font-weight:normal;color:#57606a;font-size:.92em;}
-table.cat th{background:#C6EFCE;} table.num th{background:#F4B084;}
-.note{font-size:.86em;color:#3d444d;margin:.35rem 0;line-height:1.4;}
-.dupes{font-size:.9em;margin:1rem 0 .3rem;line-height:1.4;}
-"
+raw_data_body <- paste0(
+  "<div class='raw-data'>",
+  "<div class='section-note'>Per-source summary tables, computed directly from the raw EPA downloads. ",
+  "Navy table headers are categorical (frequent values); burgundy headers are date/numeric distributions. ",
+  "For column-by-column field definitions, see the <a href='dictionary.html'>Data Dictionary</a>.</div>",
+  nav_html,
+  "</div>")
 
-html <- paste0("<!doctype html><html lang='en'><head><meta charset='utf-8'>",
-  "<meta name='viewport' content='width=device-width,initial-scale=1'>",
-  "<title>CAA Regulatory Data — Summary Tables</title><style>", css, "</style></head><body>",
-  "<h1>CAA Regulatory Data Infrastructure</h1>",
-  "<p class='lead'>Per-source summary tables. Green = categorical (frequent values); orange = date / numeric distributions.</p>",
-  "<nav>", toc, "</nav>", body,
-  "<p style='text-align:center;color:#8a8f98;margin-top:3rem;font-size:.85em'>Generated by <code>code/diagnostics/build_site.R</code> from <code>data/raw/</code>.</p>",
-  "</body></html>")
+html <- site_shell(
+  title       = "Raw Data",
+  description = "Per-source summary tables for the raw ICIS-Air, AFS, and emissions downloads: variable coverage, frequent values, and missingness.",
+  active      = "raw_data",
+  body_html   = paste0(
+    hero(
+      title   = "Raw Data",
+      desc    = paste(
+        "Per-source summary tables for all 16 raw ICIS-Air, AFS, and emissions files — variable",
+        "coverage, frequent values, and missingness, computed directly from the raw downloads."),
+      eyebrow = "Source Files"
+    ),
+    page_main(raw_data_body)
+  )
+)
 
-OUT <- here("docs", "index.html")
+OUT <- here("docs", "raw_data.html")
 writeLines(html, OUT)
 cat("wrote", OUT, "(", length(built), "of", length(order), "sections )\n")
